@@ -1,0 +1,15 @@
+{
+  "name":"etherworld-intellectus-pack",
+  "version":"4.0.0",
+  "private":true,
+  "type":"module",
+  "scripts":{
+    "typecheck:core":"tsc -p tsconfig.core.json",
+    "build:core":"tsc -p tsconfig.build.json",
+    "test:core":"bash scripts/test-core.sh"
+  },
+  "peerDependencies":{
+    "react":"^18.0.0",
+    "react-dom":"^18.0.0"
+  }
+}

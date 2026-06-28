@@ -1,0 +1,18 @@
+TROXT ETHERWORLD - SERVER FIRST
+
+Run server:
+node server/index.js
+
+HTTP:
+GET  /api/health
+GET  /api/world/schema
+GET  /api/brain/agents
+POST /api/admin/command
+POST /api/build/patch
+
+Socket.IO:
+server:hello
+admin:command
+build:patch
+world:buildPatch
+brain:result

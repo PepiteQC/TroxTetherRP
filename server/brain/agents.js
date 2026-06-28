@@ -1,0 +1,18 @@
+export const agents = [
+  { id: "ether-core", role: "Standardise les noms, IDs et conventions." },
+  { id: "ether-prism", role: "Transforme les demandes en schemas RP importables." },
+  { id: "ether-forge", role: "Construit les modules Node et patterns Lua." },
+  { id: "ether-weave", role: "Connecte economie, territoire, maisons et joueurs." },
+  { id: "ether-guard", role: "Protege permissions, transactions et anti-abus." },
+  { id: "ether-ui", role: "Prepare HUD, menus et UX joueur." },
+  { id: "ether-lens", role: "Inspecte bugs, failles et equilibre RP." },
+  { id: "ether-sim", role: "Simule les scenarios RP multi-joueurs." },
+  { id: "forge-factory", role: "Produit items, props et configurations en masse." },
+  { id: "ether-deploy", role: "Prepare une livraison stable sans coupure." },
+  { id: "ether-memory", role: "Memorise decisions, patterns et historique." },
+  { id: "troxt-third-eye", role: "Surveille le risque avant execution." },
+  { id: "arcadius", role: "Bus d'evenements priorise." },
+  { id: "benedictus", role: "Contrats et validations structurees." },
+  { id: "momentus", role: "Retry, timeout, concurrence et autosave." },
+  { id: "decaprius", role: "Commandes, rollback et telemetrie." },
+];

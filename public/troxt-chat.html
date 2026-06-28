@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TroxT Agent — EtherWorld Neural Chat</title>
+  <link rel="stylesheet" href="troxt-chat.css">
+</head>
+<body>
+
+<canvas id="bg-canvas"></canvas>
+
+<!-- ── HEADER ── -->
+<header class="tc-header">
+  <a href="/" class="tc-back">
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M10 3L5 8L10 13" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    EtherWorld
+  </a>
+  <div class="tc-header-center">
+    <div class="tc-agent-avatar">
+      <span class="ta-hex">⬡</span>
+      <span class="ta-pulse"></span>
+    </div>
+    <div class="tc-agent-info">
+      <div class="tc-agent-name">TroxT <span class="tc-agent-tag">NEURAL CORE</span></div>
+      <div class="tc-agent-status"><span class="tc-status-dot"></span>Online · EtherWorld v1.0</div>
+    </div>
+  </div>
+  <div class="tc-header-right">
+    <button class="tc-hdr-btn" id="btn-clear-chat" title="Effacer le chat">🗑</button>
+    <a href="/character-creator" class="tc-hdr-btn" title="Character Creator">👤</a>
+  </div>
+</header>
+
+<!-- ── MAIN ── -->
+<main class="tc-main">
+
+  <!-- LEFT: Sidebar info -->
+  <aside class="tc-sidebar">
+    <div class="tc-sid-block">
+      <div class="tc-sid-label">// TROXT AGENT</div>
+      <div class="tc-sid-desc">Intelligence centrale d'EtherWorld. Je connais chaque module, chaque système, chaque mécanique de la plateforme.</div>
+    </div>
+
+    <div class="tc-sid-block">
+      <div class="tc-sid-label">// CAPACITÉS</div>
+      <div class="tc-cap-list">
+        <div class="tc-cap"><span class="tc-cap-icon">👤</span><span>Character Creator</span></div>
+        <div class="tc-cap"><span class="tc-cap-icon">🎬</span><span>Animations GLB</span></div>
+        <div class="tc-cap"><span class="tc-cap-icon">🗄️</span><span>EtherPrism DB</span></div>
+        <div class="tc-cap"><span class="tc-cap-icon">⚒️</span><span>EtherForge 3D</span></div>
+        <div class="tc-cap"><span class="tc-cap-icon">🎮</span><span>Gameplay RP</span></div>
+        <div class="tc-cap"><span class="tc-cap-icon">🔗</span><span>Export & Partage</span></div>
+      </div>
+    </div>
+
+    <div class="tc-sid-block">
+      <div class="tc-sid-label">// SUJETS RAPIDES</div>
+      <div class="tc-topics" id="tc-topics">
+        <button class="tc-topic-btn" data-msg="Comment créer un personnage ?">Character Creator</button>
+        <button class="tc-topic-btn" data-msg="Explique le système d'animations GLB et additives">Animations GLB</button>
+        <button class="tc-topic-btn" data-msg="C'est quoi EtherPrism ?">EtherPrism</button>
+        <button class="tc-topic-btn" data-msg="Comment partager mon personnage ?">Export & Share</button>
+        <button class="tc-topic-btn" data-msg="Quels modules sont disponibles dans EtherWorld ?">Modules</button>
+        <button class="tc-topic-btn" data-msg="Donne-moi des conseils RP">Conseils RP</button>
+        <button class="tc-topic-btn" data-msg="Comment charger un avatar Ready Player Me ?">Ready Player Me</button>
+        <button class="tc-topic-btn" data-msg="Qu'est-ce que le blending additif ?">Blending Additif</button>
+      </div>
+    </div>
+
+    <div class="tc-sid-block tc-sid-stats">
+      <div class="tc-sid-label">// SESSION</div>
+      <div class="tc-stat-row"><span>Messages</span><span class="tc-stat-val" id="stat-msgs">0</span></div>
+      <div class="tc-stat-row"><span>Durée</span><span class="tc-stat-val" id="stat-time">0:00</span></div>
+      <div class="tc-stat-row"><span>Modèle</span><span class="tc-stat-val">TroxT-v2</span></div>
+    </div>
+  </aside>
+
+  <!-- CENTER: Chat window -->
+  <section class="tc-chat">
+
+    <!-- Messages -->
+    <div class="tc-messages" id="tc-messages">
+      <!-- Welcome message injected by JS -->
+    </div>
+
+    <!-- Typing indicator -->
+    <div class="tc-typing" id="tc-typing">
+      <div class="tc-typing-avatar">⬡</div>
+      <div class="tc-typing-dots">
+        <span></span><span></span><span></span>
+      </div>
+      <span class="tc-typing-label">TroxT génère une réponse…</span>
+    </div>
+
+    <!-- Input -->
+    <div class="tc-input-wrap">
+      <div class="tc-input-row">
+        <textarea
+          class="tc-input"
+          id="tc-input"
+          placeholder="Pose une question à TroxT Agent…"
+          rows="1"
+          maxlength="800"
+        ></textarea>
+        <button class="tc-send-btn" id="tc-send-btn">
+          <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+            <path d="M2 9L16 2L9 16L8 10L2 9Z" fill="currentColor"/>
+          </svg>
+        </button>
+      </div>
+      <div class="tc-input-footer">
+        <span class="tc-char-count" id="tc-char-count">0 / 800</span>
+        <span class="tc-input-hint">Entrée pour envoyer · Maj+Entrée pour nouvelle ligne</span>
+      </div>
+    </div>
+
+  </section>
+
+</main>
+
+<script src="troxt-chat.js"></script>
+</body>
+</html>

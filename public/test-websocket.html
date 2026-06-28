@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>TroxT WebSocket Test</title>
+  <style>
+    body { 
+      font-family: 'Courier New', monospace; 
+      background: #0a0a0a; 
+      color: #0f0; 
+      margin: 0; 
+      padding: 20px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      height: 100vh;
+      box-sizing: border-box;
+    }
+    .panel {
+      background: #111;
+      border: 1px solid #0f0;
+      padding: 15px;
+      overflow-y: auto;
+    }
+    h3 { margin-top: 0; color: #0f0; border-bottom: 1px solid #0f0; padding-bottom: 10px; }
+    .log { 
+      height: 200px; 
+      overflow-y: scroll; 
+      background: #000; 
+      padding: 10px; 
+      margin: 10px 0;
+      font-size: 12px;
+      border: 1px solid #333;
+    }
+    input, button, select {
+      background: #222;
+      color: #0f0;
+      border: 1px solid #0f0;
+      padding: 5px;
+      margin: 2px;
+      font-family: inherit;
+    }
+    button { cursor: pointer; background: #0f0; color: #000; font-weight: bold; }
+    button:hover { background: #0a0; color: #0f0; }
+    .error { color: #f00; }
+    .success { color: #0f0; }
+    .info { color: #0ff; }
+    .player-tag { 
+      display: inline-block; 
+      background: #0f0; 
+      color: #000; 
+      padding: 2px 6px; 
+      margin: 2px; 
+      font-size: 11px;
+      font-weight: bold;
+    }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  </style>
+</head>
+<body>
+
+<!-- Panel 1: Contrôle Principal -->
+<div class="panel">
+  <h3>🎮 Contrôle Serveur</h3>
+  <div>
+    <input type="text" id="serverUrl" value="ws://localhost:3000" style="width: 200px;">
+    <button onclick="connect()">Connecter</button>
+    <button onclick="disconnect()">Déconnecter</button>
+    <span id="status" style="color: #f00;">● OFFLINE</span>
+  </div>
+  
+  <div class="log" id="mainLog"></div>
+  
+  <div>
+    <input type="text" id="cmdInput" placeholder="/help" style="width: 200px;" onkeypress="if(event.key==='Enter')sendCmd()">
+    <button onclick="sendCmd()">Envoyer Commande</button>
+  </div>
+  
+  <div style="margin-top: 10px;">
+    <strong>Quick Actions:</strong><br>
+    <button onclick="quickCmd('/help')">/help</button>
+    <button onclick="quickCmd('/world')">/world</button>
+    <button onclick="quickCmd('/eye')">/eye</button>
+    <button onclick="quickCmd('/entities')">/entities</button>
+    <button onclick="quickCmd('/players')">/players</button>
+  </div>
+</div>
+
+<!-- Panel 2: Simulation Multi-Joueurs -->
+<div class="panel">
+  <h3>👥 Simulateur de Joueurs</h3>
+  <div class="grid-2">
+    <div>
+      <button onclick="spawnBot('Civilian')">+ Civil</button>
+      <button onclick="spawnBot('Police')">+ Police</button>
+      <button onclick="spawnBot('Criminal')">+ Criminel</button>
+      <button onclick="clearBots()">Tout supprimer</button>
+    </div>
+    <div>
+      <button onclick="botsAction('random')">Actions aléatoires</button>
+      <button onclick="botsAction('spawn')">Tous spawn objets</button>
+      <button onclick="botsAction('scan')">Tous scanner</button>
+    </div>
+  </div>
+  
+  <div id="botsList" style="margin-top: 10px;"></div>
+  
+  <div class="log" id="botsLog"></div>
+</div>
+
+<!-- Panel 3: Observateur Temps Réel -->
+<div class="panel">
+  <h3>👁 ThirdEye Live Feed</h3>
+  <div id="eyeStats">En attente de connexion...</div>
+  <div class="log" id="eyeLog"></div>
+  <button onclick="subscribeEye()">S'abonner aux scans</button>
+</div>
+
+<!-- Panel 4: État du Monde -->
+<div class="panel">
+  <h3>🌍 World State</h3>
+  <div id="worldState">Non connecté</div>
+  <button onclick="fetchWorld()">Rafraîchir</button>
+  <button onclick="toggleAutoRefresh()" id="autoBtn">Auto: OFF</button>
+  
+  <div style="margin-top: 10px;">
+    <strong>Créer Entité:</strong><br>
+    <button onclick="sendCmdDirect('/create cube')">Cube</button>
+    <button onclick="sendCmdDirect('/create sphere')">Sphere</button>
+    <button onclick="sendCmdDirect('/car sport')">Voiture</button>
+  </div>
+</div>
+
+<script>
+let ws = null;
+let bots = [];
+let autoRefresh = false;
+let autoInterval = null;
+
+function log(msg, type='info', target='mainLog') {
+  const el = document.getElementById(target);
+  const div = document.createElement('div');
+  div.className = type;
+  div.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
+  el.appendChild(div);
+  el.scrollTop = el.scrollHeight;
+}
+
+function connect() {
+  const url = document.getElementById('serverUrl').value;
+  ws = new WebSocket(url);
+  
+  ws.onopen = () => {
+    document.getElementById('status').style.color = '#0f0';
+    document.getElementById('status').textContent = '● ONLINE';
+    log('Connecté au serveur TroxT', 'success');
+    ws.send(JSON.stringify({type: 'command', cmd: '/world', player: 'TestClient'}));
+  };
+  
+  ws.onmessage = (e) => {
+    const data = JSON.parse(e.data);
+    handleMessage(data);
+  };
+  
+  ws.onerror = (e) => {
+    log('Erreur WebSocket', 'error');
+  };
+  
+  ws.onclose = () => {
+    document.getElementById('status').style.color = '#f00';
+    document.getElementById('status').textContent = '● OFFLINE';
+    log('Déconnecté', 'error');
+  };
+}
+
+function disconnect() {
+  if (ws) ws.close();
+}
+
+function sendCmd() {
+  const input = document.getElementById('cmdInput');
+  const cmd = input.value;
+  if (!cmd || !ws) return;
+  
+  ws.send(JSON.stringify({
+    type: 'command',
+    cmd: cmd,
+    player: 'TestClient'
+  }));
+  
+  log(`→ ${cmd}`, 'info');
+  input.value = '';
+}
+
+function quickCmd(cmd) {
+  document.getElementById('cmdInput').value = cmd;
+  sendCmd();
+}
+
+function sendCmdDirect(cmd) {
+  if (!ws) return;
+  ws.send(JSON.stringify({type: 'command', cmd, player: 'TestClient'}));
+  log(`→ ${cmd}`, 'info');
+}
+
+function handleMessage(data) {
+  if (data.type === 'welcome') {
+    log('Reçu: Welcome message', 'success');
+  }
+  else if (data.type === 'command_result') {
+    log(`Résultat: ${data.result}`, data.success ? 'success' : 'error');
+    if (data.raw === '/world' || data.raw.includes('/world')) {
+      updateWorldDisplay(data.result || data);
+    }
+  }
+  else if (data.type === 'observation') {
+    log(`Scan: ${JSON.stringify(data.result)}`, 'info', 'eyeLog');
+    updateEyeStats(data.result);
+  }
+  else if (data.type === 'thought') {
+    log(`IA: ${data.thought.response}`, 'info');
+  }
+}
+
+// ─── Simulation de Bots ─────────────────────────────────────────────────────
+
+function spawnBot(type) {
+  const id = 'Bot_' + Math.floor(Math.random() * 1000);
+  const bot = {
+    id,
+    type,
+    ws: null,
+    connected: false
+  };
+  
+  // Créer une connexion WebSocket séparée pour chaque bot
+  const url = document.getElementById('serverUrl').value;
+  bot.ws = new WebSocket(url);
+  
+  bot.ws.onopen = () => {
+    bot.connected = true;
+    bot.ws.send(JSON.stringify({
+      type: 'command',
+      cmd: `/setjob ${id} ${type}`,
+      player: id
+    }));
+    updateBotsList();
+    log(`Bot ${id} connecté (${type})`, 'success', 'botsLog');
+  };
+  
+  bot.ws.onmessage = (e) => {
+    const data = JSON.parse(e.data);
+    if (Math.random() > 0.8) { // Log seulement 20% des messages pour éviter le spam
+      log(`[${id}] ${data.type}`, 'info', 'botsLog');
+    }
+  };
+  
+  bots.push(bot);
+  updateBotsList();
+}
+
+function clearBots() {
+  bots.forEach(b => { if (b.ws) b.ws.close(); });
+  bots = [];
+  updateBotsList();
+  log('Tous les bots déconnectés', 'info', 'botsLog');
+}
+
+function updateBotsList() {
+  const el = document.getElementById('botsList');
+  el.innerHTML = bots.map(b => 
+    `<span class="player-tag" style="background: ${b.connected ? '#0f0' : '#f00'}">${b.id} (${b.type})</span>`
+  ).join('');
+}
+
+function botsAction(action) {
+  bots.forEach(bot => {
+    if (!bot.connected) return;
+    
+    setTimeout(() => {
+      let cmd = '';
+      switch(action) {
+        case 'random':
+          const cmds = ['/scan Player1', '/world', '/eye', '/create cube', '/weather sunny'];
+          cmd = cmds[Math.floor(Math.random() * cmds.length)];
+          break;
+        case 'spawn':
+          cmd = '/create box';
+          break;
+        case 'scan':
+          cmd = '/scan ' + bots[Math.floor(Math.random() * bots.length)].id;
+          break;
+      }
+      bot.ws.send(JSON.stringify({type: 'command', cmd, player: bot.id}));
+    }, Math.random() * 1000);
+  });
+  log(`Action "${action}" envoyée à ${bots.length} bots`, 'info', 'botsLog');
+}
+
+// ─── World State ────────────────────────────────────────────────────────────
+
+function updateWorldDisplay(data) {
+  const el = document.getElementById('worldState');
+  if (typeof data === 'string') {
+    el.innerHTML = `<pre>${data}</pre>`;
+  } else {
+    el.innerHTML = `
+      <strong>Mode:</strong> ${data.mode || 'sandbox'}<br>
+      <strong>Joueurs:</strong> ${data.playerCount || 0}<br>
+      <strong>Events:</strong> ${data.worldEvents?.length || 0}<br>
+      <strong>Météo:</strong> ${data.weather || 'sunny'}<br>
+      <strong>Heure:</strong> ${data.hour || 12}h<br>
+    `;
+  }
+}
+
+function fetchWorld() {
+  if (ws) sendCmdDirect('/world');
+}
+
+function toggleAutoRefresh() {
+  autoRefresh = !autoRefresh;
+  document.getElementById('autoBtn').textContent = autoRefresh ? 'Auto: ON' : 'Auto: OFF';
+  
+  if (autoRefresh) {
+    autoInterval = setInterval(fetchWorld, 2000);
+  } else {
+    clearInterval(autoInterval);
+  }
+}
+
+// ─── ThirdEye ───────────────────────────────────────────────────────────────
+
+function subscribeEye() {
+  // Simuler des scans réguliers
+  setInterval(() => {
+    if (ws && Math.random() > 0.5) {
+      const targets = ['Player1', 'Zone_A', 'Vehicle_1', 'Bot_' + Math.floor(Math.random()*1000)];
+      const target = targets[Math.floor(Math.random() * targets.length)];
+      ws.send(JSON.stringify({type: 'observe', target}));
+    }
+  }, 3000);
+  log('Abonnement ThirdEye actif', 'success', 'eyeLog');
+}
+
+function updateEyeStats(obs) {
+  document.getElementById('eyeStats').innerHTML = `
+    <strong>Dernier scan:</strong> ${obs.target}<br>
+    <strong>Threat:</strong> <span style="color: ${obs.threatLevel === 'HIGH' ? '#f00' : '#0f0'}">${obs.threatLevel}</span><br>
+    <strong>ID:</strong> ${obs.id?.slice(0,8)}<br>
+  `;
+}
+
+// Connexion auto au chargement
+window.onload = () => {
+  setTimeout(connect, 500);
+};
+</script>
+</body>
+</html>

@@ -1,0 +1,161 @@
+[
+  {
+    "id": "dfca3040-1718-486b-bbdf-a1cfeb98242e",
+    "timestamp": "2026-06-18T04:25:50.850Z",
+    "event_type": "player_leave",
+    "user_id": "b9339061",
+    "message": "Player b9339061 left",
+    "data": {},
+    "severity": "info"
+  },
+  {
+    "id": "a37101b6-ef58-4873-afdf-042bbcf9bead",
+    "timestamp": "2026-06-18T04:25:46.685Z",
+    "event_type": "snapshot_created",
+    "user_id": null,
+    "message": "Snapshot: 79168dc5-620f-41f2-96b5-2684b7374369",
+    "data": {
+      "type": "auto"
+    },
+    "severity": "info"
+  },
+  {
+    "id": "ea974ec4-bfc1-48e2-af6a-9a97b6a2de3d",
+    "timestamp": "2026-06-18T04:25:38.118Z",
+    "event_type": "player_join",
+    "user_id": "b9339061",
+    "message": "Player b9339061 connected",
+    "data": {},
+    "severity": "info"
+  },
+  {
+    "id": "8fe55ab7-04a3-433c-93a9-51099b26adf8",
+    "timestamp": "2026-06-18T04:24:46.684Z",
+    "event_type": "snapshot_created",
+    "user_id": null,
+    "message": "Snapshot: 610ad688-bb1a-4637-9335-f65579b793cc",
+    "data": {
+      "type": "auto"
+    },
+    "severity": "info"
+  },
+  {
+    "id": "f9826abb-289e-4ebd-92bb-468b896baf95",
+    "timestamp": "2026-06-18T04:23:46.684Z",
+    "event_type": "snapshot_created",
+    "user_id": null,
+    "message": "Snapshot: 0a81086e-2a2e-42d7-ae6b-99a558fd2aba",
+    "data": {
+      "type": "auto"
+    },
+    "severity": "info"
+  },
+  {
+    "id": "7a6b233d-43a8-43f6-bae2-509d20048776",
+    "timestamp": "2026-06-18T04:22:46.683Z",
+    "event_type": "snapshot_created",
+    "user_id": null,
+    "message": "Snapshot: d9bcf4d6-23b0-42a6-abad-966beeb37151",
+    "data": {
+      "type": "auto"
+    },
+    "severity": "info"
+  },
+  {
+    "id": "87803367-c841-4571-98a7-aa09619e909b",
+    "timestamp": "2026-06-18T04:21:46.683Z",
+    "event_type": "snapshot_created",
+    "user_id": null,
+    "message": "Snapshot: b6ae9750-b8a9-41bf-a6ee-f6df10388f1f",
+    "data": {
+      "type": "auto"
+    },
+    "severity": "info"
+  },
+  {
+    "id": "81c2af64-b2b6-41c6-aca2-1309e556f061",
+    "timestamp": "2026-06-18T04:20:46.683Z",
+    "event_type": "snapshot_created",
+    "user_id": null,
+    "message": "Snapshot: cf38aa7d-1b52-4767-8693-51b0705f04db",
+    "data": {
+      "type": "auto"
+    },
+    "severity": "info"
+  },
+  {
+    "id": "e3f5e867-a0b8-4654-93c5-97ea7ad894b0",
+    "timestamp": "2026-06-18T04:19:46.684Z",
+    "event_type": "snapshot_created",
+    "user_id": null,
+    "message": "Snapshot: 63becc20-34a4-4e22-9d17-4f09cd647474",
+    "data": {
+      "type": "auto"
+    },
+    "severity": "info"
+  },
+  {
+    "id": "2f0ea602-b03b-488c-be71-8b8c35cc84e1",
+    "timestamp": "2026-06-18T04:18:46.683Z",
+    "event_type": "snapshot_created",
+    "user_id": null,
+    "message": "Snapshot: c4a47f66-9388-4a45-9fdd-c18b929a021e",
+    "data": {
+      "type": "auto"
+    },
+    "severity": "info"
+  },
+  {
+    "id": "685f70b5-0bd6-41a6-9c72-d40770ab5405",
+    "timestamp": "2026-06-18T04:17:46.682Z",
+    "event_type": "snapshot_created",
+    "user_id": null,
+    "message": "Snapshot: a51b92db-75fa-4614-bb31-3ccbde237542",
+    "data": {
+      "type": "auto"
+    },
+    "severity": "info"
+  },
+  {
+    "id": "1227d9f0-44fd-4c9b-872a-d539595c7665",
+    "timestamp": "2026-06-18T04:16:46.682Z",
+    "event_type": "snapshot_created",
+    "user_id": null,
+    "message": "Snapshot: 2854a92c-ca52-45b4-8f73-fada4a9ee034",
+    "data": {
+      "type": "auto"
+    },
+    "severity": "info"
+  },
+  {
+    "id": "8e9276aa-b8ed-4392-8c9b-8957cb6eba45",
+    "timestamp": "2026-06-18T04:15:46.681Z",
+    "event_type": "snapshot_created",
+    "user_id": null,
+    "message": "Snapshot: abb3095c-ae20-45b1-a86f-8b33867562de",
+    "data": {
+      "type": "auto"
+    },
+    "severity": "info"
+  },
+  {
+    "id": "5b49dcd0-cdfa-44f1-8259-f05a9ae03b4d",
+    "timestamp": "2026-06-18T04:14:46.683Z",
+    "event_type": "snapshot_created",
+    "user_id": null,
+    "message": "Snapshot: 35ea1689-16b1-4757-9985-e4eed665cb59",
+    "data": {
+      "type": "auto"
+    },
+    "severity": "info"
+  },
+  {
+    "id": "92efd6f4-c6b8-4e94-8b73-0c1d35be8631",
+    "timestamp": "2026-06-18T04:13:46.683Z",
+    "event_type": "server_start",
+    "user_id": null,
+    "message": "Server started",
+    "data": {},
+    "severity": "info"
+  }
+]

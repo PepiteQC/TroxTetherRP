@@ -1,0 +1,962 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Intellectus — TroxT Neural Dashboard</title>
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{
+      --bg:#050810;--bg2:#090d1a;--surf:#0d1220;
+      --bord:rgba(100,150,255,.12);
+      --p:#7b6fff;--cyan:#00d4ff;--green:#43e97b;
+      --red:#ff4757;--orange:#ff6b35;--yellow:#ffd700;
+      --txt:#e8eaf6;--mid:#9ca3af;--dim:#6b7280;
+      --mono:'JetBrains Mono',monospace;
+    }
+    body{background:var(--bg);color:var(--txt);font-family:system-ui,sans-serif;overflow-x:hidden}
+    a{color:inherit;text-decoration:none}
+
+    /* NAV */
+    .nav{
+      display:flex;align-items:center;gap:16px;
+      padding:14px 24px;
+      background:rgba(5,8,16,.95);
+      border-bottom:1px solid var(--bord);
+      position:sticky;top:0;z-index:100;
+    }
+    .nav-logo{
+      display:flex;align-items:center;gap:8px;
+      font-size:16px;font-weight:800;letter-spacing:.5px;
+    }
+    .nav-icon{
+      width:32px;height:32px;border-radius:8px;
+      background:linear-gradient(135deg,var(--p),var(--cyan));
+      display:flex;align-items:center;justify-content:center;
+      font-size:16px;box-shadow:0 0 12px rgba(123,111,255,.4);
+    }
+    .nav-status{
+      display:flex;align-items:center;gap:6px;
+      font-size:11px;color:var(--dim);font-family:var(--mono);
+    }
+    .dot{
+      width:7px;height:7px;border-radius:50%;
+      background:var(--green);box-shadow:0 0 6px var(--green);
+      animation:blink 2s ease infinite;
+    }
+    @keyframes blink{0%,100%{opacity:1}50%{opacity:.4}}
+    .nav-actions{margin-left:auto;display:flex;gap:8px}
+    .btn{
+      display:inline-flex;align-items:center;gap:6px;
+      padding:7px 14px;border-radius:8px;
+      border:1px solid var(--bord);
+      background:rgba(255,255,255,.04);
+      color:var(--mid);font-size:12px;font-weight:600;
+      cursor:pointer;transition:all .2s;font-family:inherit;
+    }
+    .btn:hover{background:rgba(255,255,255,.08);color:var(--txt)}
+    .btn.p{background:var(--p);color:#fff;border-color:var(--p)}
+    .btn.p:hover{background:#5b4fff}
+
+    /* LAYOUT */
+    .container{max-width:1400px;margin:0 auto;padding:20px}
+
+    /* TABS */
+    .tabs{
+      display:flex;gap:4px;
+      border-bottom:1px solid var(--bord);
+      margin-bottom:20px;
+    }
+    .tab{
+      padding:10px 18px;border:none;
+      background:transparent;color:var(--dim);
+      font-size:13px;font-weight:600;cursor:pointer;
+      border-bottom:2px solid transparent;
+      transition:all .2s;font-family:inherit;
+    }
+    .tab:hover{color:var(--txt)}
+    .tab.active{color:var(--p);border-bottom-color:var(--p)}
+
+    .panel{display:none}
+    .panel.active{display:block}
+
+    /* CARDS GRID */
+    .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px;margin-bottom:20px}
+    .card{
+      background:var(--surf);border:1px solid var(--bord);
+      border-radius:12px;padding:18px;transition:all .2s;
+    }
+    .card:hover{border-color:rgba(123,111,255,.3);transform:translateY(-2px)}
+    .card-label{font-size:11px;color:var(--mid);font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px}
+    .card-value{font-size:26px;font-weight:900;font-family:var(--mono)}
+    .card-sub{font-size:10px;color:var(--dim);margin-top:4px;font-family:var(--mono)}
+    .c-blue .card-value{color:var(--cyan)}
+    .c-green .card-value{color:var(--green)}
+    .c-purple .card-value{color:var(--p)}
+    .c-orange .card-value{color:var(--orange)}
+    .c-yellow .card-value{color:var(--yellow)}
+    .c-red .card-value{color:var(--red)}
+
+    /* TABLE */
+    .tbl-wrap{background:var(--surf);border:1px solid var(--bord);border-radius:12px;overflow:hidden;margin-bottom:20px}
+    .tbl-head{padding:14px 16px;border-bottom:1px solid var(--bord);font-weight:700;font-size:13px;display:flex;align-items:center;justify-content:space-between}
+    table{width:100%;border-collapse:collapse;font-size:12px}
+    thead th{
+      text-align:left;padding:10px 16px;
+      font-size:10px;font-weight:700;text-transform:uppercase;
+      letter-spacing:1px;color:var(--dim);
+      border-bottom:1px solid var(--bord);background:var(--bg2);
+      white-space:nowrap;
+    }
+    tbody td{padding:9px 16px;border-bottom:1px solid rgba(255,255,255,.03);color:var(--mid)}
+    tbody tr:hover{background:rgba(123,111,255,.05)}
+    .mono{font-family:var(--mono);font-size:11px}
+    .badge{
+      display:inline-block;padding:2px 8px;border-radius:10px;
+      font-size:10px;font-weight:700;white-space:nowrap;
+    }
+    .b-green{background:rgba(67,233,123,.15);color:var(--green);border:1px solid rgba(67,233,123,.25)}
+    .b-red  {background:rgba(255,71,87,.15); color:var(--red);  border:1px solid rgba(255,71,87,.25)}
+    .b-blue {background:rgba(0,212,255,.12); color:var(--cyan); border:1px solid rgba(0,212,255,.2)}
+    .b-orange{background:rgba(255,107,53,.15);color:var(--orange);border:1px solid rgba(255,107,53,.25)}
+    .b-yellow{background:rgba(255,215,0,.12);color:var(--yellow);border:1px solid rgba(255,215,0,.2)}
+    .b-gray {background:rgba(255,255,255,.06);color:var(--dim); border:1px solid rgba(255,255,255,.1)}
+    .b-purple{background:rgba(123,111,255,.15);color:var(--p); border:1px solid rgba(123,111,255,.25)}
+
+    /* AGENT CARDS */
+    .agents-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px;margin-bottom:20px}
+    .agent-card{
+      background:var(--surf);border:1px solid var(--bord);
+      border-radius:12px;padding:16px;
+    }
+    .agent-header{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+    .agent-icon{
+      width:36px;height:36px;border-radius:9px;
+      display:flex;align-items:center;justify-content:center;
+      font-size:18px;flex-shrink:0;
+    }
+    .agent-name{font-size:13px;font-weight:700;color:#fff}
+    .agent-status{font-size:10px;margin-top:1px}
+    .agent-metrics{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+    .agent-metric{
+      background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.05);
+      border-radius:6px;padding:8px;
+    }
+    .agent-metric-label{font-size:9px;color:var(--dim);text-transform:uppercase;letter-spacing:.5px}
+    .agent-metric-value{font-size:16px;font-weight:800;font-family:var(--mono);color:var(--p)}
+
+    /* MEMORY TABLE */
+    .mem-key{color:var(--cyan);font-family:var(--mono);font-size:11px}
+    .mem-tags{display:flex;flex-wrap:wrap;gap:3px}
+    .mem-tag{
+      font-size:9px;padding:1px 5px;border-radius:3px;
+      background:rgba(123,111,255,.1);color:var(--p);
+      border:1px solid rgba(123,111,255,.2);
+    }
+
+    /* ALERT LEVELS */
+    .al-GREEN {color:var(--green)}
+    .al-BLUE  {color:var(--cyan)}
+    .al-YELLOW{color:var(--yellow)}
+    .al-ORANGE{color:var(--orange)}
+    .al-RED   {color:var(--red)}
+    .al-BLACK {color:#fff;background:#000}
+
+    /* TERMINAL */
+    .terminal{
+      background:#060a12;border:1px solid rgba(123,111,255,.2);
+      border-radius:10px;overflow:hidden;margin-bottom:20px;
+    }
+    .term-head{
+      display:flex;align-items:center;gap:10px;
+      padding:10px 16px;background:rgba(255,255,255,.03);
+      border-bottom:1px solid rgba(255,255,255,.05);
+    }
+    .term-dots{display:flex;gap:5px}
+    .term-dots i{display:block;width:10px;height:10px;border-radius:50%}
+    .term-dots i:nth-child(1){background:#ff5f56}
+    .term-dots i:nth-child(2){background:#ffbd2e}
+    .term-dots i:nth-child(3){background:#27c93f}
+    .term-body{padding:16px;font-family:var(--mono);font-size:12px;color:var(--mid);line-height:1.6;max-height:300px;overflow-y:auto}
+    .term-input-row{display:flex;gap:8px;padding:10px 16px;border-top:1px solid rgba(255,255,255,.05)}
+    .term-input{
+      flex:1;background:transparent;border:none;outline:none;
+      color:var(--p);font-family:var(--mono);font-size:12px;
+    }
+    .term-prompt{color:var(--p);font-family:var(--mono);font-size:13px;padding-top:1px}
+
+    /* TOAST */
+    #toasts{position:fixed;bottom:20px;right:20px;z-index:999;display:flex;flex-direction:column;gap:8px}
+    .toast{
+      padding:10px 16px;border-radius:8px;font-size:13px;
+      background:var(--surf);border:1px solid var(--bord);
+      box-shadow:0 8px 24px rgba(0,0,0,.4);min-width:240px;
+      animation:tIn .3s ease;
+    }
+    @keyframes tIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+    .toast.s{border-left:3px solid var(--green)}
+    .toast.e{border-left:3px solid var(--red)}
+    .toast.i{border-left:3px solid var(--cyan)}
+
+    /* MISC */
+    .empty{text-align:center;padding:40px;color:var(--dim)}
+    .refresh-btn{
+      background:none;border:1px solid var(--bord);border-radius:6px;
+      color:var(--dim);font-size:11px;padding:4px 10px;cursor:pointer;font-family:inherit;
+    }
+    .refresh-btn:hover{color:var(--txt);border-color:rgba(255,255,255,.2)}
+    .prog{height:4px;background:rgba(255,255,255,.06);border-radius:2px;overflow:hidden}
+    .prog-bar{height:100%;border-radius:2px;transition:width .3s}
+  </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="nav">
+  <div class="nav-logo">
+    <div class="nav-icon">⚡</div>
+    <span>Intellectus</span>
+    <span style="font-size:10px;color:var(--p);background:rgba(123,111,255,.1);border:1px solid rgba(123,111,255,.25);padding:2px 6px;border-radius:4px;font-family:var(--mono)">V5</span>
+  </div>
+  <div class="nav-status">
+    <span class="dot" id="conn-dot"></span>
+    <span id="conn-text">Connexion...</span>
+  </div>
+  <div style="font-size:11px;color:var(--dim);font-family:var(--mono);margin-left:12px" id="last-update">—</div>
+  <div class="nav-actions">
+    <button class="btn" onclick="refresh()">🔄 Refresh</button>
+    <a href="/etherprism" class="btn">🔷 EtherPrism</a>
+    <a href="/" class="btn">🏠 Accueil</a>
+  </div>
+</nav>
+
+<!-- CONTENT -->
+<div class="container">
+
+  <!-- TABS -->
+  <div class="tabs">
+    <button class="tab active" onclick="showTab('overview')">📊 Vue d'ensemble</button>
+    <button class="tab" onclick="showTab('memory')">🧠 Mémoire</button>
+    <button class="tab" onclick="showTab('agents')">🤖 Agents</button>
+    <button class="tab" onclick="showTab('scheduler')">⏱️ Scheduler</button>
+    <button class="tab" onclick="showTab('contracts')">📋 Contrats</button>
+    <button class="tab" onclick="showTab('brain')">🧠 Brain</button>
+    <button class="tab" onclick="showTab('thirdeye')">👁️ ThirdEye</button>
+    <button class="tab" onclick="showTab('terminal')">⌨️ Terminal</button>
+  </div>
+
+  <!-- OVERVIEW -->
+  <div class="panel active" id="tab-overview">
+    <div class="grid" id="overview-cards">
+      <div class="card c-blue skeleton" style="height:80px"></div>
+      <div class="card c-green skeleton" style="height:80px"></div>
+      <div class="card c-purple skeleton" style="height:80px"></div>
+      <div class="card c-orange skeleton" style="height:80px"></div>
+    </div>
+
+    <!-- Agents quick view -->
+    <div class="tbl-wrap">
+      <div class="tbl-head">
+        🤖 Agents Status
+        <button class="refresh-btn" onclick="loadAgents()">🔄</button>
+      </div>
+      <table>
+        <thead><tr><th>Agent</th><th>Status</th><th>Tasks</th><th>Succès</th><th>Échecs</th><th>Avg ms</th><th>Confiance</th></tr></thead>
+        <tbody id="agents-quick"></tbody>
+      </table>
+    </div>
+
+    <!-- ThirdEye alerts -->
+    <div class="tbl-wrap">
+      <div class="tbl-head">
+        👁️ ThirdEye — Alertes récentes
+        <button class="refresh-btn" onclick="loadThirdEye()">🔄</button>
+      </div>
+      <table>
+        <thead><tr><th>Niveau</th><th>Agent</th><th>Message</th><th>Action</th><th>Heure</th></tr></thead>
+        <tbody id="alerts-quick"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- MEMORY -->
+  <div class="panel" id="tab-memory">
+    <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;align-items:center">
+      <input id="mem-search" placeholder="🔍 Clé ou tag..." style="background:var(--surf);border:1px solid var(--bord);border-radius:8px;padding:8px 12px;color:var(--txt);font-size:12px;outline:none;width:280px" oninput="loadMemory()">
+      <select id="mem-source" style="background:var(--surf);border:1px solid var(--bord);border-radius:8px;padding:8px 10px;color:var(--mid);font-size:11px;outline:none" onchange="loadMemory()">
+        <option value="">Toutes les sources</option>
+        <option value="brain">brain</option>
+        <option value="thirdeye">thirdeye</option>
+        <option value="ether-forge">ether-forge</option>
+        <option value="ether-lens">ether-lens</option>
+        <option value="ether-prism">ether-prism</option>
+        <option value="ether-weave">ether-weave</option>
+        <option value="forge-factory">forge-factory</option>
+        <option value="agent-bus">agent-bus</option>
+      </select>
+      <button class="btn" onclick="loadMemory()">🔄 Refresh</button>
+      <button class="btn" style="color:var(--red)" onclick="clearMemory()">🗑️ Vider</button>
+      <span id="mem-count" style="font-size:11px;color:var(--dim);font-family:var(--mono);margin-left:auto"></span>
+    </div>
+
+    <!-- Metrics -->
+    <div class="grid" id="mem-metrics" style="margin-bottom:14px;grid-template-columns:repeat(auto-fill,minmax(140px,1fr))"></div>
+
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>Clé</th><th>Source</th><th>Tags</th><th>Version</th><th>TTL</th><th>Actions</th></tr></thead>
+        <tbody id="mem-table"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- AGENTS -->
+  <div class="panel" id="tab-agents">
+    <div style="display:flex;gap:8px;margin-bottom:16px">
+      <button class="btn" onclick="loadAgents()">🔄 Refresh</button>
+      <button class="btn p" onclick="showTaskModal()">➕ Dispatcher tâche</button>
+    </div>
+    <div class="agents-grid" id="agents-grid"></div>
+  </div>
+
+  <!-- SCHEDULER -->
+  <div class="panel" id="tab-scheduler">
+    <div style="display:flex;gap:8px;margin-bottom:14px;align-items:center">
+      <select id="task-status" style="background:var(--surf);border:1px solid var(--bord);border-radius:8px;padding:8px 10px;color:var(--mid);font-size:11px;outline:none" onchange="loadScheduler()">
+        <option value="">Toutes</option>
+        <option value="queued">Queued</option>
+        <option value="running">Running</option>
+        <option value="succeeded">Succeeded</option>
+        <option value="failed">Failed</option>
+        <option value="cancelled">Cancelled</option>
+      </select>
+      <button class="btn" onclick="loadScheduler()">🔄 Refresh</button>
+      <button class="btn" onclick="clearScheduler()">🗑️ Nettoyer terminées</button>
+      <span id="sched-count" style="font-size:11px;color:var(--dim);font-family:var(--mono);margin-left:auto"></span>
+    </div>
+    <div class="grid" id="sched-metrics" style="grid-template-columns:repeat(auto-fill,minmax(130px,1fr));margin-bottom:14px"></div>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>ID</th><th>Agent</th><th>Mission</th><th>Status</th><th>Priority</th><th>Retry</th><th>Durée</th><th>Actions</th></tr></thead>
+        <tbody id="sched-table"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- CONTRACTS -->
+  <div class="panel" id="tab-contracts">
+    <div style="display:flex;gap:8px;margin-bottom:16px">
+      <button class="btn" onclick="loadContracts()">🔄 Refresh</button>
+    </div>
+    <div id="contracts-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:14px"></div>
+  </div>
+
+  <!-- BRAIN -->
+  <div class="panel" id="tab-brain">
+    <div style="display:flex;gap:8px;margin-bottom:16px">
+      <button class="btn" onclick="loadBrain()">🔄 Refresh</button>
+      <button class="btn p" onclick="showBrainModal()">⚡ Soumettre requête</button>
+    </div>
+    <div class="grid" id="brain-metrics" style="margin-bottom:16px;grid-template-columns:repeat(auto-fill,minmax(140px,1fr))"></div>
+    <div class="tbl-wrap">
+      <div class="tbl-head">📋 Historique décisions</div>
+      <table>
+        <thead><tr><th>ID</th><th>Status</th><th>Agents</th><th>Steps OK</th><th>Steps KO</th><th>Durée</th><th>Summary</th></tr></thead>
+        <tbody id="brain-history"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- THIRDEYE -->
+  <div class="panel" id="tab-thirdeye">
+    <div style="display:flex;gap:8px;margin-bottom:16px">
+      <button class="btn" onclick="loadThirdEye()">🔄 Refresh</button>
+    </div>
+    <div class="grid" id="thirdeye-levels" style="grid-template-columns:repeat(6,1fr);margin-bottom:16px"></div>
+    <div class="tbl-wrap">
+      <div class="tbl-head">🚨 Alertes Third Eye</div>
+      <table>
+        <thead><tr><th>Niveau</th><th>Agent</th><th>Task</th><th>Message</th><th>Action</th><th>Heure</th></tr></thead>
+        <tbody id="thirdeye-alerts"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- TERMINAL -->
+  <div class="panel" id="tab-terminal">
+    <div class="terminal">
+      <div class="term-head">
+        <div class="term-dots"><i></i><i></i><i></i></div>
+        <span style="font-family:var(--mono);font-size:12px;color:var(--dim)">Intellectus Terminal</span>
+        <button class="refresh-btn" onclick="clearTerminal()" style="margin-left:auto">✕ Vider</button>
+      </div>
+      <div class="term-body" id="term-output">
+        <div style="color:var(--green)">⚡ Intellectus Terminal V5 — prêt</div>
+        <div style="color:var(--dim)">Commandes: help, status, memory, agents, brain, thirdeye, task, validate</div>
+      </div>
+      <div class="term-input-row">
+        <span class="term-prompt">›</span>
+        <input class="term-input" id="term-input" placeholder="Commande..." onkeydown="onTermKey(event)" autocomplete="off" spellcheck="false">
+      </div>
+    </div>
+  </div>
+
+</div><!-- /container -->
+
+<!-- MODALS -->
+<div id="modal-task" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:200;display:none;align-items:center;justify-content:center">
+  <div style="background:var(--surf);border:1px solid var(--bord);border-radius:14px;padding:24px;width:480px;max-width:90vw">
+    <div style="font-weight:800;font-size:16px;margin-bottom:16px">⚡ Dispatcher une tâche agent</div>
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <select id="task-agent" style="background:var(--bg2);border:1px solid var(--bord);border-radius:8px;padding:10px;color:var(--txt);font-size:13px;outline:none">
+        <option value="ether-forge">🔨 Ether-Forge</option>
+        <option value="ether-lens">🔍 Ether-Lens</option>
+        <option value="ether-prism">🔮 Ether-Prism</option>
+        <option value="ether-weave">🕸️ Ether-Weave</option>
+        <option value="forge-factory">🏭 Forge-Factory</option>
+      </select>
+      <input id="task-mission" placeholder="Mission (ex: Créer PropertySystem, Audit architecture...)" style="background:var(--bg2);border:1px solid var(--bord);border-radius:8px;padding:10px;color:var(--txt);font-size:13px;outline:none">
+      <select id="task-priority" style="background:var(--bg2);border:1px solid var(--bord);border-radius:8px;padding:10px;color:var(--txt);font-size:13px;outline:none">
+        <option value="normal">Normal</option>
+        <option value="high">High</option>
+        <option value="critical">Critical</option>
+        <option value="low">Low</option>
+      </select>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:16px;justify-content:flex-end">
+      <button class="btn" onclick="closeModal()">Annuler</button>
+      <button class="btn p" onclick="dispatchTask()">▶ Exécuter</button>
+    </div>
+  </div>
+</div>
+
+<div id="modal-brain" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:200;align-items:center;justify-content:center">
+  <div style="background:var(--surf);border:1px solid var(--bord);border-radius:14px;padding:24px;width:500px;max-width:90vw">
+    <div style="font-weight:800;font-size:16px;margin-bottom:16px">🧠 Soumettre au TroxT Brain</div>
+    <textarea id="brain-request" placeholder="Requête... (ex: Crée un système immobilier complet, Audit architecture V5...)" style="width:100%;background:var(--bg2);border:1px solid var(--bord);border-radius:8px;padding:10px;color:var(--txt);font-size:13px;outline:none;min-height:100px;resize:vertical;font-family:inherit"></textarea>
+    <div style="display:flex;gap:8px;margin-top:12px;justify-content:flex-end">
+      <button class="btn" onclick="closeModal()">Annuler</button>
+      <button class="btn p" onclick="submitBrain()">🧠 Soumettre</button>
+    </div>
+  </div>
+</div>
+
+<div id="toasts"></div>
+
+<script>
+// ══════════════════════════════════════════════════════════════
+//  Intellectus Dashboard — Client
+// ══════════════════════════════════════════════════════════════
+
+const BASE = '/api/intellectus';
+let _refreshInterval;
+
+// ── Utils ──────────────────────────────────────────────────────
+async function get(url) {
+  try {
+    const r = await fetch(url);
+    return r.json();
+  } catch(e) {
+    return { error: e.message };
+  }
+}
+
+async function post(url, body) {
+  try {
+    const r = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+    return r.json();
+  } catch(e) {
+    return { error: e.message };
+  }
+}
+
+function toast(msg, type = 'i') {
+  const el = document.createElement('div');
+  el.className = `toast ${type}`;
+  el.textContent = msg;
+  document.getElementById('toasts').appendChild(el);
+  setTimeout(() => { el.style.opacity = '0'; el.style.transition = '.3s'; setTimeout(() => el.remove(), 300); }, 3000);
+}
+
+function fmtTime(ts) {
+  if (!ts) return '—';
+  return new Date(ts).toLocaleTimeString('fr', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+}
+
+function fmtDuration(ms) {
+  if (!ms) return '—';
+  return ms > 1000 ? `${(ms/1000).toFixed(1)}s` : `${ms}ms`;
+}
+
+function statusBadge(status) {
+  const map = {
+    idle:      ['b-green', '● idle'],
+    working:   ['b-yellow', '⟳ working'],
+    error:     ['b-red', '✕ error'],
+    offline:   ['b-gray', '○ offline'],
+    succeeded: ['b-green', '✓ ok'],
+    failed:    ['b-red', '✕ fail'],
+    queued:    ['b-blue', '⏳ queued'],
+    running:   ['b-yellow', '⟳ running'],
+    cancelled: ['b-gray', '✕ cancel'],
+  };
+  const [cls, label] = map[status] ?? ['b-gray', status];
+  return `<span class="badge ${cls}">${label}</span>`;
+}
+
+function levelBadge(level) {
+  const colors = { GREEN: 'b-green', BLUE: 'b-blue', YELLOW: 'b-yellow', ORANGE: 'b-orange', RED: 'b-red', BLACK: 'b-gray' };
+  return `<span class="badge ${colors[level] ?? 'b-gray'} al-${level}">${level}</span>`;
+}
+
+// ── Tabs ───────────────────────────────────────────────────────
+function showTab(id) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  event.target.classList.add('active');
+  document.getElementById(`tab-${id}`).classList.add('active');
+
+  const loaders = { overview: refresh, memory: loadMemory, agents: loadAgents, scheduler: loadScheduler, contracts: loadContracts, brain: loadBrain, thirdeye: loadThirdEye };
+  loaders[id]?.();
+}
+
+// ── Overview ───────────────────────────────────────────────────
+async function refresh() {
+  const data = await get(`${BASE}/metrics`);
+  if (data.error) { setState(false); return; }
+  setState(true);
+
+  const mem   = data.intellectus?.memory   ?? {};
+  const sched = data.intellectus?.scheduler ?? {};
+  const brain = data.brain ?? {};
+  const eye   = data.thirdEye ?? {};
+
+  // Cards
+  const grid = document.getElementById('overview-cards');
+  grid.innerHTML = [
+    { label: 'Mémoire',     value: mem.size ?? 0,          sub: `hit rate: ${mem.hitRate ?? 0}%`,     color: 'c-blue',   icon: '🧠' },
+    { label: 'Tasks OK',    value: sched.succeeded ?? 0,    sub: `${sched.failed ?? 0} échoués`,       color: 'c-green',  icon: '✅' },
+    { label: 'En queue',    value: sched.queued ?? 0,       sub: `${sched.running ?? 0} en cours`,     color: 'c-yellow', icon: '⏳' },
+    { label: 'Décisions',   value: brain.requests ?? 0,     sub: `${brain.success ?? 0} succès`,       color: 'c-purple', icon: '🧠' },
+    { label: 'Agents',      value: Object.keys(data.agents?.status ?? {}).length, sub: 'actifs', color: 'c-orange', icon: '🤖' },
+    { label: 'Alertes',     value: eye.status?.totalAlerts ?? 0, sub: 'Third Eye', color: 'c-red', icon: '👁️' },
+    { label: 'Contrats',    value: data.intellectus?.contracts ?? 0, sub: 'Benedictus', color: 'c-blue', icon: '📋' },
+    { label: 'Hit Rate',    value: `${mem.hitRate ?? 0}%`,  sub: `${mem.hits ?? 0} hits / ${mem.misses ?? 0} misses`, color: 'c-green', icon: '⚡' },
+  ].map(c => `
+    <div class="card ${c.color}">
+      <div class="card-label">${c.icon} ${c.label}</div>
+      <div class="card-value">${c.value}</div>
+      <div class="card-sub">${c.sub}</div>
+    </div>
+  `).join('');
+
+  // Agents quick
+  const agentsTbody = document.getElementById('agents-quick');
+  const agents = data.agents?.status ?? {};
+  agentsTbody.innerHTML = Object.entries(agents).map(([id, info]) => {
+    const m = info.metrics ?? {};
+    const conf = m.taskCount > 0 ? Math.round((m.successCount / m.taskCount) * 100) : 0;
+    return `<tr>
+      <td class="mono">${id}</td>
+      <td>${statusBadge(m.status ?? 'idle')}</td>
+      <td class="mono">${m.taskCount ?? 0}</td>
+      <td><span style="color:var(--green)">${m.successCount ?? 0}</span></td>
+      <td><span style="color:var(--red)">${m.failCount ?? 0}</span></td>
+      <td class="mono">${fmtDuration(m.avgDurationMs)}</td>
+      <td>
+        <div class="prog"><div class="prog-bar" style="width:${conf}%;background:${conf>80?'var(--green)':conf>50?'var(--yellow)':'var(--red)'}"></div></div>
+        <div style="font-size:9px;color:var(--dim);font-family:var(--mono);margin-top:2px">${conf}%</div>
+      </td>
+    </tr>`;
+  }).join('') || '<tr><td colspan="7" class="empty">Aucun agent</td></tr>';
+
+  // Alerts quick
+  const alerts = eye.status?.recentAlerts ?? [];
+  const alertsTbody = document.getElementById('alerts-quick');
+  alertsTbody.innerHTML = alerts.slice(0, 8).map(a => `<tr>
+    <td>${levelBadge(a.level)}</td>
+    <td class="mono" style="font-size:11px">${a.agentId ?? '—'}</td>
+    <td class="mono" style="font-size:10px;color:var(--dim)">${(a.taskId ?? '').slice(0, 12)}</td>
+    <td style="font-size:11px;max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${a.message ?? '—'}</td>
+    <td><span class="badge b-gray" style="font-size:9px">${a.action ?? '—'}</span></td>
+    <td class="mono" style="font-size:10px;color:var(--dim)">${fmtTime(a.timestamp)}</td>
+  </tr>`).join('') || '<tr><td colspan="6" class="empty">✅ Aucune alerte</td></tr>';
+
+  document.getElementById('last-update').textContent = `Mis à jour ${new Date().toLocaleTimeString('fr')}`;
+}
+
+// ── Memory ─────────────────────────────────────────────────────
+async function loadMemory() {
+  const q      = document.getElementById('mem-search').value;
+  const source = document.getElementById('mem-source').value;
+  const params = new URLSearchParams({ limit: 100 });
+  if (q)      params.set(q.startsWith('#') ? 'tags' : 'keyPrefix', q.replace(/^#/, ''));
+  if (source) params.set('source', source);
+
+  const data = await get(`${BASE}/memory?${params}`);
+  const entries = data.entries ?? [];
+  document.getElementById('mem-count').textContent = `${entries.length} entrées`;
+
+  // Metrics
+  const m = data.metrics ?? {};
+  document.getElementById('mem-metrics').innerHTML = [
+    { label: 'Taille',    value: m.size ?? 0,       color: 'var(--cyan)' },
+    { label: 'Hits',      value: m.hits ?? 0,        color: 'var(--green)' },
+    { label: 'Misses',    value: m.misses ?? 0,      color: 'var(--red)' },
+    { label: 'Writes',    value: m.writes ?? 0,      color: 'var(--p)' },
+    { label: 'Evictions', value: m.evictions ?? 0,   color: 'var(--orange)' },
+    { label: 'Hit Rate',  value: `${m.hitRate ?? 0}%`, color: 'var(--green)' },
+  ].map(c => `<div class="card" style="padding:12px">
+    <div class="card-label">${c.label}</div>
+    <div class="card-value" style="color:${c.color};font-size:20px">${c.value}</div>
+  </div>`).join('');
+
+  const tbody = document.getElementById('mem-table');
+  tbody.innerHTML = entries.map(e => {
+    const ttl = e.expiresAt ? Math.max(0, Math.round((e.expiresAt - Date.now()) / 1000)) : null;
+    return `<tr>
+      <td class="mem-key">${e.key?.slice(0, 60) ?? '—'}</td>
+      <td><span class="badge b-purple" style="font-size:9px">${e.source ?? '—'}</span></td>
+      <td><div class="mem-tags">${(e.tags ?? []).map(t => `<span class="mem-tag">${t}</span>`).join('')}</div></td>
+      <td class="mono" style="color:var(--dim)">v${e.version ?? 1}</td>
+      <td class="mono" style="font-size:10px;color:${ttl !== null && ttl < 60 ? 'var(--red)' : 'var(--dim)'}">${ttl !== null ? `${ttl}s` : '∞'}</td>
+      <td><button class="refresh-btn" onclick="deleteMemKey('${e.key}')">🗑️</button></td>
+    </tr>`;
+  }).join('') || '<tr><td colspan="6" class="empty">Mémoire vide</td></tr>';
+}
+
+async function deleteMemKey(key) {
+  await fetch(`${BASE}/memory/${encodeURIComponent(key)}`, { method: 'DELETE' });
+  toast(`Clé supprimée: ${key.slice(0, 40)}`, 'i');
+  loadMemory();
+}
+
+async function clearMemory() {
+  if (!confirm('Vider toute la mémoire Intellectus ?')) return;
+  await fetch(`${BASE}/memory`, { method: 'DELETE' });
+  toast('Mémoire vidée', 'i');
+  loadMemory();
+}
+
+// ── Agents ─────────────────────────────────────────────────────
+async function loadAgents() {
+  const data = await get(`${BASE}/agents`);
+  const agents = data.agents ?? {};
+  const icons = { 'ether-forge':'🔨', 'ether-lens':'🔍', 'ether-prism':'🔮', 'ether-weave':'🕸️', 'forge-factory':'🏭' };
+  const colors = { 'ether-forge':'rgba(255,107,53,.12)', 'ether-lens':'rgba(0,212,255,.1)', 'ether-prism':'rgba(123,111,255,.1)', 'ether-weave':'rgba(67,233,123,.1)', 'forge-factory':'rgba(255,215,0,.1)' };
+
+  document.getElementById('agents-grid').innerHTML = Object.entries(agents).map(([id, info]) => {
+    const m = info.metrics ?? {};
+    const conf = m.taskCount > 0 ? Math.round(((m.successCount ?? 0) / m.taskCount) * 100) : 100;
+    const statusColor = m.status === 'idle' ? 'var(--green)' : m.status === 'working' ? 'var(--yellow)' : 'var(--red)';
+    return `<div class="agent-card" style="border-color:${m.status !== 'idle' ? 'rgba(123,111,255,.3)' : 'var(--bord)'}">
+      <div class="agent-header">
+        <div class="agent-icon" style="background:${colors[id] ?? 'rgba(255,255,255,.05)'}">${icons[id] ?? '🤖'}</div>
+        <div>
+          <div class="agent-name">${id}</div>
+          <div class="agent-status" style="color:${statusColor}">● ${m.status ?? 'idle'}</div>
+        </div>
+        <button class="refresh-btn" style="margin-left:auto" onclick="quickTask('${id}')">▶</button>
+      </div>
+      <div class="agent-metrics">
+        <div class="agent-metric"><div class="agent-metric-label">Tasks</div><div class="agent-metric-value">${m.taskCount ?? 0}</div></div>
+        <div class="agent-metric"><div class="agent-metric-label">Succès</div><div class="agent-metric-value" style="color:var(--green)">${m.successCount ?? 0}</div></div>
+        <div class="agent-metric"><div class="agent-metric-label">Échecs</div><div class="agent-metric-value" style="color:var(--red)">${m.failCount ?? 0}</div></div>
+        <div class="agent-metric"><div class="agent-metric-label">Avg</div><div class="agent-metric-value">${fmtDuration(m.avgDurationMs)}</div></div>
+      </div>
+      <div style="margin-top:10px">
+        <div style="font-size:9px;color:var(--dim);margin-bottom:4px">Confiance ${conf}%</div>
+        <div class="prog"><div class="prog-bar" style="width:${conf}%;background:${conf>80?'var(--green)':conf>50?'var(--yellow)':'var(--red)'}"></div></div>
+      </div>
+    </div>`;
+  }).join('') || '<div class="empty">Aucun agent enregistré</div>';
+}
+
+async function quickTask(agentId) {
+  const mission = prompt(`Mission pour ${agentId}:`, 'Audit architecture');
+  if (!mission) return;
+  const data = await post(`${BASE}/agents/${agentId}/task`, { mission, input: { validated: true }, priority: 'normal', timeout: 15000 });
+  if (data.result?.success) toast(`✅ ${agentId}: succès (${data.result.duration}ms)`, 's');
+  else toast(`❌ ${agentId}: ${data.result?.error ?? 'Erreur'}`, 'e');
+  loadAgents();
+}
+
+// ── Scheduler ──────────────────────────────────────────────────
+async function loadScheduler() {
+  const status = document.getElementById('task-status').value;
+  const data   = await get(`${BASE}/scheduler${status ? `?status=${status}` : ''}`);
+  const tasks  = data.tasks ?? [];
+  const m      = data.metrics ?? {};
+
+  document.getElementById('sched-count').textContent = `${tasks.length} tâches`;
+
+  document.getElementById('sched-metrics').innerHTML = [
+    { label: 'Scheduled', value: m.scheduled ?? 0, color: 'var(--p)' },
+    { label: 'Running',   value: m.running ?? 0,   color: 'var(--yellow)' },
+    { label: 'Succeeded', value: m.succeeded ?? 0, color: 'var(--green)' },
+    { label: 'Failed',    value: m.failed ?? 0,    color: 'var(--red)' },
+    { label: 'Cancelled', value: m.cancelled ?? 0, color: 'var(--dim)' },
+    { label: 'Queued',    value: m.queued ?? 0,    color: 'var(--cyan)' },
+  ].map(c => `<div class="card" style="padding:12px">
+    <div class="card-label">${c.label}</div>
+    <div class="card-value" style="color:${c.color};font-size:20px">${c.value}</div>
+  </div>`).join('');
+
+  const tbody = document.getElementById('sched-table');
+  tbody.innerHTML = tasks.slice(0, 50).map(t => `<tr>
+    <td class="mono" style="font-size:10px;color:var(--dim)">${t.id?.slice(0, 14) ?? '—'}</td>
+    <td class="mono" style="font-size:11px">${t.agentId ?? '—'}</td>
+    <td style="font-size:11px;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${t.mission?.slice(0, 60) ?? '—'}</td>
+    <td>${statusBadge(t.status)}</td>
+    <td><span class="badge b-purple" style="font-size:9px">${t.priority}</span></td>
+    <td class="mono" style="font-size:10px">${t.attempts ?? 0}/${t.retryMax ?? 1}</td>
+    <td class="mono" style="font-size:10px">${t.startedAt && t.endedAt ? fmtDuration(t.endedAt - t.startedAt) : '—'}</td>
+    <td><button class="refresh-btn" onclick="cancelTask('${t.id}')">✕</button></td>
+  </tr>`).join('') || '<tr><td colspan="8" class="empty">Aucune tâche</td></tr>';
+}
+
+async function cancelTask(id) {
+  await fetch(`${BASE}/scheduler/${id}`, { method: 'DELETE' });
+  toast('Tâche annulée', 'i');
+  loadScheduler();
+}
+
+async function clearScheduler() {
+  await post(`${BASE}/scheduler/clear`, {});
+  toast('Tâches terminées supprimées', 'i');
+  loadScheduler();
+}
+
+// ── Contracts ──────────────────────────────────────────────────
+async function loadContracts() {
+  const data      = await get(`${BASE}/contracts`);
+  const contracts = data.contracts ?? [];
+
+  document.getElementById('contracts-grid').innerHTML = contracts.map(c => `
+    <div class="tbl-wrap" style="margin:0">
+      <div class="tbl-head" style="font-size:12px">
+        📋 ${c.name}
+        <span style="font-size:10px;color:var(--dim)">${c.rules?.length ?? 0} règles</span>
+      </div>
+      <div style="padding:10px 16px;font-size:11px;color:var(--dim)">${c.description ?? '—'}</div>
+      <table>
+        <thead><tr><th>Champ</th><th>Type</th><th>Requis</th><th>Contraintes</th></tr></thead>
+        <tbody>
+          ${(c.rules ?? []).map(r => `<tr>
+            <td class="mono" style="color:var(--cyan)">${r.field}</td>
+            <td><span class="badge b-purple" style="font-size:9px">${r.type}</span></td>
+            <td>${r.required ? '<span class="badge b-red" style="font-size:9px">requis</span>' : '<span class="badge b-gray" style="font-size:9px">optionnel</span>'}</td>
+            <td style="font-size:10px;color:var(--dim)">${[r.min !== undefined ? `min:${r.min}` : '', r.max !== undefined ? `max:${r.max}` : '', r.pattern ? `pattern` : ''].filter(Boolean).join(' ')}</td>
+          </tr>`).join('')}
+        </tbody>
+      </table>
+    </div>
+  `).join('') || '<div class="empty">Aucun contrat</div>';
+}
+
+// ── Brain ──────────────────────────────────────────────────────
+async function loadBrain() {
+  const data    = await get(`${BASE}/brain`);
+  const status  = data.status ?? {};
+  const history = data.history ?? [];
+
+  document.getElementById('brain-metrics').innerHTML = [
+    { label: 'Requêtes', value: status.requests ?? 0, color: 'var(--p)' },
+    { label: 'Succès',   value: status.success ?? 0,  color: 'var(--green)' },
+    { label: 'Échecs',   value: status.failures ?? 0, color: 'var(--red)' },
+    { label: 'Plans',    value: status.activePlans ?? 0, color: 'var(--cyan)' },
+    { label: 'Agents',   value: (status.agents ?? []).length, color: 'var(--orange)' },
+  ].map(c => `<div class="card" style="padding:12px">
+    <div class="card-label">${c.label}</div>
+    <div class="card-value" style="color:${c.color};font-size:20px">${c.value}</div>
+  </div>`).join('');
+
+  const tbody = document.getElementById('brain-history');
+  tbody.innerHTML = history.map(d => `<tr>
+    <td class="mono" style="font-size:10px;color:var(--dim)">${d.requestId?.slice(0, 10) ?? '—'}</td>
+    <td>${d.success ? '<span class="badge b-green">✅ ok</span>' : '<span class="badge b-red">❌ fail</span>'}</td>
+    <td style="font-size:10px">${(d.agentsUsed ?? []).join(' → ')}</td>
+    <td class="mono" style="color:var(--green)">${d.completedSteps?.length ?? 0}</td>
+    <td class="mono" style="color:var(--red)">${d.failedSteps?.length ?? 0}</td>
+    <td class="mono">${fmtDuration(d.duration)}</td>
+    <td style="font-size:11px;max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${d.summary?.slice(0, 80) ?? '—'}</td>
+  </tr>`).join('') || '<tr><td colspan="7" class="empty">Aucune décision</td></tr>';
+}
+
+// ── ThirdEye ───────────────────────────────────────────────────
+async function loadThirdEye() {
+  const data    = await get(`${BASE}/thirdeye`);
+  const status  = data.status ?? {};
+  const alerts  = data.alerts ?? [];
+  const byLevel = status.alertsByLevel ?? {};
+  const levels  = ['GREEN','BLUE','YELLOW','ORANGE','RED','BLACK'];
+
+  document.getElementById('thirdeye-levels').innerHTML = levels.map(l => `
+    <div class="card" style="padding:12px;text-align:center">
+      <div class="al-${l}" style="font-size:18px;font-weight:900;font-family:var(--mono)">${byLevel[l] ?? 0}</div>
+      <div style="font-size:10px;color:var(--dim);margin-top:4px">${l}</div>
+    </div>
+  `).join('');
+
+  const tbody = document.getElementById('thirdeye-alerts');
+  tbody.innerHTML = alerts.map(a => `<tr>
+    <td>${levelBadge(a.level)}</td>
+    <td class="mono" style="font-size:11px">${a.agentId ?? '—'}</td>
+    <td class="mono" style="font-size:10px;color:var(--dim)">${a.taskId?.slice(0, 12) ?? '—'}</td>
+    <td style="font-size:11px;max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${a.message ?? '—'}</td>
+    <td><span class="badge b-gray" style="font-size:9px">${a.action ?? '—'}</span></td>
+    <td class="mono" style="font-size:10px;color:var(--dim)">${fmtTime(a.timestamp)}</td>
+  </tr>`).join('') || '<tr><td colspan="6" class="empty">✅ Aucune alerte</td></tr>';
+}
+
+// ── Terminal ───────────────────────────────────────────────────
+const COMMANDS = {
+  help: () => `Commandes: status, memory [tag], agents, brain, thirdeye, task <agent> <mission>, validate <contract>`,
+  status: async () => {
+    const d = await get(`${BASE}/metrics`);
+    return `Memory: ${d.intellectus?.memory?.size ?? 0} entrées (${d.intellectus?.memory?.hitRate ?? 0}% hit)\nScheduler: ${d.intellectus?.scheduler?.succeeded ?? 0} OK / ${d.intellectus?.scheduler?.failed ?? 0} KO\nAgents: ${Object.keys(d.agents?.status ?? {}).length} actifs\nBrain: ${d.brain?.requests ?? 0} requêtes\nThirdEye: ${d.thirdEye?.status?.totalAlerts ?? 0} alertes`;
+  },
+  memory: async (args) => {
+    const tag = args[0];
+    const d   = await get(`${BASE}/memory${tag ? `?tags=${tag}&limit=10` : '?limit=10'}`);
+    return (d.entries ?? []).map(e => `${e.key?.slice(0,50)} [${e.source}] ttl:${e.expiresAt ? Math.max(0,Math.round((e.expiresAt-Date.now())/1000))+'s' : '∞'}`).join('\n') || 'Mémoire vide';
+  },
+  agents: async () => {
+    const d = await get(`${BASE}/agents`);
+    return Object.entries(d.agents ?? {}).map(([id, info]) => `${id}: ${info.metrics?.status ?? 'idle'} | tasks:${info.metrics?.taskCount ?? 0} | ok:${info.metrics?.successCount ?? 0}`).join('\n');
+  },
+  brain: async () => {
+    const d = await get(`${BASE}/brain`);
+    return `Brain: ${d.status?.requests ?? 0} requêtes, ${d.status?.success ?? 0} succès, ${d.status?.failures ?? 0} échecs`;
+  },
+  thirdeye: async () => {
+    const d = await get(`${BASE}/thirdeye`);
+    const levels = d.status?.alertsByLevel ?? {};
+    return `ThirdEye: ${Object.entries(levels).map(([l,n]) => `${l}:${n}`).join(' ')}`;
+  },
+  task: async (args) => {
+    const [agent, ...mParts] = args;
+    const mission = mParts.join(' ');
+    if (!agent || !mission) return 'Usage: task <agent> <mission>';
+    const d = await post(`${BASE}/agents/${agent}/task`, { mission, input: { validated: true }, priority: 'normal', timeout: 15000 });
+    const r = d.result ?? {};
+    return `${r.success ? '✅' : '❌'} ${agent} | ${r.duration}ms | conf:${r.confidence}% | ${r.error ?? r.output?.status ?? 'done'}`;
+  },
+  validate: async (args) => {
+    const name = args[0];
+    if (!name) return 'Usage: validate <contractName>';
+    const d = await post(`${BASE}/contracts/validate`, { contract: name, data: { taskId: 'test', agentId: 'ether-forge', success: true, output: {}, confidence: 85, duration: 100, timestamp: Date.now() } });
+    return d.valid ? `✅ Contrat "${name}" valide` : `❌ Issues: ${d.issues?.map(i => `${i.field}: ${i.message}`).join(', ')}`;
+  },
+};
+
+let termHistory = [], termHistIdx = -1;
+
+async function onTermKey(e) {
+  const input = document.getElementById('term-input');
+  if (e.key === 'Enter') {
+    const cmd = input.value.trim();
+    if (!cmd) return;
+    termHistory.unshift(cmd); termHistIdx = -1;
+    const parts = cmd.split(/\s+/);
+    const fn    = COMMANDS[parts[0]];
+    termLog(`› ${cmd}`, 'color:var(--p)');
+    if (fn) {
+      try {
+        const result = await fn(parts.slice(1));
+        termLog(result, 'color:var(--green)');
+      } catch(err) {
+        termLog(`❌ ${err.message}`, 'color:var(--red)');
+      }
+    } else {
+      termLog(`Commande inconnue: ${parts[0]}. Tapez "help"`, 'color:var(--red)');
+    }
+    input.value = '';
+  } else if (e.key === 'ArrowUp') {
+    termHistIdx = Math.min(termHistIdx + 1, termHistory.length - 1);
+    input.value = termHistory[termHistIdx] ?? '';
+  } else if (e.key === 'ArrowDown') {
+    termHistIdx = Math.max(termHistIdx - 1, -1);
+    input.value = termHistIdx >= 0 ? termHistory[termHistIdx] : '';
+  }
+}
+
+function termLog(text, style = '') {
+  const out = document.getElementById('term-output');
+  const div = document.createElement('div');
+  div.style.cssText = style;
+  div.textContent   = text;
+  out.appendChild(div);
+  out.scrollTop = out.scrollHeight;
+}
+
+function clearTerminal() {
+  document.getElementById('term-output').innerHTML = '<div style="color:var(--green)">Terminal vidé.</div>';
+}
+
+// ── Modals ─────────────────────────────────────────────────────
+function showTaskModal() {
+  document.getElementById('modal-task').style.display = 'flex';
+}
+
+function showBrainModal() {
+  document.getElementById('modal-brain').style.display = 'flex';
+}
+
+function closeModal() {
+  document.querySelectorAll('[id^="modal-"]').forEach(m => m.style.display = 'none');
+}
+
+async function dispatchTask() {
+  const agent    = document.getElementById('task-agent').value;
+  const mission  = document.getElementById('task-mission').value.trim();
+  const priority = document.getElementById('task-priority').value;
+  if (!mission) return;
+  const data = await post(`${BASE}/agents/${agent}/task`, { mission, input: { validated: true }, priority, timeout: 15000 });
+  const r = data.result ?? {};
+  if (r.success) toast(`✅ ${agent}: succès (${r.duration}ms)`, 's');
+  else toast(`❌ ${agent}: ${r.error ?? 'Erreur'}`, 'e');
+  closeModal();
+  loadAgents();
+}
+
+async function submitBrain() {
+  const raw = document.getElementById('brain-request').value.trim();
+  if (!raw) return;
+  const data = await post(`${BASE}/brain/process`, { request: raw, requestedBy: 'dashboard' });
+  if (data.decision?.success) toast('✅ Brain: décision créée', 's');
+  else toast(`❌ Brain: ${data.decision?.summary ?? 'Erreur'}`, 'e');
+  closeModal();
+  loadBrain();
+}
+
+// ── Connection ─────────────────────────────────────────────────
+function setState(online) {
+  const dot  = document.getElementById('conn-dot');
+  const text = document.getElementById('conn-text');
+  if (online) {
+    dot.style.background  = 'var(--green)';
+    dot.style.boxShadow   = '0 0 6px var(--green)';
+    text.textContent      = 'Connecté — Intellectus V5';
+  } else {
+    dot.style.background  = 'var(--red)';
+    dot.style.boxShadow   = '0 0 6px var(--red)';
+    text.textContent      = 'Hors ligne';
+  }
+}
+
+// Close modals on outside click
+document.querySelectorAll('[id^="modal-"]').forEach(m => {
+  m.addEventListener('click', e => { if (e.target === m) closeModal(); });
+});
+
+// ── Init ───────────────────────────────────────────────────────
+refresh();
+_refreshInterval = setInterval(refresh, 15000);
+</script>
+</body>
+</html>

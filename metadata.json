@@ -1,0 +1,6 @@
+{
+  "name": "TroxT EtherWorld RP Town Sandbox",
+  "description": "Un simulateur RP urbain 3D fusionnant l'esthétique réaliste de Nova Life, le constructeur modulaire de GMod et l'interaction de GTA 5.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

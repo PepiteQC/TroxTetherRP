@@ -1,0 +1,22 @@
+{
+  "name": "TroxT EtherWorld",
+  "ver": "4.0.0",
+  "layers": {
+    "brain": "Orchestrator",
+    "thirdeye": "Risk monitor",
+    "intellectus": "Nervous system",
+    "agents": [
+      "core",
+      "forge",
+      "lens",
+      "prism",
+      "weave",
+      "guard",
+      "ui",
+      "sim",
+      "deploy",
+      "memory",
+      "forge-factory"
+    ]
+  }
+}

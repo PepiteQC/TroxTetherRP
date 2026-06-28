@@ -1,0 +1,660 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "TroxT City RP — Settings V5",
+  "description": "Configuration complète du serveur EtherWorld V5",
+  "type": "object",
+  "required": [
+    "server",
+    "world",
+    "physics",
+    "features"
+  ],
+  "properties": {
+    "server": {
+      "type": "object",
+      "required": [
+        "name",
+        "version",
+        "port"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Nom affiché du serveur"
+        },
+        "version": {
+          "type": "string",
+          "pattern": "^\\d+\\.\\d+\\.\\d+$"
+        },
+        "environment": {
+          "type": "string",
+          "enum": [
+            "development",
+            "staging",
+            "production"
+          ]
+        },
+        "port": {
+          "type": "integer",
+          "minimum": 1024,
+          "maximum": 65535
+        },
+        "tickRate": {
+          "type": "integer",
+          "minimum": 10,
+          "maximum": 128,
+          "description": "Ticks par seconde"
+        },
+        "maxEntities": {
+          "type": "integer",
+          "minimum": 100,
+          "maximum": 10000
+        },
+        "sandbox": {
+          "type": "boolean"
+        },
+        "debug": {
+          "type": "boolean"
+        },
+        "locale": {
+          "type": "string",
+          "description": "ex: fr-CA, en-US"
+        },
+        "timezone": {
+          "type": "string"
+        },
+        "build": {
+          "type": "string",
+          "enum": [
+            "green",
+            "yellow",
+            "red"
+          ]
+        }
+      }
+    },
+    "world": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "gravity": {
+          "type": "object",
+          "properties": {
+            "x": {
+              "type": "number"
+            },
+            "y": {
+              "type": "number"
+            },
+            "z": {
+              "type": "number"
+            }
+          }
+        },
+        "bounds": {
+          "type": "object",
+          "properties": {
+            "min": {
+              "type": "array",
+              "items": {
+                "type": "number"
+              },
+              "minItems": 3,
+              "maxItems": 3
+            },
+            "max": {
+              "type": "array",
+              "items": {
+                "type": "number"
+              },
+              "minItems": 3,
+              "maxItems": 3
+            }
+          }
+        },
+        "defaultSpawn": {
+          "type": "object",
+          "properties": {
+            "x": {
+              "type": "number"
+            },
+            "y": {
+              "type": "number"
+            },
+            "z": {
+              "type": "number"
+            }
+          }
+        },
+        "timeOfDay": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 24
+        },
+        "timeCycleDurationMs": {
+          "type": "integer",
+          "minimum": 60000
+        },
+        "weather": {
+          "type": "string",
+          "enum": [
+            "clear",
+            "rain",
+            "snow",
+            "fog",
+            "storm"
+          ]
+        },
+        "allowedWeathers": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "autosaveIntervalMs": {
+          "type": "integer",
+          "minimum": 10000
+        },
+        "worldFile": {
+          "type": "string"
+        },
+        "sectors": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "physics": {
+      "type": "object",
+      "properties": {
+        "engine": {
+          "type": "string",
+          "enum": [
+            "cannon-es",
+            "rapier",
+            "ammo"
+          ]
+        },
+        "fixedStep": {
+          "type": "number",
+          "minimum": 0.001,
+          "maximum": 0.1
+        },
+        "maxSubSteps": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 10
+        },
+        "solverIterations": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 50
+        },
+        "broadphase": {
+          "type": "string",
+          "enum": [
+            "naive",
+            "SAP",
+            "grid"
+          ]
+        },
+        "allowSleep": {
+          "type": "boolean"
+        },
+        "sleepSpeedLimit": {
+          "type": "number"
+        },
+        "sleepTimeLimit": {
+          "type": "number"
+        },
+        "defaultFriction": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 2
+        },
+        "defaultRestitution": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "defaultLinearDamping": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "defaultAngularDamping": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "worldBoundsEnforced": {
+          "type": "boolean"
+        },
+        "outOfBoundsY": {
+          "type": "number"
+        }
+      }
+    },
+    "limits": {
+      "type": "object",
+      "properties": {
+        "maxPropsPerPlayer": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "maxPropMass": {
+          "type": "number",
+          "minimum": 0
+        },
+        "maxRopeLength": {
+          "type": "number",
+          "minimum": 1
+        },
+        "maxWeldsPerProp": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "maxFurniturePerHouse": {
+          "type": "object"
+        },
+        "maxVehiclesPerPlayer": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "maxPropertiesPerPlayer": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "maxInventorySlots": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "maxChatMessageLength": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "maxPlayerNameLength": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "maxBrainRequestsPerMin": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    },
+    "websocket": {
+      "type": "object",
+      "properties": {
+        "path": {
+          "type": "string"
+        },
+        "heartbeatIntervalMs": {
+          "type": "integer",
+          "minimum": 1000
+        },
+        "broadcastRateMs": {
+          "type": "integer",
+          "minimum": 16
+        },
+        "maxConnections": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "compression": {
+          "type": "boolean"
+        },
+        "pingTimeoutMs": {
+          "type": "integer"
+        },
+        "maxMessageSizeKb": {
+          "type": "integer"
+        }
+      }
+    },
+    "features": {
+      "type": "object",
+      "description": "Activer/désactiver les fonctionnalités",
+      "properties": {
+        "physicsGun": {
+          "type": "boolean"
+        },
+        "gravityGun": {
+          "type": "boolean"
+        },
+        "weldTool": {
+          "type": "boolean"
+        },
+        "ropeTool": {
+          "type": "boolean"
+        },
+        "thruster": {
+          "type": "boolean"
+        },
+        "vehicleSpawn": {
+          "type": "boolean"
+        },
+        "effectZones": {
+          "type": "boolean"
+        },
+        "propertySystem": {
+          "type": "boolean"
+        },
+        "furniturePlacement": {
+          "type": "boolean"
+        },
+        "troxtBrain": {
+          "type": "boolean"
+        },
+        "troxtThirdEye": {
+          "type": "boolean"
+        },
+        "devConsole": {
+          "type": "boolean"
+        },
+        "builder": {
+          "type": "boolean"
+        },
+        "weatherSystem": {
+          "type": "boolean"
+        },
+        "dayCycle": {
+          "type": "boolean"
+        },
+        "economySystem": {
+          "type": "boolean"
+        },
+        "inventorySystem": {
+          "type": "boolean"
+        },
+        "lawSystem": {
+          "type": "boolean"
+        },
+        "jobSystem": {
+          "type": "boolean"
+        },
+        "factionSystem": {
+          "type": "boolean"
+        }
+      }
+    },
+    "troxt": {
+      "type": "object",
+      "properties": {
+        "brain": {
+          "type": "object",
+          "properties": {
+            "enabled": {
+              "type": "boolean"
+            },
+            "maxRequestsPerMin": {
+              "type": "integer"
+            },
+            "timeoutMs": {
+              "type": "integer"
+            },
+            "agents": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "thirdEye": {
+          "type": "object",
+          "properties": {
+            "enabled": {
+              "type": "boolean"
+            },
+            "pollIntervalMs": {
+              "type": "integer",
+              "minimum": 100
+            },
+            "alertLevels": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "autoCorrect": {
+              "type": "boolean"
+            },
+            "scoreThreshold": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 100
+            },
+            "securityThreshold": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 100
+            }
+          }
+        }
+      }
+    },
+    "economy": {
+      "type": "object",
+      "properties": {
+        "currency": {
+          "type": "string"
+        },
+        "startingCash": {
+          "type": "number",
+          "minimum": 0
+        },
+        "startingBank": {
+          "type": "number",
+          "minimum": 0
+        },
+        "taxRate": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "salaryIntervalMs": {
+          "type": "integer",
+          "minimum": 60000
+        },
+        "atm_limit_daily": {
+          "type": "number",
+          "minimum": 0
+        },
+        "transfer_fee": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "property_tax_rate": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        }
+      }
+    },
+    "security": {
+      "type": "object",
+      "properties": {
+        "rateLimiting": {
+          "type": "boolean"
+        },
+        "maxRequestsPerMin": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "banOnCheat": {
+          "type": "boolean"
+        },
+        "logSuspiciousActions": {
+          "type": "boolean"
+        },
+        "allowedOrigins": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "format": "uri"
+          }
+        },
+        "jwtEnabled": {
+          "type": "boolean"
+        },
+        "jwtSecret": {
+          "type": "string",
+          "minLength": 16
+        },
+        "adminIPs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "performance": {
+      "type": "object",
+      "properties": {
+        "lodEnabled": {
+          "type": "boolean"
+        },
+        "lodDistances": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 2
+        },
+        "maxShadowDistance": {
+          "type": "number",
+          "minimum": 0
+        },
+        "particleLimit": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "effectLimit": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "frustumCulling": {
+          "type": "boolean"
+        },
+        "instancedMeshes": {
+          "type": "boolean"
+        },
+        "textureCompression": {
+          "type": "boolean"
+        },
+        "targetFPS": {
+          "type": "integer",
+          "minimum": 10,
+          "maximum": 120
+        },
+        "minFPS": {
+          "type": "integer",
+          "minimum": 10,
+          "maximum": 60
+        }
+      }
+    },
+    "categories": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "label",
+          "icon",
+          "enabled"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          },
+          "icon": {
+            "type": "string"
+          },
+          "enabled": {
+            "type": "boolean"
+          },
+          "maxSpawn": {
+            "type": "integer",
+            "minimum": 0
+          }
+        }
+      }
+    },
+    "ui": {
+      "type": "object",
+      "properties": {
+        "defaultTheme": {
+          "type": "string",
+          "enum": [
+            "dark",
+            "light",
+            "system"
+          ]
+        },
+        "accentColor": {
+          "type": "string",
+          "pattern": "^#[0-9a-fA-F]{6}$"
+        },
+        "animationsEnabled": {
+          "type": "boolean"
+        },
+        "hudEnabled": {
+          "type": "boolean"
+        },
+        "devConsoleKey": {
+          "type": "string"
+        },
+        "builderKey": {
+          "type": "string"
+        },
+        "chatKey": {
+          "type": "string"
+        },
+        "language": {
+          "type": "string"
+        }
+      }
+    },
+    "audio": {
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "masterVolume": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "sfxVolume": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "musicVolume": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "spatialAudio": {
+          "type": "boolean"
+        },
+        "maxAudioSources": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    }
+  }
+}

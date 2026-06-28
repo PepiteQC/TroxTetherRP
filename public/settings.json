@@ -1,0 +1,492 @@
+{
+  "$schema": "./settings.schema.json",
+  "server": {
+    "name": "TroxT City RP — EtherWorld V5",
+    "version": "5.0.0",
+    "environment": "development",
+    "port": 5000,
+    "tickRate": 20,
+    "maxEntities": 2000,
+    "sandbox": true,
+    "debug": false,
+    "locale": "fr-CA",
+    "timezone": "America/Montreal",
+    "build": "green"
+  },
+  "world": {
+    "name": "TroxT City",
+    "gravity": {
+      "x": 0,
+      "y": -9.81,
+      "z": 0
+    },
+    "bounds": {
+      "min": [
+        -1000,
+        -100,
+        -1000
+      ],
+      "max": [
+        1000,
+        500,
+        1000
+      ]
+    },
+    "defaultSpawn": {
+      "x": 0,
+      "y": 2,
+      "z": 0
+    },
+    "autosaveIntervalMs": 60000,
+    "worldFile": "world.json",
+    "timeOfDay": 12.0,
+    "timeCycleDurationMs": 1440000,
+    "weather": "clear",
+    "allowedWeathers": [
+      "clear",
+      "rain",
+      "snow",
+      "fog",
+      "storm"
+    ],
+    "sectors": [
+      "downtown",
+      "industrial",
+      "rural",
+      "forest",
+      "highway",
+      "port",
+      "airport",
+      "prison",
+      "suburban"
+    ]
+  },
+  "physics": {
+    "engine": "cannon-es",
+    "fixedStep": 0.01667,
+    "maxSubSteps": 3,
+    "solverIterations": 10,
+    "broadphase": "SAP",
+    "allowSleep": true,
+    "sleepSpeedLimit": 0.1,
+    "sleepTimeLimit": 1.0,
+    "defaultFriction": 0.4,
+    "defaultRestitution": 0.2,
+    "defaultLinearDamping": 0.1,
+    "defaultAngularDamping": 0.1,
+    "worldBoundsEnforced": true,
+    "outOfBoundsY": -200
+  },
+  "limits": {
+    "maxPropsPerPlayer": 150,
+    "maxPropMass": 5000,
+    "maxRopeLength": 50,
+    "maxWeldsPerProp": 8,
+    "maxFurniturePerHouse": {
+      "poor": 40,
+      "modest": 75,
+      "townhouse": 130,
+      "family": 200,
+      "country": 180,
+      "upper": 350,
+      "luxury": 500,
+      "mansion": 700
+    },
+    "maxVehiclesPerPlayer": 3,
+    "maxPropertiesPerPlayer": 5,
+    "maxInventorySlots": 100,
+    "maxChatMessageLength": 300,
+    "maxPlayerNameLength": 20,
+    "maxBrainRequestsPerMin": 60
+  },
+  "websocket": {
+    "path": "/ws",
+    "heartbeatIntervalMs": 15000,
+    "broadcastRateMs": 100,
+    "maxConnections": 200,
+    "compression": true,
+    "pingTimeoutMs": 30000,
+    "maxMessageSizeKb": 512
+  },
+  "logging": {
+    "label": "TroxTAudit",
+    "level": "info",
+    "toFile": true,
+    "dir": "./logs",
+    "rotateDaily": true,
+    "maxFileSizeMb": 20,
+    "maxFiles": 14,
+    "format": "json",
+    "includeTimestamp": true,
+    "levels": [
+      "debug",
+      "info",
+      "warning",
+      "error",
+      "critical"
+    ]
+  },
+  "database": {
+    "type": "json",
+    "file": "server/data/etherprism_db.json",
+    "autoSeed": false,
+    "seedOnEmpty": true,
+    "flushIntervalMs": 5000,
+    "tables": [
+      "players",
+      "vehicles",
+      "properties",
+      "houses",
+      "shops",
+      "jobs",
+      "inventory",
+      "factions",
+      "bank_accounts",
+      "warrants",
+      "incidents",
+      "licenses",
+      "phone_contacts",
+      "phone_messages",
+      "impound",
+      "invoices",
+      "furniture_placements",
+      "transactions"
+    ]
+  },
+  "snapshots": {
+    "dir": "server/data/snapshots",
+    "maxSnapshots": 10,
+    "autoSave": true,
+    "autoSaveIntervalMs": 60000,
+    "onShutdown": true,
+    "format": "json"
+  },
+  "features": {
+    "physicsGun": true,
+    "gravityGun": true,
+    "weldTool": true,
+    "ropeTool": true,
+    "thruster": true,
+    "vehicleSpawn": true,
+    "effectZones": true,
+    "propertySystem": true,
+    "furniturePlacement": true,
+    "troxtBrain": true,
+    "troxtThirdEye": true,
+    "devConsole": true,
+    "builder": true,
+    "weatherSystem": true,
+    "dayCycle": true,
+    "economySystem": true,
+    "inventorySystem": true,
+    "lawSystem": true,
+    "jobSystem": true,
+    "factionSystem": true
+  },
+  "troxt": {
+    "brain": {
+      "enabled": true,
+      "maxRequestsPerMin": 60,
+      "timeoutMs": 15000,
+      "agents": [
+        "ether-forge",
+        "ether-lens",
+        "ether-prism",
+        "ether-weave",
+        "forge-factory",
+        "ether-guard",
+        "ether-ui",
+        "ether-sim"
+      ]
+    },
+    "thirdEye": {
+      "enabled": true,
+      "pollIntervalMs": 500,
+      "alertLevels": [
+        "GREEN",
+        "BLUE",
+        "YELLOW",
+        "ORANGE",
+        "RED",
+        "BLACK"
+      ],
+      "autoCorrect": false,
+      "scoreThreshold": 70,
+      "securityThreshold": 65
+    },
+    "memory": {
+      "maxDecisions": 100,
+      "maxPlans": 50,
+      "persistHistory": false
+    }
+  },
+  "economy": {
+    "currency": "CAD",
+    "startingCash": 10000,
+    "startingBank": 25000,
+    "taxRate": 0.15,
+    "salaryIntervalMs": 300000,
+    "atm_limit_daily": 5000,
+    "transfer_fee": 0.005,
+    "property_tax_rate": 0.01
+  },
+  "jobs": {
+    "payIntervalMs": 300000,
+    "maxOnDutyBonus": 1.25,
+    "dutyCooldownMs": 30000,
+    "available": [
+      "police",
+      "ambulance",
+      "fire",
+      "mechanic",
+      "taxi",
+      "trucker",
+      "farmer",
+      "logger",
+      "miner",
+      "construction",
+      "store",
+      "journalist",
+      "corrections",
+      "government",
+      "electric",
+      "unemployed"
+    ]
+  },
+  "vehicles": {
+    "fuelConsumptionRate": 0.08,
+    "repairCostPerPoint": 12,
+    "impoundFeeBase": 250,
+    "maxSpeed_kmh": 350,
+    "maxSpawnedPerServer": 80,
+    "despawnRadiusM": 200,
+    "engineStartDelayMs": 800
+  },
+  "property": {
+    "enabled": true,
+    "maxPerPlayer": 5,
+    "keyDuplicateCost": 150,
+    "guestAccessDurationH": 24,
+    "furnitureSaveAuto": true,
+    "visitCooldownMs": 5000,
+    "listingFeePct": 0.02,
+    "rentPaymentIntervalMs": 2592000000
+  },
+  "security": {
+    "rateLimiting": true,
+    "maxRequestsPerMin": 120,
+    "banOnCheat": false,
+    "logSuspiciousActions": true,
+    "allowedOrigins": [
+      "http://localhost:3000",
+      "http://localhost:5000",
+      "http://192.168.1.193:3000"
+    ],
+    "jwtEnabled": false,
+    "jwtSecret": "CHANGE_ME_IN_PRODUCTION",
+    "adminIPs": [
+      "127.0.0.1",
+      "192.168.1.1"
+    ]
+  },
+  "performance": {
+    "lodEnabled": true,
+    "lodDistances": [
+      20,
+      50,
+      100,
+      200
+    ],
+    "maxShadowDistance": 80,
+    "particleLimit": 5000,
+    "effectLimit": 50,
+    "frustumCulling": true,
+    "instancedMeshes": true,
+    "textureCompression": false,
+    "targetFPS": 60,
+    "minFPS": 30
+  },
+  "categories": [
+    {
+      "id": "props",
+      "label": "Props",
+      "icon": "📦",
+      "enabled": true,
+      "maxSpawn": 50
+    },
+    {
+      "id": "vehicules",
+      "label": "Véhicules",
+      "icon": "🚗",
+      "enabled": true,
+      "maxSpawn": 10
+    },
+    {
+      "id": "entities",
+      "label": "Entities",
+      "icon": "🤖",
+      "enabled": true,
+      "maxSpawn": 30
+    },
+    {
+      "id": "effets",
+      "label": "Effets",
+      "icon": "⚡",
+      "enabled": true,
+      "maxSpawn": 20
+    },
+    {
+      "id": "tools",
+      "label": "Tools",
+      "icon": "🔧",
+      "enabled": true,
+      "maxSpawn": 5
+    },
+    {
+      "id": "terrain",
+      "label": "Terrain",
+      "icon": "🌍",
+      "enabled": true,
+      "maxSpawn": 100
+    },
+    {
+      "id": "weapons",
+      "label": "Weapons",
+      "icon": "💣",
+      "enabled": false,
+      "maxSpawn": 0
+    },
+    {
+      "id": "specials",
+      "label": "Specials",
+      "icon": "✨",
+      "enabled": true,
+      "maxSpawn": 10
+    },
+    {
+      "id": "furniture",
+      "label": "Mobilier",
+      "icon": "🛋️",
+      "enabled": true,
+      "maxSpawn": 200
+    },
+    {
+      "id": "nature",
+      "label": "Nature",
+      "icon": "🌲",
+      "enabled": true,
+      "maxSpawn": 150
+    },
+    {
+      "id": "urban",
+      "label": "Urbain",
+      "icon": "🏙️",
+      "enabled": true,
+      "maxSpawn": 80
+    },
+    {
+      "id": "industrial",
+      "label": "Industriel",
+      "icon": "🏭",
+      "enabled": true,
+      "maxSpawn": 60
+    },
+    {
+      "id": "emergency",
+      "label": "Urgences",
+      "icon": "🚨",
+      "enabled": true,
+      "maxSpawn": 15
+    },
+    {
+      "id": "criminal",
+      "label": "Criminel",
+      "icon": "🔫",
+      "enabled": false,
+      "maxSpawn": 0
+    }
+  ],
+  "ui": {
+    "defaultTheme": "dark",
+    "accentColor": "#7b6fff",
+    "fontFamily": "system-ui",
+    "monoFont": "JetBrains Mono",
+    "animationsEnabled": true,
+    "hudEnabled": true,
+    "devConsoleKey": "F2",
+    "builderKey": "B",
+    "chatKey": "T",
+    "escapeAction": "close_menu",
+    "language": "fr-CA"
+  },
+  "map": {
+    "enabled": true,
+    "style": "satellite",
+    "defaultZoom": 1.0,
+    "showPlayers": true,
+    "showProperties": true,
+    "showVehicles": false,
+    "blipTypes": [
+      "player",
+      "property_for_sale",
+      "property_sold",
+      "police",
+      "ems",
+      "fire",
+      "gas_station",
+      "mechanic",
+      "bank",
+      "atm",
+      "casino",
+      "prison"
+    ]
+  },
+  "notifications": {
+    "enabled": true,
+    "maxVisible": 4,
+    "durationMs": 3500,
+    "positionX": "right",
+    "positionY": "top",
+    "types": {
+      "info": {
+        "color": "#4488ff",
+        "icon": "ℹ️"
+      },
+      "success": {
+        "color": "#44ff88",
+        "icon": "✅"
+      },
+      "warning": {
+        "color": "#ffaa44",
+        "icon": "⚠️"
+      },
+      "error": {
+        "color": "#ff4444",
+        "icon": "❌"
+      },
+      "admin": {
+        "color": "#7b6fff",
+        "icon": "🛡️"
+      }
+    }
+  },
+  "audio": {
+    "enabled": true,
+    "masterVolume": 0.7,
+    "sfxVolume": 0.8,
+    "musicVolume": 0.3,
+    "spatialAudio": true,
+    "maxAudioSources": 32
+  },
+  "dev": {
+    "hotReload": true,
+    "verbosePhysics": false,
+    "showBoundingBoxes": false,
+    "showNavmesh": false,
+    "showFPS": true,
+    "showPing": true,
+    "consoleEnabled": true,
+    "brainDebug": false,
+    "thirdEyeDebug": false
+  }
+}
