@@ -1,0 +1,1020 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WoW Epic Buff Auras</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body { overflow:hidden; background:#000; font-family:'Segoe UI',sans-serif; }
+canvas { display:block; }
+#ui {
+    position:fixed; top:0; left:0; right:0; bottom:0; pointer-events:none;
+    z-index:100;
+}
+#buff-bar {
+    position:fixed; bottom:28px; left:50%; transform:translateX(-50%);
+    display:flex; gap:10px; pointer-events:all;
+}
+.buff-btn {
+    display:flex; flex-direction:column; align-items:center; gap:4px;
+    background:rgba(0,0,0,0.75); border:1px solid rgba(255,255,255,0.15);
+    border-radius:10px; padding:8px 12px; cursor:pointer;
+    transition:all 0.2s; min-width:80px; color:#ccc;
+}
+.buff-btn:hover { border-color:rgba(255,255,255,0.4); background:rgba(255,255,255,0.08); }
+.buff-btn.active { border-color:var(--c); background:rgba(var(--cr),var(--cg),var(--cb),0.18); color:#fff; }
+.buff-icon {
+    width:42px; height:42px; border-radius:8px; display:flex;
+    align-items:center; justify-content:center; font-size:22px;
+    border:1px solid rgba(255,255,255,0.1);
+}
+.buff-name { font-size:10px; text-transform:uppercase; letter-spacing:1px; }
+#active-label {
+    position:fixed; top:24px; left:50%; transform:translateX(-50%);
+    font-size:13px; color:rgba(255,255,255,0.35); letter-spacing:2px; text-transform:uppercase;
+    pointer-events:none;
+}
+</style>
+</head>
+<body>
+<div id="ui">
+    <div id="active-label">Choisissez un buff ↓</div>
+    <div id="buff-bar">
+        <div class="buff-btn" data-buff="divine" style="--c:#ffe066;--cr:255;--cg:224;--cb:102">
+            <div class="buff-icon" style="background:linear-gradient(135deg,#332a00,#665500)">✦</div>
+            <span class="buff-name">Bouclier Divin</span>
+        </div>
+        <div class="buff-btn" data-buff="void" style="--c:#b06fff;--cr:176;--cg:111;--cb:255">
+            <div class="buff-icon" style="background:linear-gradient(135deg,#1a0033,#3a0066)">◈</div>
+            <span class="buff-name">Vide Éternel</span>
+        </div>
+        <div class="buff-btn" data-buff="blood" style="--c:#ff3333;--cr:255;--cg:51;--cb:51">
+            <div class="buff-icon" style="background:linear-gradient(135deg,#330000,#660000)">♦</div>
+            <span class="buff-name">Rage de Sang</span>
+        </div>
+        <div class="buff-btn" data-buff="frost" style="--c:#00d4ff;--cr:0;--cg:212;--cb:255">
+            <div class="buff-icon" style="background:linear-gradient(135deg,#001a2e,#003355)">❄</div>
+            <span class="buff-name">Nova de Givre</span>
+        </div>
+        <div class="buff-btn" data-buff="nature" style="--c:#44ff88;--cr:68;--cg:255;--cb:136">
+            <div class="buff-icon" style="background:linear-gradient(135deg,#001a0a,#003318)">✿</div>
+            <span class="buff-name">Âme Ancienne</span>
+        </div>
+        <div class="buff-btn" data-buff="chaos" style="--c:#ff9900;--cr:255;--cg:153;--cb:0">
+            <div class="buff-icon" style="background:linear-gradient(135deg,#1a0a00,#331500)">☯</div>
+            <span class="buff-name">Chaos Primordial</span>
+        </div>
+    </div>
+</div>
+
+<script type="importmap">
+{
+    "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+    }
+}
+</script>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+// ─── SCENE ───────────────────────────────────────────────────
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x050508);
+scene.fog = new THREE.FogExp2(0x050508, 0.06);
+
+const camera = new THREE.PerspectiveCamera(50, innerWidth/innerHeight, 0.1, 200);
+camera.position.set(0, 2.2, 6.5);
+
+const renderer = new THREE.WebGLRenderer({ antialias:true, powerPreference:'high-performance' });
+renderer.setSize(innerWidth, innerHeight);
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.4;
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+document.body.appendChild(renderer.domElement);
+
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true; controls.dampingFactor = 0.04;
+controls.target.set(0, 1.6, 0);
+controls.minDistance = 3; controls.maxDistance = 14;
+controls.minPolarAngle = 0.2; controls.maxPolarAngle = Math.PI * 0.58;
+
+// ─── LIGHTING ─────────────────────────────────────────────────
+const ambient = new THREE.AmbientLight(0x111122, 1.5);
+scene.add(ambient);
+
+const sun = new THREE.DirectionalLight(0xffffff, 1.2);
+sun.position.set(5, 10, 4);
+sun.castShadow = true;
+sun.shadow.mapSize.set(2048, 2048);
+sun.shadow.camera.near = 0.1; sun.shadow.camera.far = 40;
+sun.shadow.camera.left = -6; sun.shadow.camera.right = 6;
+sun.shadow.camera.top = 8; sun.shadow.camera.bottom = -4;
+sun.shadow.bias = -0.001;
+scene.add(sun);
+
+const rimL = new THREE.PointLight(0x4466ff, 2, 12);
+rimL.position.set(-3, 4, -3);
+scene.add(rimL);
+
+// Dynamic buff light (changes color with buff)
+const buffLight = new THREE.PointLight(0xffffff, 0, 8);
+buffLight.position.set(0, 2, 1.5);
+scene.add(buffLight);
+
+// ─── GROUND ───────────────────────────────────────────────────
+const groundMat = new THREE.MeshStandardMaterial({ color:0x111118, roughness:0.9, metalness:0.2 });
+const ground = new THREE.Mesh(new THREE.CircleGeometry(14, 64), groundMat);
+ground.rotation.x = -Math.PI/2; ground.receiveShadow = true;
+scene.add(ground);
+
+// Reflective platform
+const platMat = new THREE.MeshStandardMaterial({ color:0x181824, roughness:0.3, metalness:0.7 });
+const platform = new THREE.Mesh(new THREE.CylinderGeometry(1.8, 2.0, 0.12, 64), platMat);
+platform.position.y = 0.01; platform.receiveShadow = true; platform.castShadow = true;
+scene.add(platform);
+
+// Platform rune ring (ring geometry)
+const runeRingGeo = new THREE.TorusGeometry(1.6, 0.025, 8, 128);
+const runeRingMat = new THREE.MeshStandardMaterial({ color:0x334466, emissive:0x112244, emissiveIntensity:1, roughness:0.2 });
+const runeRing = new THREE.Mesh(runeRingGeo, runeRingMat);
+runeRing.rotation.x = -Math.PI/2; runeRing.position.y = 0.08;
+scene.add(runeRing);
+
+// Grid floor lines
+const gridHelper = new THREE.GridHelper(28, 28, 0x111133, 0x0a0a22);
+gridHelper.position.y = 0.001;
+scene.add(gridHelper);
+
+// ─── CHARACTER (GTA-style humanoid silhouette) ─────────────────
+const charGroup = new THREE.Group();
+scene.add(charGroup);
+
+function bodyMat(color, roughness = 0.5, metalness = 0.3) {
+    return new THREE.MeshStandardMaterial({ color, roughness, metalness });
+}
+
+// Body parts
+const parts = [];
+
+function addPart(geo, mat, px, py, pz, sx=1, sy=1, sz=1) {
+    const m = new THREE.Mesh(geo, mat);
+    m.position.set(px, py, pz);
+    m.scale.set(sx, sy, sz);
+    m.castShadow = true; m.receiveShadow = true;
+    charGroup.add(m);
+    parts.push(m);
+    return m;
+}
+
+// Torso
+addPart(new THREE.BoxGeometry(0.7, 0.85, 0.38), bodyMat(0x1a1a2a, 0.7, 0.2), 0, 1.55, 0);
+// Shoulders (epaulettes)
+addPart(new THREE.BoxGeometry(0.28, 0.28, 0.3), bodyMat(0x222235, 0.6, 0.4), -0.52, 1.88, 0);
+addPart(new THREE.BoxGeometry(0.28, 0.28, 0.3), bodyMat(0x222235, 0.6, 0.4),  0.52, 1.88, 0);
+// Upper arms
+addPart(new THREE.CylinderGeometry(0.12, 0.10, 0.52, 12), bodyMat(0x161622, 0.7, 0.2), -0.55, 1.52, 0);
+addPart(new THREE.CylinderGeometry(0.12, 0.10, 0.52, 12), bodyMat(0x161622, 0.7, 0.2),  0.55, 1.52, 0);
+// Lower arms
+addPart(new THREE.CylinderGeometry(0.09, 0.07, 0.46, 10), bodyMat(0x131320, 0.8, 0.15), -0.55, 1.15, 0);
+addPart(new THREE.CylinderGeometry(0.09, 0.07, 0.46, 10), bodyMat(0x131320, 0.8, 0.15),  0.55, 1.15, 0);
+// Hands
+addPart(new THREE.SphereGeometry(0.09, 10, 8), bodyMat(0x1a1a1a, 0.9, 0.1), -0.55, 0.88, 0);
+addPart(new THREE.SphereGeometry(0.09, 10, 8), bodyMat(0x1a1a1a, 0.9, 0.1),  0.55, 0.88, 0);
+// Belt
+addPart(new THREE.BoxGeometry(0.72, 0.12, 0.40), bodyMat(0x2a2015, 0.5, 0.5), 0, 1.13, 0);
+// Thighs
+addPart(new THREE.CylinderGeometry(0.16, 0.14, 0.52, 12), bodyMat(0x181828, 0.7, 0.2), -0.2, 0.82, 0);
+addPart(new THREE.CylinderGeometry(0.16, 0.14, 0.52, 12), bodyMat(0x181828, 0.7, 0.2),  0.2, 0.82, 0);
+// Shins
+addPart(new THREE.CylinderGeometry(0.13, 0.09, 0.52, 10), bodyMat(0x141420, 0.8, 0.2), -0.2, 0.44, 0);
+addPart(new THREE.CylinderGeometry(0.13, 0.09, 0.52, 10), bodyMat(0x141420, 0.8, 0.2),  0.2, 0.44, 0);
+// Boots
+addPart(new THREE.BoxGeometry(0.22, 0.16, 0.36), bodyMat(0x0e0e14, 0.9, 0.3), -0.2, 0.09, 0.06);
+addPart(new THREE.BoxGeometry(0.22, 0.16, 0.36), bodyMat(0x0e0e14, 0.9, 0.3),  0.2, 0.09, 0.06);
+// Neck
+addPart(new THREE.CylinderGeometry(0.1, 0.12, 0.18, 10), bodyMat(0x1a1020, 0.8, 0.1), 0, 2.04, 0);
+// Head
+addPart(new THREE.BoxGeometry(0.48, 0.54, 0.44), bodyMat(0x181822, 0.6, 0.2), 0, 2.41, 0);
+// Visor/helmet front
+addPart(new THREE.BoxGeometry(0.36, 0.14, 0.08), bodyMat(0x080810, 0.2, 0.9), 0, 2.44, 0.22);
+// Helmet top ridge
+addPart(new THREE.BoxGeometry(0.08, 0.16, 0.44), bodyMat(0x222235, 0.5, 0.5), 0, 2.7, 0);
+
+// Weapon (sword)
+const sword = new THREE.Group();
+// Blade
+const bladeM = new THREE.Mesh(new THREE.BoxGeometry(0.04, 1.1, 0.12), bodyMat(0x8899bb, 0.1, 0.9));
+bladeM.position.y = 0.55;
+sword.add(bladeM);
+// Guard
+const guardM = new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.06, 0.08), bodyMat(0x665522, 0.4, 0.7));
+sword.add(guardM);
+// Handle
+const handleM = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.025, 0.32, 8), bodyMat(0x331100, 0.8, 0.2));
+handleM.position.y = -0.2;
+sword.add(handleM);
+sword.position.set(0.88, 1.1, 0.1);
+sword.rotation.z = 0.15;
+charGroup.add(sword);
+
+charGroup.position.y = 0.07;
+
+// ─── AURA SYSTEM ──────────────────────────────────────────────
+
+const auraGroup = new THREE.Group();
+charGroup.add(auraGroup);
+
+let activeBuff = null;
+let auraObjects = [];
+let particles = [];
+let time = 0;
+
+// BUFF DEFINITIONS
+const BUFFS = {
+    divine: {
+        name: 'Bouclier Divin — Protection Divine',
+        color: new THREE.Color(1.0, 0.88, 0.2),
+        color2: new THREE.Color(1.0, 1.0, 0.8),
+        lightColor: 0xffe066,
+        build: buildDivineShield
+    },
+    void: {
+        name: 'Vide Éternel — Forme de Vide',
+        color: new THREE.Color(0.55, 0.22, 1.0),
+        color2: new THREE.Color(0.8, 0.4, 1.0),
+        lightColor: 0xaa44ff,
+        build: buildVoidAura
+    },
+    blood: {
+        name: 'Rage de Sang — Présence de Mort',
+        color: new THREE.Color(1.0, 0.08, 0.08),
+        color2: new THREE.Color(1.0, 0.4, 0.0),
+        lightColor: 0xff2200,
+        build: buildBloodAura
+    },
+    frost: {
+        name: 'Nova de Givre — Présence de Glace',
+        color: new THREE.Color(0.0, 0.82, 1.0),
+        color2: new THREE.Color(0.6, 0.96, 1.0),
+        lightColor: 0x00ccff,
+        build: buildFrostAura
+    },
+    nature: {
+        name: 'Âme Ancienne — Forme Stellaire',
+        color: new THREE.Color(0.1, 1.0, 0.4),
+        color2: new THREE.Color(0.6, 1.0, 0.2),
+        lightColor: 0x22ff66,
+        build: buildNatureAura
+    },
+    chaos: {
+        name: 'Chaos Primordial — Métamorphose',
+        color: new THREE.Color(1.0, 0.5, 0.0),
+        color2: new THREE.Color(1.0, 0.9, 0.0),
+        lightColor: 0xff8800,
+        build: buildChaosAura
+    }
+};
+
+function clearAuras() {
+    auraObjects.forEach(obj => {
+        if (obj.geometry) obj.geometry.dispose();
+        if (obj.material) obj.material.dispose();
+        auraGroup.remove(obj);
+    });
+    auraObjects = [];
+    particles = [];
+    buffLight.intensity = 0;
+}
+
+// ── DIVINE SHIELD ──────────────────────────────────────────────
+function buildDivineShield(buff) {
+    const c = buff.color;
+
+    // Outer sphere shell
+    const outerGeo = new THREE.SphereGeometry(1.55, 64, 32);
+    const outerMat = new THREE.MeshStandardMaterial({
+        color: c, emissive: c, emissiveIntensity: 0.3,
+        transparent: true, opacity: 0.06, side: THREE.DoubleSide,
+        roughness: 0, metalness: 0.8, wireframe: false
+    });
+    const outerSphere = new THREE.Mesh(outerGeo, outerMat);
+    outerSphere.position.y = 1.5;
+    auraGroup.add(outerSphere); auraObjects.push(outerSphere);
+
+    // Hexagonal shield pattern (wireframe inner)
+    const hexGeo = new THREE.IcosahedronGeometry(1.42, 2);
+    const hexMat = new THREE.MeshBasicMaterial({
+        color: buff.color2, transparent: true, opacity: 0.22, wireframe: true
+    });
+    const hexShield = new THREE.Mesh(hexGeo, hexMat);
+    hexShield.position.y = 1.5;
+    auraGroup.add(hexShield); auraObjects.push(hexShield);
+
+    // Inner glow core
+    const coreGeo = new THREE.SphereGeometry(1.3, 32, 16);
+    const coreMat = new THREE.MeshStandardMaterial({
+        color: c, emissive: c, emissiveIntensity: 1.8,
+        transparent: true, opacity: 0.04, side: THREE.BackSide
+    });
+    const core = new THREE.Mesh(coreGeo, coreMat);
+    core.position.y = 1.5;
+    auraGroup.add(core); auraObjects.push(core);
+
+    // Holy rings (horizontal)
+    for (let i = 0; i < 3; i++) {
+        const rGeo = new THREE.TorusGeometry(1.52 - i*0.12, 0.018 + i*0.004, 8, 128);
+        const rMat = new THREE.MeshStandardMaterial({
+            color: c, emissive: c, emissiveIntensity: 3.0 - i*0.5,
+            transparent: true, opacity: 0.9 - i*0.2, roughness:0, metalness:1
+        });
+        const ring = new THREE.Mesh(rGeo, rMat);
+        ring.position.y = 1.5 + (i-1) * 0.45;
+        ring.userData = { baseY: ring.position.y, i, type:'divineRing' };
+        auraGroup.add(ring); auraObjects.push(ring);
+    }
+
+    // Vertical rotating ring
+    const vRGeo = new THREE.TorusGeometry(1.52, 0.015, 8, 128);
+    const vRMat = new THREE.MeshStandardMaterial({
+        color: buff.color2, emissive: buff.color2, emissiveIntensity: 4,
+        transparent: true, opacity: 0.85, roughness:0, metalness:1
+    });
+    const vRing = new THREE.Mesh(vRGeo, vRMat);
+    vRing.position.y = 1.5; vRing.userData.type = 'vRing';
+    auraGroup.add(vRing); auraObjects.push(vRing);
+
+    const vRing2 = vRing.clone();
+    vRing2.rotation.y = Math.PI/2;
+    vRing2.userData.type = 'vRing2';
+    auraGroup.add(vRing2); auraObjects.push(vRing2);
+
+    // Holy light columns (rising particles)
+    for (let i = 0; i < 32; i++) {
+        const angle = (i/32)*Math.PI*2;
+        particles.push({
+            type:'divine', angle,
+            speed: 0.3 + Math.random()*0.4,
+            r: 0.8 + Math.random()*0.6,
+            y: Math.random()*3,
+            size: 0.015 + Math.random()*0.02,
+            alpha: 0.5 + Math.random()*0.5
+        });
+    }
+
+    // Runes circle on ground
+    for (let i = 0; i < 8; i++) {
+        const angle = (i/8)*Math.PI*2;
+        const rGeo2 = new THREE.BoxGeometry(0.06, 0.005, 0.18);
+        const rMat2 = new THREE.MeshStandardMaterial({
+            color: c, emissive: c, emissiveIntensity: 4,
+            transparent: true, opacity: 0.9
+        });
+        const rune = new THREE.Mesh(rGeo2, rMat2);
+        rune.position.set(Math.cos(angle)*1.3, 0.01, Math.sin(angle)*1.3);
+        rune.rotation.y = angle;
+        rune.position.y -= charGroup.position.y;
+        auraGroup.add(rune); auraObjects.push(rune);
+    }
+
+    outerSphere.userData.type = 'divineOuter';
+    hexShield.userData.type = 'divineHex';
+    core.userData.type = 'divineCore';
+}
+
+// ── VOID AURA ──────────────────────────────────────────────────
+function buildVoidAura(buff) {
+    const c = buff.color;
+
+    // Void sphere — dark swirling
+    const voidGeo = new THREE.SphereGeometry(1.4, 64, 32);
+    const voidMat = new THREE.MeshStandardMaterial({
+        color: 0x110022, emissive: c, emissiveIntensity: 0.15,
+        transparent: true, opacity: 0.18, side: THREE.DoubleSide, roughness:1
+    });
+    const voidSphere = new THREE.Mesh(voidGeo, voidMat);
+    voidSphere.position.y = 1.5;
+    voidSphere.userData.type = 'voidSphere';
+    auraGroup.add(voidSphere); auraObjects.push(voidSphere);
+
+    // Void tentacles (curved tubes around body)
+    for (let i = 0; i < 5; i++) {
+        const pts = [];
+        const startAngle = (i/5)*Math.PI*2;
+        for (let j = 0; j <= 20; j++) {
+            const t = j/20;
+            const a = startAngle + t*Math.PI*1.5;
+            const r = 0.5 + t*0.8;
+            const y = t*3.2 - 0.2;
+            pts.push(new THREE.Vector3(Math.cos(a)*r, y, Math.sin(a)*r));
+        }
+        const curve = new THREE.CatmullRomCurve3(pts);
+        const tGeo = new THREE.TubeGeometry(curve, 24, 0.025-i*0.002, 8, false);
+        const tMat = new THREE.MeshStandardMaterial({
+            color: c, emissive: c, emissiveIntensity: 2.5,
+            transparent: true, opacity: 0.75 - i*0.05, roughness:0
+        });
+        const tube = new THREE.Mesh(tGeo, tMat);
+        tube.userData = { type:'voidTube', baseAngle: startAngle, index: i };
+        auraGroup.add(tube); auraObjects.push(tube);
+    }
+
+    // Void eyes (floating orbs)
+    for (let i = 0; i < 6; i++) {
+        const angle = (i/6)*Math.PI*2;
+        const orbGeo = new THREE.SphereGeometry(0.07, 16, 12);
+        const orbMat = new THREE.MeshStandardMaterial({
+            color: buff.color2, emissive: buff.color2, emissiveIntensity: 6,
+            roughness:0, metalness:0
+        });
+        const orb = new THREE.Mesh(orbGeo, orbMat);
+        orb.position.set(Math.cos(angle)*1.1, 1.5+Math.sin(angle*1.3)*0.5, Math.sin(angle)*1.1);
+        orb.userData = { type:'voidOrb', baseAngle: angle, i };
+        auraGroup.add(orb); auraObjects.push(orb);
+    }
+
+    // Shadow mist particles
+    for (let i = 0; i < 60; i++) {
+        particles.push({
+            type:'void',
+            angle: Math.random()*Math.PI*2,
+            r: 0.3 + Math.random()*1.2,
+            y: Math.random()*3.5 - 0.2,
+            vy: (Math.random()-0.5)*0.015,
+            rotSpeed: (Math.random()-0.5)*0.04,
+            size: 0.04 + Math.random()*0.06,
+            alpha: 0.2 + Math.random()*0.4
+        });
+    }
+
+    // Ground void portal
+    const portalGeo = new THREE.TorusGeometry(1.2, 0.04, 8, 128);
+    const portalMat = new THREE.MeshStandardMaterial({
+        color: c, emissive: c, emissiveIntensity: 5,
+        transparent: true, opacity: 0.9
+    });
+    const portal = new THREE.Mesh(portalGeo, portalMat);
+    portal.rotation.x = -Math.PI/2;
+    portal.position.y = 0.02 - charGroup.position.y;
+    portal.userData.type = 'voidPortal';
+    auraGroup.add(portal); auraObjects.push(portal);
+
+    const portalInner = new THREE.Mesh(
+        new THREE.CircleGeometry(1.2, 64),
+        new THREE.MeshStandardMaterial({ color:0x0a0015, emissive:c, emissiveIntensity:0.5, transparent:true, opacity:0.5 })
+    );
+    portalInner.rotation.x = -Math.PI/2;
+    portalInner.position.y = 0.01 - charGroup.position.y;
+    auraGroup.add(portalInner); auraObjects.push(portalInner);
+}
+
+// ── BLOOD AURA ──────────────────────────────────────────────────
+function buildBloodAura(buff) {
+    const c = buff.color;
+
+    // Blood mist (multiple overlapping spheres)
+    for (let i = 0; i < 3; i++) {
+        const bGeo = new THREE.SphereGeometry(1.1 + i*0.18, 32, 16);
+        const bMat = new THREE.MeshStandardMaterial({
+            color: c, emissive: c, emissiveIntensity: 0.4 - i*0.1,
+            transparent: true, opacity: 0.05 + i*0.02, side: THREE.DoubleSide
+        });
+        const bSphere = new THREE.Mesh(bGeo, bMat);
+        bSphere.position.y = 1.5;
+        bSphere.userData = { type:'bloodMist', i };
+        auraGroup.add(bSphere); auraObjects.push(bSphere);
+    }
+
+    // Rotating blood rune rings
+    for (let i = 0; i < 4; i++) {
+        const angle = (i/4)*Math.PI*2;
+        const rGeo = new THREE.TorusGeometry(0.7 + i*0.22, 0.022, 8, 96);
+        const rMat = new THREE.MeshStandardMaterial({
+            color: c, emissive: c, emissiveIntensity: 4,
+            transparent: true, opacity: 0.9, roughness:0, metalness:0.8
+        });
+        const ring = new THREE.Mesh(rGeo, rMat);
+        ring.position.y = 1.5;
+        ring.rotation.set(Math.cos(angle)*0.8, angle, Math.sin(angle)*0.6);
+        ring.userData = { type:'bloodRing', baseAngle: angle, i };
+        auraGroup.add(ring); auraObjects.push(ring);
+    }
+
+    // Blood droplets falling upward (inverted gravity)
+    for (let i = 0; i < 50; i++) {
+        particles.push({
+            type:'blood',
+            angle: Math.random()*Math.PI*2,
+            r: 0.15 + Math.random()*1.3,
+            y: Math.random()*4,
+            vy: 0.008 + Math.random()*0.015,
+            size: 0.02 + Math.random()*0.04,
+            alpha: 0.6 + Math.random()*0.4
+        });
+    }
+
+    // Death knight runes on ground
+    const runeColors = [c, buff.color2];
+    for (let i = 0; i < 6; i++) {
+        const angle = (i/6)*Math.PI*2;
+        for (let j = 0; j < 3; j++) {
+            const rGeo2 = new THREE.BoxGeometry(0.05, 0.005, 0.12 + j*0.04);
+            const rMat2 = new THREE.MeshStandardMaterial({
+                color: runeColors[j%2], emissive: runeColors[j%2], emissiveIntensity: 5,
+                transparent: true, opacity: 0.9
+            });
+            const rune = new THREE.Mesh(rGeo2, rMat2);
+            const r = 0.6 + j*0.4;
+            rune.position.set(Math.cos(angle+j*0.2)*r, 0.01 - charGroup.position.y, Math.sin(angle+j*0.2)*r);
+            rune.rotation.y = angle;
+            auraGroup.add(rune); auraObjects.push(rune);
+        }
+    }
+
+    // Bone shard spikes
+    for (let i = 0; i < 8; i++) {
+        const angle = (i/8)*Math.PI*2;
+        const sGeo = new THREE.ConeGeometry(0.04, 0.45, 6);
+        const sMat = new THREE.MeshStandardMaterial({
+            color: 0xddccaa, emissive: c, emissiveIntensity: 0.8, roughness:0.3, metalness:0.6
+        });
+        const spike = new THREE.Mesh(sGeo, sMat);
+        const r = 1.1;
+        spike.position.set(Math.cos(angle)*r, 1.5 + Math.sin(angle*2)*0.3, Math.sin(angle)*r);
+        spike.lookAt(0, 1.5, 0);
+        spike.rotateX(-Math.PI/2);
+        spike.userData = { type:'bloodSpike', angle, baseY: spike.position.y };
+        auraGroup.add(spike); auraObjects.push(spike);
+    }
+}
+
+// ── FROST AURA ──────────────────────────────────────────────────
+function buildFrostAura(buff) {
+    const c = buff.color;
+
+    // Frost crystal shell (icosahedron)
+    for (let d = 0; d < 2; d++) {
+        const fGeo = new THREE.IcosahedronGeometry(1.3 + d*0.2, d);
+        const fMat = new THREE.MeshStandardMaterial({
+            color: buff.color2, emissive: c, emissiveIntensity: 0.6,
+            transparent: true, opacity: 0.08 + d*0.04,
+            side: THREE.DoubleSide, roughness: 0, metalness: 0.95, wireframe: d===0
+        });
+        const frost = new THREE.Mesh(fGeo, fMat);
+        frost.position.y = 1.5;
+        frost.userData = { type:'frostShell', d };
+        auraGroup.add(frost); auraObjects.push(frost);
+    }
+
+    // Ice shards orbiting
+    for (let i = 0; i < 12; i++) {
+        const angle = (i/12)*Math.PI*2;
+        const height = (i%3) * 0.7 + 0.8;
+        const shardGeo = new THREE.ConeGeometry(0.055 - (i%3)*0.01, 0.38, 6);
+        const shardMat = new THREE.MeshStandardMaterial({
+            color: buff.color2, emissive: c, emissiveIntensity: 2,
+            transparent: true, opacity: 0.88, roughness: 0, metalness: 0.95
+        });
+        const shard = new THREE.Mesh(shardGeo, shardMat);
+        const r = 1.0 + (i%3)*0.15;
+        shard.position.set(Math.cos(angle)*r, height, Math.sin(angle)*r);
+        shard.lookAt(0, height, 0); shard.rotateX(-Math.PI/2);
+        shard.userData = { type:'frostShard', angle, r, baseH: height, i };
+        auraGroup.add(shard); auraObjects.push(shard);
+    }
+
+    // Frost rings (horizontal + tilted)
+    for (let i = 0; i < 5; i++) {
+        const rGeo = new THREE.TorusGeometry(0.5 + i*0.22, 0.012, 6, 96);
+        const rMat = new THREE.MeshStandardMaterial({
+            color: c, emissive: c, emissiveIntensity: 5,
+            transparent: true, opacity: 0.7, roughness:0, metalness:1
+        });
+        const ring = new THREE.Mesh(rGeo, rMat);
+        ring.position.y = 1.5 + (i-2)*0.35;
+        ring.rotation.x = i * 0.3;
+        ring.userData = { type:'frostRing', i, baseY: ring.position.y };
+        auraGroup.add(ring); auraObjects.push(ring);
+    }
+
+    // Snow/ice particles
+    for (let i = 0; i < 80; i++) {
+        particles.push({
+            type:'frost',
+            angle: Math.random()*Math.PI*2,
+            r: 0.2 + Math.random()*1.5,
+            y: Math.random()*3.5,
+            vy: -(0.005 + Math.random()*0.012),
+            vAngle: (Math.random()-0.5)*0.02,
+            size: 0.008 + Math.random()*0.025,
+            alpha: 0.4 + Math.random()*0.6
+        });
+    }
+
+    // Ground frost hexagons
+    for (let i = 0; i < 3; i++) {
+        const hexGeo = new THREE.TorusGeometry(0.5 + i*0.4, 0.015, 6, 6);
+        const hexMat = new THREE.MeshStandardMaterial({
+            color: c, emissive: c, emissiveIntensity: 3,
+            transparent: true, opacity: 0.7
+        });
+        const hex = new THREE.Mesh(hexGeo, hexMat);
+        hex.rotation.x = -Math.PI/2;
+        hex.position.y = 0.005 - charGroup.position.y;
+        hex.userData = { type:'frostHex', i };
+        auraGroup.add(hex); auraObjects.push(hex);
+    }
+}
+
+// ── NATURE AURA ──────────────────────────────────────────────────
+function buildNatureAura(buff) {
+    const c = buff.color;
+
+    // Stellar form — cosmic light body
+    const starGeo = new THREE.SphereGeometry(0.9, 32, 16);
+    const starMat = new THREE.MeshStandardMaterial({
+        color: buff.color2, emissive: c, emissiveIntensity: 1.2,
+        transparent: true, opacity: 0.15, side: THREE.DoubleSide
+    });
+    const starBody = new THREE.Mesh(starGeo, starMat);
+    starBody.position.y = 1.5; starBody.userData.type = 'natureStar';
+    auraGroup.add(starBody); auraObjects.push(starBody);
+
+    // Leaf/petal orbit rings
+    for (let ring = 0; ring < 3; ring++) {
+        const leafCount = 8 + ring*4;
+        for (let i = 0; i < leafCount; i++) {
+            const angle = (i/leafCount)*Math.PI*2;
+            const r = 0.7 + ring*0.3;
+            const lGeo = new THREE.ConeGeometry(0.04 - ring*0.005, 0.25, 5);
+            const lMat = new THREE.MeshStandardMaterial({
+                color: c, emissive: c, emissiveIntensity: 3,
+                transparent: true, opacity: 0.7, roughness:0.2, metalness:0.3
+            });
+            const leaf = new THREE.Mesh(lGeo, lMat);
+            const height = 0.8 + ring*0.6 + (i%3)*0.25;
+            leaf.position.set(Math.cos(angle)*r, height, Math.sin(angle)*r);
+            leaf.lookAt(0, height, 0); leaf.rotateX(-Math.PI/2);
+            leaf.userData = { type:'natureLeaf', angle, r, ring, i, baseH: height };
+            auraGroup.add(leaf); auraObjects.push(leaf);
+        }
+    }
+
+    // Star/moon orbits
+    for (let i = 0; i < 5; i++) {
+        const angle = (i/5)*Math.PI*2;
+        const orbGeo = new THREE.IcosahedronGeometry(0.06, 1);
+        const orbMat = new THREE.MeshStandardMaterial({
+            color: buff.color2, emissive: buff.color2, emissiveIntensity: 8,
+            roughness:0, metalness:0
+        });
+        const orb = new THREE.Mesh(orbGeo, orbMat);
+        orb.position.set(Math.cos(angle)*1.2, 1.5+Math.sin(angle*2)*0.6, Math.sin(angle)*1.2);
+        orb.userData = { type:'natureStar2', angle, i };
+        auraGroup.add(orb); auraObjects.push(orb);
+    }
+
+    // Vine/tendril spirals
+    for (let v = 0; v < 4; v++) {
+        const pts = [];
+        const startA = (v/4)*Math.PI*2;
+        for (let j = 0; j <= 30; j++) {
+            const t = j/30;
+            const a = startA + t*Math.PI*3;
+            const r = 0.2 + t*0.9;
+            pts.push(new THREE.Vector3(Math.cos(a)*r, t*3.2-0.1, Math.sin(a)*r));
+        }
+        const tGeo = new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 30, 0.018, 6, false);
+        const tMat = new THREE.MeshStandardMaterial({
+            color: c, emissive: c, emissiveIntensity: 2,
+            transparent: true, opacity: 0.6
+        });
+        const vine = new THREE.Mesh(tGeo, tMat);
+        vine.userData = { type:'natureVine', v };
+        auraGroup.add(vine); auraObjects.push(vine);
+    }
+
+    // Glowing nature particles
+    for (let i = 0; i < 60; i++) {
+        particles.push({
+            type:'nature',
+            angle: Math.random()*Math.PI*2,
+            r: 0.3 + Math.random()*1.0,
+            y: Math.random()*3.5,
+            vy: 0.006 + Math.random()*0.01,
+            vAngle: 0.01 + Math.random()*0.025,
+            size: 0.015 + Math.random()*0.03,
+            alpha: 0.5 + Math.random()*0.5
+        });
+    }
+
+    // Sacred circle on ground
+    for (let i = 0; i < 4; i++) {
+        const rGeo = new THREE.TorusGeometry(0.35 + i*0.35, 0.01, 6, 64);
+        const rMat = new THREE.MeshStandardMaterial({
+            color: c, emissive: c, emissiveIntensity: 4,
+            transparent: true, opacity: 0.7
+        });
+        const sacredRing = new THREE.Mesh(rGeo, rMat);
+        sacredRing.rotation.x = -Math.PI/2;
+        sacredRing.position.y = 0.005 - charGroup.position.y;
+        sacredRing.userData = { type:'natureCircle', i };
+        auraGroup.add(sacredRing); auraObjects.push(sacredRing);
+    }
+}
+
+// ── CHAOS AURA ──────────────────────────────────────────────────
+function buildChaosAura(buff) {
+    const c = buff.color;
+    const c2 = buff.color2;
+
+    // Chaotic multi-color swirling shells
+    const chaosColors = [c, c2, new THREE.Color(1,0.1,0.1), new THREE.Color(0.8,0,1)];
+    for (let i = 0; i < 4; i++) {
+        const cGeo = new THREE.OctahedronGeometry(1.1 + i*0.15, i);
+        const cMat = new THREE.MeshStandardMaterial({
+            color: chaosColors[i], emissive: chaosColors[i], emissiveIntensity: 0.5,
+            transparent: true, opacity: 0.07, side: THREE.DoubleSide, wireframe: i<2
+        });
+        const chaos = new THREE.Mesh(cGeo, cMat);
+        chaos.position.y = 1.5;
+        chaos.userData = { type:'chaosShell', i, rotSpeed: (i%2===0?1:-1)*0.4 };
+        auraGroup.add(chaos); auraObjects.push(chaos);
+    }
+
+    // Chaos lightning arcs (thin torus at random angles)
+    for (let i = 0; i < 8; i++) {
+        const arcGeo = new THREE.TorusGeometry(0.6+Math.random()*0.7, 0.01+Math.random()*0.015, 4, 64);
+        const arcColor = chaosColors[i%4];
+        const arcMat = new THREE.MeshStandardMaterial({
+            color: arcColor, emissive: arcColor, emissiveIntensity: 5,
+            transparent: true, opacity: 0.7
+        });
+        const arc = new THREE.Mesh(arcGeo, arcMat);
+        arc.position.y = 1.5;
+        arc.rotation.set(Math.random()*Math.PI, Math.random()*Math.PI, Math.random()*Math.PI);
+        arc.userData = { type:'chaosArc', rotX: (Math.random()-0.5)*0.04, rotY: (Math.random()-0.5)*0.06, i };
+        auraGroup.add(arc); auraObjects.push(arc);
+    }
+
+    // Prismatic shards flying outward
+    for (let i = 0; i < 16; i++) {
+        const sGeo = new THREE.TetrahedronGeometry(0.07 + Math.random()*0.05);
+        const sCol = chaosColors[i%4];
+        const sMat = new THREE.MeshStandardMaterial({
+            color: sCol, emissive: sCol, emissiveIntensity: 4, roughness:0, metalness:0.9
+        });
+        const shard = new THREE.Mesh(sGeo, sMat);
+        const angle = (i/16)*Math.PI*2;
+        const r = 0.9 + Math.random()*0.5;
+        const h = 0.5 + Math.random()*2.5;
+        shard.position.set(Math.cos(angle)*r, h, Math.sin(angle)*r);
+        shard.userData = { type:'chaosShard', angle, r, h, rotSpeed: Math.random()*0.1 };
+        auraGroup.add(shard); auraObjects.push(shard);
+    }
+
+    // Mixed chaos particles
+    for (let i = 0; i < 80; i++) {
+        particles.push({
+            type:'chaos',
+            angle: Math.random()*Math.PI*2,
+            r: 0.1 + Math.random()*1.5,
+            y: Math.random()*3.5 - 0.2,
+            vy: (Math.random()-0.5)*0.02,
+            vAngle: (Math.random()-0.5)*0.06,
+            colorIdx: i%4,
+            size: 0.01 + Math.random()*0.04,
+            alpha: 0.4 + Math.random()*0.6
+        });
+    }
+
+    // Chaos pentagram on ground
+    for (let i = 0; i < 5; i++) {
+        const a1 = (i/5)*Math.PI*2 - Math.PI/2;
+        const a2 = ((i+2)/5)*Math.PI*2 - Math.PI/2;
+        const pts = [
+            new THREE.Vector3(Math.cos(a1)*1.2, 0, Math.sin(a1)*1.2),
+            new THREE.Vector3(Math.cos(a2)*1.2, 0, Math.sin(a2)*1.2)
+        ];
+        const lGeo = new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 2, 0.018, 6, false);
+        const lMat = new THREE.MeshStandardMaterial({
+            color: chaosColors[i%4], emissive: chaosColors[i%4], emissiveIntensity: 4,
+            transparent: true, opacity: 0.8
+        });
+        const line = new THREE.Mesh(lGeo, lMat);
+        line.position.y = 0.01 - charGroup.position.y;
+        auraGroup.add(line); auraObjects.push(line);
+    }
+}
+
+// ── PARTICLE RENDERER ──────────────────────────────────────────
+const ptGeo = new THREE.SphereGeometry(1, 6, 4);
+const ptPool = [];
+
+function getParticle(color, size) {
+    const mat = new THREE.MeshStandardMaterial({
+        color, emissive: color, emissiveIntensity: 6,
+        transparent: true, roughness:0, metalness:0
+    });
+    const m = new THREE.Mesh(ptGeo, mat);
+    m.scale.setScalar(size);
+    auraGroup.add(m);
+    auraObjects.push(m);
+    return { mesh: m, mat };
+}
+
+let ptObjects = [];
+function initParticlePool() {
+    const buffDef = BUFFS[activeBuff];
+    if (!buffDef) return;
+    const chaosColors = [buffDef.color, buffDef.color2, new THREE.Color(1,0.1,0.1), new THREE.Color(0.8,0,1)];
+    ptObjects = particles.map(p => {
+        const col = p.colorIdx !== undefined ? chaosColors[p.colorIdx] : buffDef.color;
+        return getParticle(col, p.size);
+    });
+}
+
+// ─── UI ─────────────────────────────────────────────────────────
+const label = document.getElementById('active-label');
+
+document.querySelectorAll('.buff-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        const type = btn.dataset.buff;
+        document.querySelectorAll('.buff-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        clearAuras();
+        ptObjects = [];
+        particles = [];
+        activeBuff = type;
+        const def = BUFFS[type];
+        label.textContent = def.name;
+        buffLight.color.set(def.lightColor);
+        buffLight.intensity = 3.5;
+        runeRingMat.emissive.set(def.lightColor);
+        runeRingMat.emissiveIntensity = 2;
+        runeRingMat.color.set(def.lightColor);
+        def.build(def);
+        initParticlePool();
+    });
+});
+
+// ─── ANIMATION ─────────────────────────────────────────────────
+let lastTime2 = performance.now(), frameCount2 = 0;
+
+function animate(ts) {
+    requestAnimationFrame(animate);
+    time = ts * 0.001;
+
+    // Gentle character hover
+    charGroup.position.y = 0.07 + Math.sin(time*1.1)*0.03;
+
+    // Animate aura objects
+    auraObjects.forEach(obj => {
+        const d = obj.userData;
+        if (!d || !d.type) return;
+
+        if (d.type === 'divineOuter') { obj.rotation.y = time*0.2; obj.rotation.x = Math.sin(time*0.3)*0.1; }
+        if (d.type === 'divineHex') { obj.rotation.y = -time*0.3; obj.rotation.z = time*0.15; }
+        if (d.type === 'divineCore') { obj.scale.setScalar(1 + Math.sin(time*2)*0.04); }
+        if (d.type === 'divineRing') {
+            obj.position.y = d.baseY + Math.sin(time*1.5 + d.i)*0.08;
+            obj.rotation.y = time * (0.4 + d.i*0.2);
+        }
+        if (d.type === 'vRing') { obj.rotation.y = time*0.6; }
+        if (d.type === 'vRing2') { obj.rotation.y = -time*0.5; obj.rotation.x = time*0.3; }
+
+        if (d.type === 'voidSphere') { obj.rotation.y = time*0.1; obj.scale.setScalar(1 + Math.sin(time*0.8)*0.03); }
+        if (d.type === 'voidTube') { obj.rotation.y = time * (0.15 + d.index*0.03); }
+        if (d.type === 'voidOrb') {
+            const a = d.baseAngle + time*(0.5 + d.i*0.07);
+            const r = 1.0 + Math.sin(time*0.7+d.i)*0.25;
+            obj.position.set(Math.cos(a)*r, 1.5+Math.sin(a*0.7+d.i)*0.6, Math.sin(a)*r);
+            obj.scale.setScalar(0.8 + Math.sin(time*2+d.i)*0.3);
+        }
+        if (d.type === 'voidPortal') { obj.rotation.z = -time*0.4; }
+
+        if (d.type === 'bloodMist') { obj.rotation.y = time*(0.12+d.i*0.05); obj.scale.setScalar(1+Math.sin(time*1.5+d.i)*0.05); }
+        if (d.type === 'bloodRing') {
+            obj.rotation.y = time*(0.3+d.i*0.1) + d.baseAngle;
+            obj.rotation.x += (Math.random()-0.5)*0.002;
+        }
+        if (d.type === 'bloodSpike') {
+            obj.position.y = d.baseY + Math.sin(time*2+d.angle*3)*0.12;
+            obj.scale.setScalar(0.85 + Math.sin(time*2+d.angle)*0.2);
+        }
+
+        if (d.type === 'frostShell') {
+            obj.rotation.y = time*(d.d===0?0.15:-0.1);
+            obj.rotation.x = time*(d.d===0?0.08:0.12);
+        }
+        if (d.type === 'frostShard') {
+            const a = d.angle + time*(0.2+d.i*0.015);
+            obj.position.set(Math.cos(a)*d.r, d.baseH+Math.sin(time*1.2+d.i)*0.15, Math.sin(a)*d.r);
+        }
+        if (d.type === 'frostRing') {
+            obj.rotation.y = time*(0.2+d.i*0.05);
+            obj.position.y = d.baseY + Math.sin(time+d.i)*0.05;
+        }
+        if (d.type === 'frostHex') { obj.rotation.z = time*(0.1+d.i*0.08); }
+
+        if (d.type === 'natureStar') { obj.scale.setScalar(1+Math.sin(time*1.5)*0.08); obj.rotation.y = time*0.3; }
+        if (d.type === 'natureLeaf') {
+            const a = d.angle + time*(0.15+d.ring*0.06+d.i*0.003);
+            obj.position.set(Math.cos(a)*d.r, d.baseH+Math.sin(time+d.i)*0.2, Math.sin(a)*d.r);
+        }
+        if (d.type === 'natureStar2') {
+            const a = d.angle + time*(0.3+d.i*0.04);
+            obj.position.set(Math.cos(a)*1.2, 1.5+Math.sin(time*0.8+d.i)*0.7, Math.sin(a)*1.2);
+            obj.scale.setScalar(0.7+Math.sin(time*2+d.i)*0.5);
+        }
+        if (d.type === 'natureVine') { obj.rotation.y = time*0.2*(d.v%2===0?1:-1); }
+        if (d.type === 'natureCircle') { obj.rotation.z = time*(0.12+d.i*0.06); }
+
+        if (d.type === 'chaosShell') {
+            obj.rotation.y += d.rotSpeed * 0.016;
+            obj.rotation.x += d.rotSpeed * 0.009;
+            obj.scale.setScalar(1 + Math.sin(time*3+d.i)*0.05);
+        }
+        if (d.type === 'chaosArc') { obj.rotation.x += d.rotX; obj.rotation.y += d.rotY; }
+        if (d.type === 'chaosShard') {
+            const a = d.angle + time*0.4;
+            obj.position.set(Math.cos(a)*d.r, d.h+Math.sin(time*2+d.angle)*0.3, Math.sin(a)*d.r);
+            obj.rotation.y += d.rotSpeed;
+        }
+    });
+
+    // Animate particles
+    const buffDef = activeBuff ? BUFFS[activeBuff] : null;
+    particles.forEach((p, idx) => {
+        const obj = ptObjects[idx];
+        if (!obj) return;
+
+        if (p.type === 'divine') {
+            p.y += p.speed * 0.012;
+            if (p.y > 3.5) p.y = -0.3;
+            const a = p.angle + time*0.2;
+            obj.mesh.position.set(Math.cos(a)*p.r, p.y, Math.sin(a)*p.r);
+        }
+        if (p.type === 'void') {
+            p.y += p.vy; p.angle += p.rotSpeed;
+            if (p.y > 3.5) p.y = -0.3;
+            if (p.y < -0.3) p.y = 3.5;
+            obj.mesh.position.set(Math.cos(p.angle)*p.r, p.y, Math.sin(p.angle)*p.r);
+        }
+        if (p.type === 'blood') {
+            p.y += p.vy;
+            if (p.y > 4) p.y = 0;
+            const a = p.angle + time*0.3;
+            obj.mesh.position.set(Math.cos(a)*p.r, p.y, Math.sin(a)*p.r);
+        }
+        if (p.type === 'frost') {
+            p.y += p.vy; p.angle += p.vAngle;
+            if (p.y < -0.3) p.y = 3.5;
+            obj.mesh.position.set(Math.cos(p.angle)*p.r, p.y, Math.sin(p.angle)*p.r);
+        }
+        if (p.type === 'nature') {
+            p.y += p.vy; p.angle += p.vAngle;
+            if (p.y > 3.5) p.y = 0;
+            obj.mesh.position.set(Math.cos(p.angle)*p.r, p.y, Math.sin(p.angle)*p.r);
+        }
+        if (p.type === 'chaos') {
+            p.y += p.vy; p.angle += p.vAngle;
+            if (p.y > 3.8) p.y = -0.2;
+            if (p.y < -0.2) p.y = 3.8;
+            obj.mesh.position.set(Math.cos(p.angle)*p.r, p.y, Math.sin(p.angle)*p.r);
+        }
+
+        const pulse = 0.7 + Math.sin(time*3+idx*0.5)*0.35;
+        obj.mesh.scale.setScalar(p.size * pulse);
+        obj.mat.opacity = p.alpha * pulse * 0.8;
+    });
+
+    // Animate buff light pulsing
+    if (activeBuff) {
+        buffLight.intensity = 2.5 + Math.sin(time*2)*1.0;
+        rimL.intensity = 2 + Math.sin(time*1.3)*0.8;
+    }
+
+    // Slow auto-rotation of character
+    charGroup.rotation.y = Math.sin(time*0.2)*0.4;
+
+    controls.update();
+    renderer.render(scene, camera);
+}
+
+animate(0);
+
+window.addEventListener('resize', () => {
+    camera.aspect = innerWidth/innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(innerWidth, innerHeight);
+});
+</script>
+</body>
+</html>

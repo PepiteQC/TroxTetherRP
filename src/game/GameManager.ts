@@ -12,12 +12,6 @@ export class GameManager {
   public city!: CityArchitect;
   public builder!: GModBuilder;
 
-  // Character Creator custom stored states & Cosmic Aura
-  private customCharData: any = null;
-  private activeAuraColor: number = 0x00ffff;
-  private auraPointsMesh: THREE.Points | null = null;
-  private auraRingsGroup: THREE.Group | null = null;
-
   // Mounts & Vehicles
   public activeMount: 'hoverboard' | 'broom' | null = null;
   private hoverboardMesh: THREE.Group | null = null;
@@ -42,6 +36,25 @@ export class GameManager {
     stage: number;
     position: { x: number; y: number; z: number };
   }> = [];
+
+  // TroxT Real Estate Property Ownership, Keyring & 14 AI Agent systems
+  public boughtPropertyIds: string[] = [];
+  public agentLogs: string[] = [
+    "🚀 TroxT Brain: Système initialisé.",
+    "👁️ Third Eye: Analyse de risques en survol active - GREEN",
+    "⚙️ Intellectus: Bus d'événements Arcadius connecté."
+  ];
+  public activeAgentAction = "Attente";
+  public agentCognitiveScore = 95;
+  public riskRating: 'GREEN' | 'BLUE' | 'YELLOW' | 'ORANGE' | 'RED' | 'BLACK' = 'GREEN';
+  private agentSimTimer = 0;
+
+  // Vehicle System, Forge-Factory & Ether-Weave telemetry
+  public forgeFactoryStatus: 'idle' | 'generated' = 'idle';
+  public etherWeaveConnected = false;
+  public thirdEyeRiskValidated = false;
+  public hoverboardStats = { speed: 2.2, mass: 15, power: 12 };
+  public broomStats = { speed: 1.6, mass: 8, power: 8 };
 
   // Shop visual components
   private dispensarySign!: THREE.Group;
@@ -104,6 +117,11 @@ export class GameManager {
     attackCooldown: number;
     personality: 'aggressive' | 'defensive' | 'brawler';
     wobbleFactor: number;
+    jointRot?: THREE.Vector3;
+    jointRotVelocity?: THREE.Vector3;
+    isPinnedToWall?: boolean;
+    pinWallNormal?: THREE.Vector3;
+    pinTimer?: number;
   }[] = [];
 
   // Physical Training Dummies
@@ -147,14 +165,9 @@ export class GameManager {
   private flashlightSpot!: THREE.SpotLight;
   private flashlightOn = false;
   public playerHealth = 100;
-  public playerStamina = 100;
-  public inventory: Array<{ id: string; label: string; quantity: number; rarity: string }> = [
-    { id: 'water_bottle', label: 'Eau Minérale', quantity: 2, rarity: 'Common' },
-    { id: 'bread', label: 'Pain frais', quantity: 1, rarity: 'Common' }
-  ];
 
   // Physics & Navigation
-  public playerPos = new THREE.Vector3(0, 0, 2); // Spawn centre de l'intersection, en pleine rue
+  public playerPos = new THREE.Vector3(0, 0, 15);
   public playerVelocity = new THREE.Vector3(0, 0, 0);
   private playerSpeed = 5.0; // units per second
   private playerSprintMultiplier = 1.8;
@@ -256,47 +269,27 @@ export class GameManager {
     this.playerGroup = new THREE.Group();
     this.playerGroup.position.copy(this.playerPos);
 
-    // Load Character Creator options
-    try {
-      const saved = localStorage.getItem('troxt_latest_character');
-      if (saved) this.customCharData = JSON.parse(saved);
-    } catch(e) {}
-
-    const wScale = this.customCharData?.widthScale ?? 1.0;
-    const hScale = this.customCharData?.heightScale ?? 1.0;
-    const mScale = this.customCharData?.muscleScale ?? 1.0;
-    const skinColor = this.customCharData?.skinTone || '#ffd1a4';
-    const eyesColor = this.customCharData?.eyeColor || '#090d16';
-    const primaryColor = this.customCharData?.outfitColors?.[0] || '#1e293b';
-    const secondaryColor = this.customCharData?.outfitColors?.[1] || '#475569';
-    const shoesColor = this.customCharData?.outfitColors?.[2] || '#f8fafc';
-    const hairColorHex = this.customCharData?.hairColor || '#0f172a';
-    const hairStyle = this.customCharData?.hairStyle || 'spiky';
-
     // Torso (Spacious corporate jacket style)
-    const torsoGeo = new THREE.BoxGeometry(0.8 * wScale, 1.0, 0.45);
-    const torsoMat = new THREE.MeshStandardMaterial({ color: new THREE.Color(primaryColor), roughness: 0.65 });
+    const torsoGeo = new THREE.BoxGeometry(0.8, 1.0, 0.45);
+    const torsoMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.7 });
     const torso = new THREE.Mesh(torsoGeo, torsoMat);
     torso.position.y = 1.0;
     torso.castShadow = true;
     torso.receiveShadow = true;
     this.playerGroup.add(torso);
 
-    const chestStripe = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.45, 0.04), new THREE.MeshStandardMaterial({ color: new THREE.Color(secondaryColor) }));
-    chestStripe.position.set(0, 0.15, 0.22);
-    torso.add(chestStripe);
-
-    // Head (Styled round head)
+    // Head (Styled round cap head)
     const headGeo = new THREE.SphereGeometry(0.3, 16, 16);
-    const headMat = new THREE.MeshStandardMaterial({ color: new THREE.Color(skinColor), roughness: 0.55 });
+    const headMat = new THREE.MeshStandardMaterial({ color: 0xffd1a4, roughness: 0.6 });
     this.playerHead = new THREE.Mesh(headGeo, headMat);
     this.playerHead.position.set(0, 1.65, 0);
     this.playerHead.castShadow = true;
     this.playerGroup.add(this.playerHead);
 
     // ─── ADD FACE FEATURES TO PLAYER HEAD ───
+    // Eyes
     const eyeGeo = new THREE.SphereGeometry(0.04, 8, 8);
-    const eyeMat = new THREE.MeshStandardMaterial({ color: new THREE.Color(eyesColor), roughness: 0.1 });
+    const eyeMat = new THREE.MeshStandardMaterial({ color: 0x090d16, roughness: 0.1 });
     
     const leftEye = new THREE.Mesh(eyeGeo, eyeMat);
     leftEye.position.set(-0.1, 0.05, 0.26);
@@ -306,81 +299,50 @@ export class GameManager {
     rightEye.position.set(0.1, 0.05, 0.26);
     this.playerHead.add(rightEye);
 
+    // Nose
     const noseGeo = new THREE.BoxGeometry(0.05, 0.08, 0.06);
-    const noseMat = new THREE.MeshStandardMaterial({ color: new THREE.Color(skinColor), roughness: 0.6 });
+    const noseMat = new THREE.MeshStandardMaterial({ color: 0xe0a980, roughness: 0.6 });
     const nose = new THREE.Mesh(noseGeo, noseMat);
     nose.position.set(0, -0.01, 0.28);
     this.playerHead.add(nose);
 
-    const mouthGeo = new THREE.BoxGeometry(0.1, 0.03, 0.03);
+    // Mouth
+    const mouthGeo = new THREE.BoxGeometry(0.12, 0.03, 0.03);
     const mouthMat = new THREE.MeshStandardMaterial({ color: 0x991b1b, roughness: 0.5 });
     const mouth = new THREE.Mesh(mouthGeo, mouthMat);
     mouth.position.set(0, -0.1, 0.26);
     this.playerHead.add(mouth);
 
-    // Hair / Cap Customizer
-    const hMat = new THREE.MeshStandardMaterial({ color: new THREE.Color(hairColorHex), roughness: 0.7 });
-    if (hairStyle !== 'bald') {
-      if (hairStyle === 'short') {
-        const c = new THREE.Mesh(new THREE.CylinderGeometry(0.31, 0.31, 0.12, 12), hMat);
-        c.position.set(0, 0.2, 0);
-        this.playerHead.add(c);
-      } else if (hairStyle === 'spiky') {
-        const c = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.3, 0.1, 12), hMat);
-        c.position.set(0, 0.18, 0);
-        this.playerHead.add(c);
-        for (let i = -0.16; i <= 0.16; i += 0.08) {
-          const sp = new THREE.Mesh(new THREE.ConeGeometry(0.05, 0.18, 6), hMat);
-          sp.position.set(i, 0.3, 0); sp.rotation.z = i * -1.8;
-          this.playerHead.add(sp);
-        }
-      } else if (hairStyle === 'afro') {
-        const a = new THREE.Mesh(new THREE.SphereGeometry(0.38, 12, 12), hMat);
-        a.position.set(0, 0.16, -0.04);
-        this.playerHead.add(a);
-      } else if (hairStyle === 'ponytail') {
-        const c = new THREE.Mesh(new THREE.SphereGeometry(0.31, 12, 12), hMat);
-        c.position.set(0, 0.1, 0);
-        this.playerHead.add(c);
-        const t = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.03, 0.55, 8), hMat);
-        t.position.set(0, 0.02, -0.34); t.rotation.x = -0.4;
-        this.playerHead.add(t);
-      } else if (hairStyle === 'long') {
-        const c = new THREE.Mesh(new THREE.SphereGeometry(0.31, 12, 12), hMat);
-        c.position.set(0, 0.1, 0);
-        this.playerHead.add(c);
-        [-0.25, 0.25].forEach(x => {
-          const l = new THREE.Mesh(new THREE.BoxGeometry(0.09, 0.55, 0.18), hMat);
-          l.position.set(x, -0.12, 0.05);
-          this.playerHead.add(l);
-        });
-      } else {
-        const cap = new THREE.Mesh(new THREE.CylinderGeometry(0.32, 0.32, 0.12, 12), hMat);
-        cap.position.set(0, 0.18, 0.05); cap.rotation.x = 0.15;
-        this.playerHead.add(cap);
-        const visor = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.03, 0.25), hMat);
-        visor.position.set(0, 0.16, 0.32);
-        this.playerHead.add(visor);
-      }
-    }
+    // Hair/Cap (Cool dark cap)
+    const capGeo = new THREE.CylinderGeometry(0.32, 0.32, 0.12, 12);
+    const capMat = new THREE.MeshStandardMaterial({ color: 0x0f172a });
+    const cap = new THREE.Mesh(capGeo, capMat);
+    cap.position.set(0, 1.82, 0.05);
+    cap.rotation.x = 0.15;
+    this.playerGroup.add(cap);
+
+    const visorGeo = new THREE.BoxGeometry(0.42, 0.03, 0.25);
+    const visor = new THREE.Mesh(visorGeo, capMat);
+    visor.position.set(0, 1.8, 0.32);
+    this.playerGroup.add(visor);
 
     // Left Arm
-    const armGeo = new THREE.CylinderGeometry(0.12 * mScale, 0.1 * mScale, 0.9, 8);
-    const sleeveMat = new THREE.MeshStandardMaterial({ color: new THREE.Color(primaryColor) });
+    const armGeo = new THREE.CylinderGeometry(0.12, 0.1, 0.9, 8);
+    const sleeveMat = new THREE.MeshStandardMaterial({ color: 0x1e293b });
     this.leftArm = new THREE.Mesh(armGeo, sleeveMat);
-    this.leftArm.position.set(-0.52 * wScale, 1.0, 0);
+    this.leftArm.position.set(-0.52, 1.0, 0);
     this.leftArm.castShadow = true;
     this.playerGroup.add(this.leftArm);
 
-    // Right Arm
+    // Right Arm (Hold Flashlight source)
     this.rightArm = new THREE.Mesh(armGeo, sleeveMat);
-    this.rightArm.position.set(0.52 * wScale, 1.0, 0);
+    this.rightArm.position.set(0.52, 1.0, 0);
     this.rightArm.castShadow = true;
     this.playerGroup.add(this.rightArm);
 
-    // Hands
-    const handGeo = new THREE.SphereGeometry(0.11 * mScale, 8, 8);
-    const handMat = new THREE.MeshStandardMaterial({ color: new THREE.Color(skinColor), roughness: 0.6 });
+    // ─── ADD HANDS TO ARMS ───
+    const handGeo = new THREE.SphereGeometry(0.11, 8, 8);
+    const handMat = new THREE.MeshStandardMaterial({ color: 0xffd1a4, roughness: 0.6 });
     
     const leftHand = new THREE.Mesh(handGeo, handMat);
     leftHand.position.set(0, -0.48, 0);
@@ -390,35 +352,35 @@ export class GameManager {
     rightHand.position.set(0, -0.48, 0);
     this.rightArm.add(rightHand);
 
-    // Legs
-    const legGeo = new THREE.BoxGeometry(0.24, 0.9 * hScale, 0.24);
-    const pantsMat = new THREE.MeshStandardMaterial({ color: new THREE.Color(secondaryColor), roughness: 0.8 });
+    // Left Leg
+    const legGeo = new THREE.BoxGeometry(0.24, 0.9, 0.24);
+    const pantsMat = new THREE.MeshStandardMaterial({ color: 0x475569, roughness: 0.8 });
     this.leftLeg = new THREE.Mesh(legGeo, pantsMat);
-    this.leftLeg.position.set(-0.22 * wScale, 0.45 * hScale, 0);
+    this.leftLeg.position.set(-0.22, 0.45, 0);
     this.leftLeg.castShadow = true;
     this.playerGroup.add(this.leftLeg);
 
+    // Right Leg
     this.rightLeg = new THREE.Mesh(legGeo, pantsMat);
-    this.rightLeg.position.set(0.22 * wScale, 0.45 * hScale, 0);
+    this.rightLeg.position.set(0.22, 0.45, 0);
     this.rightLeg.castShadow = true;
     this.playerGroup.add(this.rightLeg);
 
-    // Feet
+    // ─── ADD FEET TO LEGS ───
     const footGeo = new THREE.BoxGeometry(0.26, 0.12, 0.36);
-    const shoeMat = new THREE.MeshStandardMaterial({ color: new THREE.Color(shoesColor), roughness: 0.5 });
+    const shoeMat = new THREE.MeshStandardMaterial({ color: 0xf8fafc, roughness: 0.5 }); // White sneakers
     
     const leftFoot = new THREE.Mesh(footGeo, shoeMat);
-    leftFoot.position.set(0, -0.45 * hScale, 0.06);
-    leftFoot.castShadow = true; leftFoot.receiveShadow = true;
+    leftFoot.position.set(0, -0.45, 0.06);
+    leftFoot.castShadow = true;
+    leftFoot.receiveShadow = true;
     this.leftLeg.add(leftFoot);
 
     const rightFoot = new THREE.Mesh(footGeo, shoeMat);
-    rightFoot.position.set(0, -0.45 * hScale, 0.06);
-    rightFoot.castShadow = true; rightFoot.receiveShadow = true;
+    rightFoot.position.set(0, -0.45, 0.06);
+    rightFoot.castShadow = true;
+    rightFoot.receiveShadow = true;
     this.rightLeg.add(rightFoot);
-
-    // Attach Cosmic Aura to character in city!
-    this.initCharacterAura();
 
     // Add Player Flashlight (F key)
     this.flashlightSpot = new THREE.SpotLight(0xffffff, 0, 18, Math.PI / 4.5, 0.5, 1.0);
@@ -429,43 +391,6 @@ export class GameManager {
     this.playerGroup.add(this.flashlightSpot.target);
 
     this.scene.add(this.playerGroup);
-  }
-
-  private initCharacterAura() {
-    const auraId = this.customCharData?.aura || 'frost';
-    const aurasMap: Record<string, number> = {
-      divine: 0xffd700, void: 0x8a2be2, rage: 0xff0000, frost: 0x00ffff,
-      nature: 0x32cd32, chaos: 0xff4500, lich: 0x4682b4, demon: 0x39ff14,
-      bloodmage: 0x800000, archmage: 0x00bfff, warlord: 0xff8c00, time: 0xffa500
-    };
-    this.activeAuraColor = aurasMap[auraId] || 0x00ffff;
-
-    const count = 90;
-    const positions = new Float32Array(count * 3);
-    for (let i = 0; i < count; i++) {
-      const th = Math.random() * Math.PI * 2;
-      const r = 0.5 + Math.random() * 0.6;
-      positions[i * 3] = Math.cos(th) * r;
-      positions[i * 3 + 1] = Math.random() * 2.2;
-      positions[i * 3 + 2] = Math.sin(th) * r;
-    }
-    const geom = new THREE.BufferGeometry();
-    geom.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-    const pMat = new THREE.PointsMaterial({
-      color: this.activeAuraColor, size: 0.08, transparent: true, opacity: 0.85, blending: THREE.AdditiveBlending
-    });
-    this.auraPointsMesh = new THREE.Points(geom, pMat);
-    this.playerGroup.add(this.auraPointsMesh);
-
-    this.auraRingsGroup = new THREE.Group();
-    const rGeom = new THREE.RingGeometry(0.7, 0.74, 24);
-    const rMat = new THREE.MeshBasicMaterial({
-      color: this.activeAuraColor, side: THREE.DoubleSide, transparent: true, opacity: 0.5, blending: THREE.AdditiveBlending
-    });
-    const r1 = new THREE.Mesh(rGeom, rMat); r1.rotation.x = Math.PI/2; r1.position.y = 0.3;
-    const r2 = r1.clone(); r2.position.y = 0.9; r2.rotation.y = 0.5;
-    this.auraRingsGroup.add(r1); this.auraRingsGroup.add(r2);
-    this.playerGroup.add(this.auraRingsGroup);
   }
 
   private initSubsystems() {
@@ -558,20 +483,13 @@ export class GameManager {
       const target = e.target as HTMLElement;
       if (target.closest('.ui-interactive')) return;
 
-      // FIX: Bloquer la rotation de la caméra si on est en train de cliquer pour poser un objet
-      // Cela évite que la caméra saute au moment du clic
       isDragging = true;
       prevMouseX = e.clientX;
       prevMouseY = e.clientY;
 
       // Handle building click to spawn object in Build Mode
       if (e.button === 0 && this.activeItemId) {
-        // Empêcher la propagation pour ne pas déclencher d'autres actions
-        e.preventDefault();
-        const success = this.builder.spawnItemAtGhost(this.activeItemId);
-        if (success) {
-           this.addCombatLog(`🛠️ BUILDER : Objet posé avec succès !`);
-        }
+        this.builder.spawnItemAtGhost(this.activeItemId);
       }
     };
 
@@ -691,9 +609,105 @@ export class GameManager {
   }
 
   public toggleDoorLock(doorId: string) {
+    const houseId = doorId.replace('_door', '');
+    const names: Record<string, string> = {
+      villa_nova: "Villa Nova",
+      modern_loft: "Modern Loft",
+      suburban_dream: "Suburban Dream"
+    };
+    const name = names[houseId] || houseId;
+
+    if (!this.boughtPropertyIds.includes(houseId)) {
+      this.addCombatLog(`🔒 ERREUR : Vous n'avez pas la clé de ${name} ! Achetez d'abord la propriété.`);
+      
+      // Update agent risk assessment
+      this.riskRating = 'YELLOW';
+      this.agentLogs.unshift(`[${new Date().toLocaleTimeString()}] 🛡️ Ether-Guard: Tentative de crochetage illégale détectée sur la porte de ${name} !`);
+      if (this.agentLogs.length > 15) this.agentLogs.pop();
+      return;
+    }
+
     const d = this.city.interactables.find(item => item.id === doorId);
     if (d) {
       d.userData.locked = !d.userData.locked;
+      const stateLabel = d.userData.locked ? "VERROUILLÉE 🔒" : "DÉVERROUILLÉE 🔓";
+      this.addCombatLog(`🔑 SERRURE : La porte de ${name} est maintenant ${stateLabel} !`);
+      
+      // Log connection event on agent logs
+      this.agentLogs.unshift(`[${new Date().toLocaleTimeString()}] 🔌 Ether-Weave: Événement de verrouillage traité pour la clé keyring_${houseId}.`);
+      if (this.agentLogs.length > 15) this.agentLogs.pop();
+    }
+  }
+
+  public buyProperty(houseId: string) {
+    const prices: Record<string, number> = {
+      villa_nova: 1200,
+      modern_loft: 800,
+      suburban_dream: 400
+    };
+    const names: Record<string, string> = {
+      villa_nova: "Villa Nova",
+      modern_loft: "Modern Loft",
+      suburban_dream: "Suburban Dream"
+    };
+
+    const cost = prices[houseId] || 500;
+    const name = names[houseId] || houseId;
+
+    if (this.boughtPropertyIds.includes(houseId)) {
+      this.addCombatLog(`🏠 PROPRIÉTÉ : Vous possédez déjà ${name} !`);
+      return;
+    }
+
+    if (this.cash >= cost) {
+      this.cash -= cost;
+      this.boughtPropertyIds.push(houseId);
+      this.addCombatLog(`🎉 ACHAT RÉUSSI : Vous avez acquis ${name} pour $${cost} !`);
+      this.addCombatLog(`🔑 CLÉ REÇUE : La clé keyring_${houseId} a été ajoutée à votre trousseau !`);
+      this.saveEconomy();
+
+      // Trigger Agents validation
+      this.agentLogs.unshift(`[${new Date().toLocaleTimeString()}] 📝 Ether-Memory: Acte de propriété de ${name} enregistré avec succès.`);
+      this.agentLogs.unshift(`[${new Date().toLocaleTimeString()}] 🛡️ Ether-Guard: Droits d'accès de construction débloqués pour la zone ${houseId}.`);
+      if (this.agentLogs.length > 15) this.agentLogs.pop();
+    } else {
+      this.addCombatLog(`⚠️ ÉCHEC : Cash insuffisant pour acheter ${name} ! Requis: $${cost}.`);
+    }
+  }
+
+  public updateAgentsSimulation(deltaTime: number) {
+    this.agentSimTimer += deltaTime;
+    if (this.agentSimTimer > 3.8) { // every 3.8 seconds, cycle agent thoughts
+      this.agentSimTimer = 0;
+
+      // Select a random agent to speak
+      const agents = [
+        { name: "🧠 TroxT Brain", actions: ["Orchestration des modules GMod", "Planification de la scène Portneuf", "Indexation des objets"], thoughts: ["Optimisation du pipeline d'exécution R3F terminée.", "Vérification des synchronisations de combat.", "Analyse de la topographie de l'Autoroute 138 (Portneuf à Trois-Rivières)."] },
+        { name: "👁️ TroxT Third Eye", actions: ["Analyse de risques en survol", "Surveillance anti-duplication de clés", "Détection des collisions"], thoughts: ["Tout est stable - Risque GLOBAL: GREEN.", "Vérification des verrous de portes d'immeubles.", "Aucun dépassement de mémoire cognitive détecté."] },
+        { name: "🛡️ Ether-Guard", actions: ["Validation des permissions", "Sécurisation des transactions", "Anti-cheat et anti-spam"], thoughts: ["Validation de la signature d'achat immobilier ok.", "Contrôle des privilèges de placement d'objets GMod.", "Intégrité des inventaires de graines cannabis validée."] },
+        { name: "🛠️ Ether-Forge", actions: ["Vérification des shaders WebGL", "Construction de structures 3D", "Rigidité de joints Ragdoll"], thoughts: ["Ombres optimisées sur les lampadaires (MAX_TEXTURE_IMAGE_UNITS résolu) !", "Optimisation des RigidBodies des mannequins et mannequins d'entraînement.", "Shaders de l'eau translucide de la piscine compilés."] },
+        { name: "🔍 Ether-Lens", actions: ["Inspection de code", "Mesure du framerate", "Audit de la mémoire de scène"], thoughts: ["Diagnostic de performance : Stable à 60 FPS.", "L'analyse montre un chargement propre du Canvas.", "Vérification de la conformité du layout de la scène."] },
+        { name: "🎨 Ether-Prism", actions: ["Indexation des textures 4K", "Variations de matériaux", "Ajustement du ciel"], thoughts: ["Matériaux de briques et de stucs ajustés pour le comté de Portneuf.", "Création de variantes de couleurs pour les vestes de personnages.", "Synchronisation des teintes du cycle jour/nuit."] },
+        { name: "🔌 Ether-Weave", actions: ["Câblage des événements Arcadius", "Liaison Clés ↔ Inventaire", "Liaison Portes ↔ Propriétés"], thoughts: ["Liaison de trousseau de clés au format standardisé.", "Envoi des trames de coordonnées de combat vers le dôme.", "Événement de verrouillage de serrure propagé avec succès."] },
+        { name: "📦 Forge-Factory", actions: ["Production d'assets en masse", "Hydratation du catalogue GMod", "Spawns d'entités"], thoughts: ["Génération d'objets de décor urbain validée par le Third Eye.", "Hydratation de la table de loot de combat.", "Vérification des dimensions des clôtures en bois."] },
+        { name: "📝 Ether-Memory", actions: ["Archivage des décisions Brain", "Indexation de l'historique RP", "Persistence de l'économie"], thoughts: ["Sauvegarde atomique du statut du joueur réussie.", "Indexation de l'historique des gains du dispensaire.", "Traces d'audits stockées dans la mémoire Lotus."] },
+        { name: "📏 Ether-Core", actions: ["Conformité des conventions de nommage", "Règles standardisées", "Formats d'objets"], thoughts: ["Standards de nommage respectés pour tous les interactables.", "Validation des enums de joints Toribash.", "Vérification de la cohérence de l'architecture."] }
+      ];
+
+      const agent = agents[Math.floor(Math.random() * agents.length)];
+      const action = agent.actions[Math.floor(Math.random() * agent.actions.length)];
+      const thought = agent.thoughts[Math.floor(Math.random() * agent.thoughts.length)];
+
+      this.activeAgentAction = `${agent.name} : ${action}`;
+      this.agentCognitiveScore = Math.floor(92 + Math.random() * 8); // Fluctuate cognitive speed
+      
+      const ratings: ('GREEN' | 'BLUE' | 'YELLOW')[] = ['GREEN', 'BLUE', 'YELLOW'];
+      this.riskRating = ratings[Math.floor(Math.random() * ratings.length)];
+
+      this.agentLogs.unshift(`[${new Date().toLocaleTimeString()}] ${agent.name}: ${thought}`);
+      if (this.agentLogs.length > 15) {
+        this.agentLogs.pop();
+      }
     }
   }
 
@@ -785,9 +799,9 @@ export class GameManager {
 
     let mountSpeedMult = 1.0;
     if (this.activeMount === 'hoverboard') {
-      mountSpeedMult = 2.2;
+      mountSpeedMult = this.hoverboardStats.speed;
     } else if (this.activeMount === 'broom') {
-      mountSpeedMult = 1.6;
+      mountSpeedMult = this.broomStats.speed;
     }
     const speed = this.playerSpeed * mountSpeedMult * (isSprinting ? this.playerSprintMultiplier : 1.0);
     targetVelocity.multiplyScalar(speed);
@@ -830,18 +844,13 @@ export class GameManager {
     let collidesX = false;
     let collidesZ = false;
 
-    // ALL collision boxes from city + props
-    const allBoxes = [
+    // List all obstacles
+    const obstacles = [
       ...this.city.collisionBoxes,
       ...this.builder.getPropCollisionBoxes()
     ];
 
-    // Sépare murs réels (hauteur > 0.5m) des surfaces plates (planchers, trottoirs)
-    // Les surfaces plates ne bloquent pas horizontalement — elles servent uniquement de sol
-    const wallObstacles = allBoxes.filter(b => (b.max.y - b.min.y) > 0.5);
-    const groundObstacles = allBoxes; // tout sert de sol potentiel
-
-    wallObstacles.forEach(obs => {
+    obstacles.forEach(obs => {
       if (pBox.intersectsBox(obs)) {
         // Collides! Let's check which axis is blocked
         // Check X axis only
@@ -870,15 +879,15 @@ export class GameManager {
     // Y Axis motion & Ground checking
     this.playerPos.y += this.playerVelocity.y * deltaTime;
 
-    // Check if on ground — utilise toutes les surfaces (murs ET sols)
+    // Check if on ground
     let currentGroundY = 0.01; // default grass level
     const playerFeetBox = new THREE.Box3(
       new THREE.Vector3(this.playerPos.x - 0.3, this.playerPos.y - 0.1, this.playerPos.z - 0.3),
       new THREE.Vector3(this.playerPos.x + 0.3, this.playerPos.y + 0.2, this.playerPos.z + 0.3)
     );
 
-    // Monter sur les trottoirs, planchers, escaliers etc.
-    groundObstacles.forEach(obs => {
+    // See if stepping on elevated sidewalks/homes
+    obstacles.forEach(obs => {
       if (playerFeetBox.intersectsBox(obs)) {
         const topOfObs = obs.max.y;
         if (this.playerPos.y >= topOfObs - 0.45 && this.playerVelocity.y <= 0) {
@@ -898,9 +907,9 @@ export class GameManager {
     // Map Pos to player group
     this.playerGroup.position.copy(this.playerPos);
 
-    // Rotate player group model facing forward travel direction (Corrected to face forward travel direction instead of camera)
+    // Rotate player group model facing forward travel direction
     if (isMoving) {
-      const faceAngle = Math.atan2(this.playerVelocity.x, this.playerVelocity.z);
+      const faceAngle = Math.atan2(-this.playerVelocity.x, -this.playerVelocity.z);
       this.playerGroup.rotation.y = THREE.MathUtils.lerp(this.playerGroup.rotation.y, faceAngle, 0.18);
     }
 
@@ -1192,8 +1201,8 @@ export class GameManager {
     // Rotate player head slightly according to pitch
     this.playerHead.rotation.x = THREE.MathUtils.lerp(this.playerHead.rotation.x, this.cameraPitch * 0.4, 0.1);
 
-    // E. UPDATE CAMERA POSITION (3rd Person GTA shoulder follow + Spring Arm collision)
-    const shoulderOffset = new THREE.Vector3(0.55, 2.1, 0);
+    // E. UPDATE CAMERA POSITION (3rd Person GTA shoulder follow)
+    const shoulderOffset = new THREE.Vector3(0.55, 2.1, 0); // slightly offset to the right for shoulder-view
     shoulderOffset.applyAxisAngle(new THREE.Vector3(0, 1, 0), this.cameraYaw);
 
     const backOffset = new THREE.Vector3(0, 0, this.cameraDistance);
@@ -1201,37 +1210,9 @@ export class GameManager {
     backOffset.applyAxisAngle(new THREE.Vector3(0, 1, 0), this.cameraYaw);
 
     const targetCameraPos = this.playerPos.clone().add(shoulderOffset).add(backOffset);
-    const lookAtTarget = this.playerPos.clone().add(new THREE.Vector3(0, 1.35, 0));
-
-    // Spring Arm Anti-collision: Prevents camera from clipping into house roofs or exterior walls
-    const rayOrigin = lookAtTarget.clone();
-    const rayVec = targetCameraPos.clone().sub(rayOrigin);
-    const rayDist = rayVec.length();
-    rayVec.normalize();
-
-    const collidableMeshes: THREE.Object3D[] = [];
-    this.scene.children.forEach(c => {
-      // FIX: Ne pas inclure le ghost du builder et les auras dans les collisions de caméra
-      if (
-        c !== this.playerGroup && 
-        !(c instanceof THREE.Light) && 
-        !(c instanceof THREE.Points) &&
-        c.name !== "ghost_mesh_group" && // Nom standard du ghost dans GModBuilder
-        !c.name.includes("aura")
-      ) {
-        collidableMeshes.push(c);
-      }
-    });
-
-    const camRay = new THREE.Raycaster(rayOrigin, rayVec, 0.05, rayDist);
-    const camHits = camRay.intersectObjects(collidableMeshes, true);
-    if (camHits.length > 0 && camHits[0].distance < rayDist) {
-      // Pull camera closer inside the room just before hitting the wall or ceiling!
-      targetCameraPos.copy(rayOrigin).addScaledVector(rayVec, Math.max(0.35, camHits[0].distance - 0.25));
-    }
     
     this.camera.position.copy(targetCameraPos);
-    this.camera.lookAt(lookAtTarget);
+    this.camera.lookAt(this.playerPos.clone().add(new THREE.Vector3(0, 1.35, 0)));
   }
 
   // ─── MASTER ANIMATION TICK (60FPS LOOP) ──────────────────────────
@@ -1247,25 +1228,7 @@ export class GameManager {
     this.updatePlayerAndCamera(deltaTime);
     this.updateWeedPlants(deltaTime);
     this.updateFightClub(deltaTime);
-
-    // Animate Cosmic Aura in city
-    if (this.auraPointsMesh && this.auraPointsMesh.geometry) {
-      const posAttr = this.auraPointsMesh.geometry.attributes.position as THREE.BufferAttribute;
-      if (posAttr && posAttr.array) {
-        const arr = posAttr.array as Float32Array;
-        for (let i = 0; i < arr.length / 3; i++) {
-          arr[i * 3 + 1] += 0.016;
-          const x = arr[i * 3]; const z = arr[i * 3 + 2]; const th = 0.015;
-          arr[i * 3] = x * Math.cos(th) - z * Math.sin(th);
-          arr[i * 3 + 2] = x * Math.sin(th) + z * Math.cos(th);
-          if (arr[i * 3 + 1] > 2.2) arr[i * 3 + 1] = 0;
-        }
-        posAttr.needsUpdate = true;
-      }
-    }
-    if (this.auraRingsGroup) {
-      this.auraRingsGroup.rotation.y += 0.035;
-    }
+    this.updateAgentsSimulation(deltaTime);
 
     // Animate physical shop spinning signs
     if (this.dispensarySign) {
@@ -1371,7 +1334,21 @@ export class GameManager {
         maxHealth: r.maxHealth,
         activeWeapon: r.activeWeapon,
         isKO: r.isKO
-      }))
+      })),
+
+      // TroxT Real Estate Property Ownership & AI Multi-Agent telemetry
+      boughtPropertyIds: this.boughtPropertyIds,
+      activeAgentAction: this.activeAgentAction,
+      agentCognitiveScore: this.agentCognitiveScore,
+      riskRating: this.riskRating,
+      agentLogs: this.agentLogs,
+
+      // Vehicle System, Forge-Factory & Ether-Weave telemetry
+      forgeFactoryStatus: this.forgeFactoryStatus,
+      etherWeaveConnected: this.etherWeaveConnected,
+      thirdEyeRiskValidated: this.thirdEyeRiskValidated,
+      hoverboardStats: this.hoverboardStats,
+      broomStats: this.broomStats
     });
   };
 
@@ -1633,6 +1610,65 @@ export class GameManager {
     spawnDummy('punchbag', 'Sac de Frappe Suspendu', 'punchbag', new THREE.Vector3(0, 0, 2.2));
   }
 
+  // Forge-Factory technical configurations generator
+  public runForgeFactory() {
+    this.forgeFactoryStatus = 'generated';
+    this.hoverboardStats = { speed: 2.8, mass: 12, power: 18 }; // Speed multiplier increased from 2.2 to 2.8!
+    this.broomStats = { speed: 2.2, mass: 6, power: 12 };       // Speed multiplier increased from 1.6 to 2.2!
+
+    const t = new Date().toLocaleTimeString();
+    this.activeAgentAction = "📦 Forge-Factory: Génération des configurations";
+    this.agentLogs.unshift(`[${t}] 📦 Forge-Factory: Configurations techniques générées pour Hoverboard (Vitesse x2.8, Masse 12kg, Propulseur 1800W).`);
+    this.agentLogs.unshift(`[${t}] 📦 Forge-Factory: Configurations techniques générées pour Balai Magique (Vitesse x2.2, Masse 6kg, Lévitation 1200W).`);
+    
+    this.addCombatLog(`🛠️ FORGE-FACTORY : Configurations de montures optimisées générées !`);
+    if (this.agentLogs.length > 15) this.agentLogs.pop();
+    this.onStateUpdatePay();
+  }
+
+  // Ether-Weave connector to the server's VehicleSystem
+  public runEtherWeave() {
+    if (this.forgeFactoryStatus !== 'generated') {
+      this.addCombatLog(`⚠️ ÉCHEC : Veuillez d'abord générer les configurations techniques avec Forge-Factory !`);
+      return;
+    }
+    this.etherWeaveConnected = true;
+
+    const t = new Date().toLocaleTimeString();
+    this.activeAgentAction = "🔌 Ether-Weave: Connexion au VehicleSystem";
+    this.agentLogs.unshift(`[${t}] 🔌 Ether-Weave: Connexion réseau établie. Mappage des configurations techniques sur le VehicleSystem.`);
+    this.agentLogs.unshift(`[${t}] 🔌 Ether-Weave: Événements de poussée et d'accélération câblés sur le bus d'événements Arcadius.`);
+
+    this.addCombatLog(`🔌 ETHER-WEAVE : Montures connectées avec succès au VehicleSystem du serveur !`);
+    if (this.agentLogs.length > 15) this.agentLogs.pop();
+    this.onStateUpdatePay();
+  }
+
+  // Third Eye boundary safety and collision risk validation
+  public runThirdEyeCollisionValidation() {
+    if (!this.etherWeaveConnected) {
+      this.addCombatLog(`⚠️ ÉCHEC : Veuillez d'abord connecter les montures au VehicleSystem avec Ether-Weave !`);
+      return;
+    }
+    this.thirdEyeRiskValidated = true;
+    this.riskRating = 'GREEN';
+
+    const t = new Date().toLocaleTimeString();
+    this.activeAgentAction = "👁️ Third Eye: Validation de collision";
+    this.agentLogs.unshift(`[${t}] 👁️ TroxT Third Eye: Début de l'analyse d'évitement de collisions pour le Hoverboard & Balai.`);
+    this.agentLogs.unshift(`[${t}] 👁️ TroxT Third Eye: Rayon de collision Hoverboard validé à 0.45m. Rayon Balai validé à 0.60m.`);
+    this.agentLogs.unshift(`[${t}] 👁️ TroxT Third Eye: Sécurité physique validée. Risque de collision : TRÈS FAIBLE (0.00% - dôme actif).`);
+
+    this.addCombatLog(`👁️ THIRD EYE : Risque de collision validé ! Vos montures volent désormais à pleine puissance.`);
+    if (this.agentLogs.length > 15) this.agentLogs.pop();
+    this.onStateUpdatePay();
+  }
+
+  private onStateUpdatePay() {
+    // Manually force triggering state update
+    this.updatePlayerAndCamera(0);
+  }
+
   public toggleMount(mount: 'hoverboard' | 'broom') {
     if (this.activeMount === mount) {
       this.activeMount = null;
@@ -1749,6 +1785,15 @@ export class GameManager {
             const forceVec = toRival.clone().multiplyScalar(forceScalar);
             rival.velocity.add(forceVec);
 
+            // Apply rotational torque / skeleton impulse on hit!
+            if (rival.jointRotVelocity) {
+              rival.jointRotVelocity.set(
+                (Math.random() - 0.5) * (isCrit ? 16.0 : 9.0),
+                (Math.random() - 0.5) * (isCrit ? 12.0 : 6.0),
+                (Math.random() - 0.5) * (isCrit ? 16.0 : 9.0)
+              );
+            }
+
             // Spawn indicators and particles
             const headPos = rival.position.clone().add(new THREE.Vector3(0, 1.8, 0));
             this.spawnDamageIndicator(`${isCrit ? '🔥 CRITICAL -' : '💢 -'}${finalDmg} HP`, headPos, isCrit);
@@ -1758,17 +1803,20 @@ export class GameManager {
 
             // Check if wall-slam threshold is triggered! (if pushed close to cage octagonal wall)
             const distFromCenter = rival.position.distanceTo(this.fightArenaCenter);
-            if (distFromCenter > this.fightArenaRadius - 1.2) {
+            if (distFromCenter > this.fightArenaRadius - 1.2 && !rival.isPinnedToWall) {
               const wallSlamDmg = 35;
               rival.health = Math.max(0, rival.health - wallSlamDmg);
-              rival.isDazed = true;
-              rival.dazedTimer = 1.8;
-              rival.velocity.multiplyScalar(-0.4); // rebound flaccidly
+              
+              // Trigger face-in-the-wall pinned state
+              rival.isPinnedToWall = true;
+              rival.pinTimer = 2.0;
+              rival.pinWallNormal = toRival.clone().normalize();
+              rival.velocity.set(0, 0, 0);
               
               const slamPos = rival.position.clone();
-              this.spawnDamageIndicator(`💥 WALL SLAM! -${wallSlamDmg} HP`, slamPos.add(new THREE.Vector3(0, 1.2, 0)), true);
+              this.spawnDamageIndicator(`💥 FACE AU MUR! -${wallSlamDmg} HP`, slamPos.add(new THREE.Vector3(0, 1.2, 0)), true);
               this.spawnCombatParticles(0xff0000, slamPos, 25);
-              this.addCombatLog(`💥 CAGE IMPACT : ${rival.name} s'écrase violemment contre la cage métallique ! Assommé !`);
+              this.addCombatLog(`💥 CHOC INTENSE : ${rival.name} est aplati FACE CONTRE GRILLE !`);
             }
 
             if (rival.health <= 0) {
@@ -1971,6 +2019,11 @@ export class GameManager {
       if (st !== null) {
         this.sceneTemplate = st;
       }
+
+      const bp = localStorage.getItem('troxt_game_bought_properties');
+      if (bp !== null) {
+        this.boughtPropertyIds = JSON.parse(bp);
+      }
     } catch (e) {
       console.warn("Could not load economy states from localstorage", e);
     }
@@ -1985,6 +2038,7 @@ export class GameManager {
       localStorage.setItem('troxt_game_jointstiffness', this.jointStiffness);
       localStorage.setItem('troxt_game_unlocked_props', JSON.stringify(this.unlockedFurnitureIds));
       localStorage.setItem('troxt_game_scene_template', this.sceneTemplate);
+      localStorage.setItem('troxt_game_bought_properties', JSON.stringify(this.boughtPropertyIds));
     } catch (e) {
       console.warn("Could not save economy states", e);
     }
@@ -2664,7 +2718,12 @@ export class GameManager {
         combatMoveTimer: 0,
         attackCooldown: 1.0 + Math.random() * 1.5,
         personality: ['aggressive', 'defensive', 'brawler'][i % 3] as any,
-        wobbleFactor: 1.0
+        wobbleFactor: 1.0,
+        jointRot: new THREE.Vector3(0, 0, 0),
+        jointRotVelocity: new THREE.Vector3(0, 0, 0),
+        isPinnedToWall: false,
+        pinWallNormal: new THREE.Vector3(0, 0, 0),
+        pinTimer: 0
       });
     }
 
@@ -2820,14 +2879,87 @@ export class GameManager {
 
         livingRivalsCount++;
 
+        // Handle face-in-the-wall pin state
+        if (rival.isPinnedToWall) {
+          rival.pinTimer = (rival.pinTimer ?? 2.0) - deltaTime;
+          rival.velocity.set(0, 0, 0);
+
+          // Face the wall directly
+          if (rival.pinWallNormal) {
+            const lookAngle = Math.atan2(rival.pinWallNormal.x, rival.pinWallNormal.z);
+            rival.mesh.rotation.y = lookAngle; // face-in-the-wall!
+          }
+
+          // Slow slide down effect
+          rival.mesh.position.y = THREE.MathUtils.lerp(rival.mesh.position.y, 0.25, 0.05);
+
+          // Pinned ragdoll limbs skeleton positions (funny crushed looks)
+          rival.head.rotation.x = THREE.MathUtils.lerp(rival.head.rotation.x, 0.9, 0.1);
+          rival.head.rotation.z = THREE.MathUtils.lerp(rival.head.rotation.z, 0.2, 0.1);
+          rival.leftArm.rotation.set(-Math.PI / 1.8, 0, -Math.PI / 4);
+          rival.rightArm.rotation.set(-Math.PI / 1.8, 0, Math.PI / 4);
+          rival.leftLeg.rotation.set(0.3, 0, 0.1);
+          rival.rightLeg.rotation.set(0.3, 0, -0.1);
+
+          // Spurt some friction sliding wall particles
+          if (Math.random() < 0.25) {
+            const sparkPos = rival.position.clone().add(new THREE.Vector3(0, 1.2, 0));
+            this.spawnCombatParticles(0xeab308, sparkPos, 2);
+          }
+
+          if (rival.pinTimer <= 0) {
+            rival.isPinnedToWall = false;
+            rival.isDazed = true;
+            rival.dazedTimer = 1.5;
+            this.addCombatLog(`🤕 DÉGAGE : ${rival.name} glisse du mur et retombe chancelant !`);
+          }
+          return;
+        }
+
+        // Apply joint spring-damper ragdoll physics for active rivals
+        if (rival.jointRot && rival.jointRotVelocity) {
+          const springK = 35.0; // soft joint stiffness
+          const damp = 4.0;
+          
+          const ax = -springK * rival.jointRot.x - damp * rival.jointRotVelocity.x;
+          const ay = -springK * rival.jointRot.y - damp * rival.jointRotVelocity.y;
+          const az = -springK * rival.jointRot.z - damp * rival.jointRotVelocity.z;
+
+          rival.jointRotVelocity.x += ax * deltaTime;
+          rival.jointRotVelocity.y += ay * deltaTime;
+          rival.jointRotVelocity.z += az * deltaTime;
+
+          rival.jointRot.x += rival.jointRotVelocity.x * deltaTime;
+          rival.jointRot.y += rival.jointRotVelocity.y * deltaTime;
+          rival.jointRot.z += rival.jointRotVelocity.z * deltaTime;
+
+          // Velocity-based drag offsets on limbs for flailing look
+          const dragX = -rival.velocity.z * 0.12;
+          const dragZ = rival.velocity.x * 0.12;
+
+          rival.head.rotation.x = rival.jointRot.x + dragX;
+          rival.head.rotation.z = rival.jointRot.z + dragZ;
+
+          // Only apply standard guard or punch if NOT dazed and NOT attacking
+          if (!rival.isDazed && !rival.activeCombatMove) {
+            rival.leftArm.rotation.x = dragX * 1.5 + Math.sin(Date.now() * 0.008) * 0.15;
+            rival.leftArm.rotation.z = -Math.PI / 8 + dragZ * 1.5;
+            rival.rightArm.rotation.x = dragX * 1.5 + Math.cos(Date.now() * 0.008) * 0.15;
+            rival.rightArm.rotation.z = Math.PI / 8 - dragZ * 1.5;
+          }
+        }
+
         // Handle Daze Stun
         if (rival.isDazed) {
           rival.dazedTimer -= deltaTime;
           rival.mesh.rotation.z = Math.sin(Date.now() * 0.04) * 0.25; // dizzy wobble animation
           
-          // floppy arms
-          rival.leftArm.rotation.z = Math.sin(Date.now() * 0.01) * 0.8;
-          rival.rightArm.rotation.z = -Math.sin(Date.now() * 0.01) * 0.8;
+          // floppy floppy limbs
+          if (rival.jointRot) {
+            rival.head.rotation.x = 0.3 + Math.sin(Date.now() * 0.02) * 0.2;
+            rival.leftArm.rotation.set(Math.sin(Date.now() * 0.015) * 1.1, 0, -Math.PI / 4);
+            rival.rightArm.rotation.set(-Math.cos(Date.now() * 0.015) * 1.1, 0, Math.PI / 4);
+          }
 
           if (rival.dazedTimer <= 0) {
             rival.isDazed = false;
@@ -2975,10 +3107,33 @@ export class GameManager {
         rival.position.add(rival.velocity.clone().multiplyScalar(deltaTime));
         rival.velocity.multiplyScalar(0.8); // high drag
 
-        // Keep inside circular boundary octagon physically
+        // Keep inside circular boundary octagon physically & trigger face-in-the-wall
         const distFromCenter = rival.position.distanceTo(this.fightArenaCenter);
-        if (distFromCenter > this.fightArenaRadius - 0.4) {
-          const pushBack = rival.position.clone().sub(this.fightArenaCenter).normalize().multiplyScalar(this.fightArenaRadius - 0.4);
+        if (distFromCenter > this.fightArenaRadius - 0.8) {
+          const pushDir = rival.position.clone().sub(this.fightArenaCenter).normalize();
+          const speedInDir = rival.velocity.dot(pushDir);
+          
+          if (speedInDir > 3.0 && !rival.isPinnedToWall && !rival.isKO) {
+            rival.isPinnedToWall = true;
+            rival.pinTimer = 2.0;
+            rival.pinWallNormal = pushDir.clone().negate();
+            rival.velocity.set(0, 0, 0);
+            
+            const slamDmg = 35;
+            rival.health = Math.max(0, rival.health - slamDmg);
+            
+            this.spawnDamageIndicator(`💥 FACE AU MUR! -${slamDmg} HP`, rival.position.clone().add(new THREE.Vector3(0, 1.8, 0)), true);
+            this.spawnCombatParticles(0xff0000, rival.position.clone().add(new THREE.Vector3(0, 1.0, 0)), 22);
+            this.addCombatLog(`💥 CHOC : ${rival.name} s'éclate FACE CONTRE GRILLE !`);
+            
+            if (rival.health <= 0) {
+              rival.isKO = true;
+              rival.isPinnedToWall = false;
+              this.addCombatLog(`💀 OUT : ${rival.name} est KO suite à l'impact !`);
+            }
+          }
+          
+          const pushBack = pushDir.multiplyScalar(this.fightArenaRadius - 0.4);
           rival.position.copy(this.fightArenaCenter).add(pushBack);
         }
       });

@@ -1,0 +1,35 @@
+# Dans C:\troxtetherworld
+cd C:\troxtetherworld
+
+@'
+{
+  "name": "etherworld-client",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "three": "^0.168.0",
+    "@react-three/fiber": "^8.17.10",
+    "@react-three/drei": "^9.114.3",
+    "socket.io-client": "^4.7.5",
+    "zustand": "^4.5.5",
+    "framer-motion": "^11.3.19"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.3",
+    "@types/react-dom": "^18.3.0",
+    "@types/three": "^0.168.0",
+    "@vitejs/plugin-react": "^4.3.1",
+    "typescript": "^5.5.3",
+    "vite": "^5.4.1"
+  }
+}
+'@ | Set-Content client\package.json -Encoding UTF8
+Write-Host "✅ client/package.json corrigé" -ForegroundColor Green

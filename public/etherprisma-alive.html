@@ -1,0 +1,1575 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EtherPrisma — Alive Edition | Admin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Exo+2:wght@300;400;500;600;700&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{
+  --bg:#01020a;--bg2:#05080f;--panel:rgba(2,4,12,0.97);
+  --b0:rgba(0,212,255,0.07);--b1:rgba(0,212,255,0.2);--b2:rgba(0,212,255,0.45);
+  --cy:#00d4ff;--go:#ffd700;--pu:#9b87ff;--re:#ff4466;--gr:#00ff88;--or:#ff8800;
+  --tx:#e8edf5;--mu:#4a5a70;--m2:#7a8a9a;
+  --f1:'Exo 2',sans-serif;--f2:'Rajdhani',sans-serif;--f3:'Orbitron',monospace;
+}
+html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(--tx);
+  font-family:var(--f1);user-select:none;}
+body::after{content:'';position:fixed;inset:0;z-index:9998;pointer-events:none;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.032'/%3E%3C/svg%3E");
+  opacity:0.4;}
+/* GATE */
+#gate{position:fixed;inset:0;z-index:5000;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:28px;
+  background:radial-gradient(ellipse at 50% 40%,#050d1a 0%,#010306 70%,#000 100%);}
+.g-logo{font-family:var(--f3);font-size:32px;font-weight:900;letter-spacing:6px;
+  color:var(--cy);text-shadow:0 0 40px var(--cy),0 0 80px rgba(0,212,255,0.3);
+  animation:glow 3s ease-in-out infinite;}
+@keyframes glow{0%,100%{text-shadow:0 0 20px var(--cy);}50%{text-shadow:0 0 55px var(--cy),0 0 110px rgba(0,212,255,0.4);}}
+.g-sub{font-family:var(--f2);font-size:10px;letter-spacing:4px;color:var(--m2);
+  text-transform:uppercase;margin-top:-22px;}
+.g-card{background:rgba(2,5,16,0.97);border:1px solid var(--b1);border-radius:12px;
+  padding:28px 36px;display:flex;flex-direction:column;gap:14px;width:380px;
+  box-shadow:0 0 80px rgba(0,212,255,0.04),0 24px 60px rgba(0,0,0,0.9);}
+.g-lbl{font-family:var(--f2);font-size:10px;letter-spacing:3px;color:var(--m2);
+  text-transform:uppercase;text-align:center;}
+.g-badge{display:flex;align-items:center;gap:8px;padding:7px 14px;border-radius:5px;
+  background:rgba(255,215,0,0.05);border:1px solid rgba(255,215,0,0.18);
+  font-family:var(--f2);font-size:9px;letter-spacing:2px;color:var(--go);
+  text-transform:uppercase;justify-content:center;}
+.g-dot{width:6px;height:6px;border-radius:50%;background:var(--re);
+  box-shadow:0 0 8px var(--re);animation:blink 1.5s ease-in-out infinite;}
+@keyframes blink{0%,100%{opacity:1;}50%{opacity:0.15;}}
+.g-roles{display:flex;gap:8px;}
+.g-role{flex:1;padding:8px 4px;border-radius:4px;border:1px solid var(--b0);
+  font-family:var(--f2);font-size:9px;letter-spacing:1.5px;text-transform:uppercase;
+  text-align:center;color:var(--mu);}
+.g-role.ow{border-color:rgba(255,215,0,0.28);color:var(--go);}
+.g-role.ad{border-color:rgba(0,212,255,0.28);color:var(--cy);}
+.g-inp{width:100%;background:rgba(0,0,0,0.6);border:1px solid var(--b1);color:var(--cy);
+  padding:12px 16px;border-radius:5px;font-family:var(--f3);font-size:13px;
+  font-weight:600;letter-spacing:3px;outline:none;transition:all 0.2s;text-align:center;}
+.g-inp::placeholder{color:var(--mu);font-family:var(--f2);letter-spacing:1px;font-size:11px;}
+.g-inp:focus{border-color:var(--cy);box-shadow:0 0 0 2px rgba(0,212,255,0.07);}
+.g-btn{width:100%;padding:13px;border-radius:5px;border:1px solid rgba(0,212,255,0.35);
+  background:linear-gradient(135deg,rgba(0,212,255,0.14),rgba(0,212,255,0.04));
+  color:var(--cy);font-family:var(--f2);font-size:12px;font-weight:700;
+  letter-spacing:3px;text-transform:uppercase;cursor:pointer;transition:all 0.2s;}
+.g-btn:hover{background:linear-gradient(135deg,rgba(0,212,255,0.22),rgba(0,212,255,0.09));
+  box-shadow:0 0 24px rgba(0,212,255,0.18);}
+.g-err{font-size:9px;color:var(--re);letter-spacing:1.5px;text-align:center;
+  text-transform:uppercase;min-height:14px;opacity:0;transition:opacity 0.3s;}
+.g-err.show{opacity:1;}
+/* APP */
+#app{display:none;width:100%;height:100%;flex-direction:column;}
+#app.on{display:flex;}
+/* HEADER */
+.hdr{height:50px;flex-shrink:0;background:linear-gradient(180deg,rgba(1,2,10,0.99),rgba(1,2,10,0.82));
+  border-bottom:1px solid;border-image:linear-gradient(90deg,transparent,var(--cy) 30%,var(--pu) 70%,transparent) 1;
+  display:flex;align-items:center;justify-content:space-between;padding:0 16px;
+  backdrop-filter:blur(20px);position:relative;z-index:200;}
+.h-logo{display:flex;align-items:center;gap:8px;}
+.h-hex{font-size:20px;color:var(--cy);filter:drop-shadow(0 0 8px var(--cy));animation:hexP 3s ease-in-out infinite;}
+@keyframes hexP{0%,100%{filter:drop-shadow(0 0 6px var(--cy));}50%{filter:drop-shadow(0 0 22px var(--cy)) drop-shadow(0 0 44px rgba(0,212,255,0.4));}}
+.h-name{font-family:var(--f3);font-size:12px;font-weight:700;letter-spacing:3px;color:var(--tx);}
+.h-name b{color:var(--cy);}
+.h-name em{color:var(--go);font-style:normal;font-size:9px;margin-left:6px;letter-spacing:2px;}
+.h-sep{width:1px;height:26px;background:linear-gradient(180deg,transparent,var(--b2),transparent);margin:0 10px;}
+.h-tabs{display:flex;align-items:center;gap:3px;}
+.h-tab{padding:5px 11px;border-radius:3px;border:1px solid transparent;color:var(--mu);
+  font-family:var(--f2);font-size:9px;font-weight:700;letter-spacing:1.5px;
+  text-transform:uppercase;cursor:pointer;transition:all 0.2s;}
+.h-tab:hover{color:var(--m2);}
+.h-tab.on{color:var(--go);border-color:rgba(255,215,0,0.2);background:rgba(255,215,0,0.04);}
+.h-right{display:flex;align-items:center;gap:8px;}
+.rb{display:flex;align-items:center;gap:5px;padding:4px 9px;border-radius:3px;
+  font-family:var(--f2);font-size:9px;letter-spacing:1.5px;text-transform:uppercase;}
+.rb.ow{border:1px solid rgba(255,215,0,0.32);background:rgba(255,215,0,0.05);color:var(--go);}
+.rb.ad{border:1px solid rgba(0,212,255,0.26);background:rgba(0,212,255,0.04);color:var(--cy);}
+.rb-dot{width:6px;height:6px;border-radius:50%;animation:blink 2s ease-in-out infinite;}
+.rb.ow .rb-dot{background:var(--go);box-shadow:0 0 6px var(--go);}
+.rb.ad .rb-dot{background:var(--cy);box-shadow:0 0 6px var(--cy);}
+.h-out{background:none;border:1px solid var(--b1);color:var(--m2);padding:4px 10px;
+  border-radius:3px;font-family:var(--f2);font-size:9px;cursor:pointer;
+  transition:all 0.2s;letter-spacing:1px;text-transform:uppercase;}
+.h-out:hover{border-color:var(--re);color:var(--re);}
+/* MAIN */
+.main{flex:1;display:grid;grid-template-columns:286px 1fr 272px;overflow:hidden;min-height:0;}
+/* LEFT */
+.lp{background:var(--panel);border-right:1px solid var(--b0);display:flex;flex-direction:column;overflow:hidden;}
+.lp-tabs{display:flex;border-bottom:1px solid var(--b0);background:rgba(0,0,0,0.28);}
+.lp-tab{flex:1;padding:8px 2px 7px;background:none;border:none;border-bottom:2px solid transparent;
+  color:var(--mu);font-family:var(--f2);font-size:7.5px;font-weight:700;letter-spacing:0.8px;
+  text-transform:uppercase;cursor:pointer;transition:all 0.2s;
+  display:flex;flex-direction:column;align-items:center;gap:2px;}
+.lp-tab .ti{font-size:13px;}
+.lp-tab:hover{color:var(--m2);}
+.lp-tab.on{color:var(--go);border-bottom-color:var(--go);}
+.lp-tab.aura-t.on{color:var(--pu);border-bottom-color:var(--pu);}
+.lp-tab.pr-t.on{color:var(--gr);border-bottom-color:var(--gr);}
+.lp-body{flex:1;overflow-y:auto;padding:12px 11px 18px;scrollbar-width:thin;
+  scrollbar-color:rgba(0,212,255,0.1) transparent;}
+.lp-body::-webkit-scrollbar{width:2px;}
+.lp-body::-webkit-scrollbar-thumb{background:rgba(0,212,255,0.1);border-radius:2px;}
+.lpanel{display:none;animation:pin 0.2s ease;}
+.lpanel.on{display:block;}
+@keyframes pin{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:none;}}
+.sec{font-family:var(--f2);font-size:8.5px;font-weight:700;letter-spacing:2px;color:var(--cy);
+  text-transform:uppercase;margin:12px 0 6px;padding-bottom:4px;
+  border-bottom:1px solid rgba(0,212,255,0.07);display:flex;align-items:center;gap:3px;}
+.sec:first-child{margin-top:0;}
+.sec::before{content:'▸';opacity:0.5;font-size:7px;}
+.sw-row{display:flex;flex-wrap:wrap;gap:6px;}
+.sw{width:21px;height:21px;border-radius:50%;border:2px solid rgba(255,255,255,0.08);
+  cursor:pointer;transition:all 0.15s;flex-shrink:0;position:relative;}
+.sw:hover{transform:scale(1.2);}
+.sw.on{border-color:#fff;box-shadow:0 0 0 2px var(--cy),0 0 10px rgba(0,212,255,0.4);transform:scale(1.1);}
+.sw.on::after{content:'✓';position:absolute;inset:0;display:flex;align-items:center;
+  justify-content:center;font-size:9px;color:rgba(255,255,255,0.9);font-weight:800;}
+.og{display:grid;grid-template-columns:repeat(auto-fill,minmax(60px,1fr));gap:4px;}
+.op{padding:7px 3px 5px;border-radius:4px;border:1px solid var(--b0);
+  background:linear-gradient(160deg,rgba(255,255,255,0.02),rgba(0,0,0,0.3));
+  color:var(--mu);font-size:7.5px;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;
+  text-align:center;cursor:pointer;transition:all 0.18s;
+  display:flex;flex-direction:column;align-items:center;gap:3px;}
+.op .oi{font-size:16px;}
+.op:hover{border-color:var(--b1);color:var(--m2);}
+.op.on{border-color:rgba(255,215,0,0.4);color:var(--go);
+  background:linear-gradient(160deg,rgba(255,215,0,0.08),rgba(255,215,0,0.02));}
+.sl-w{margin-bottom:7px;}
+.sl-h{display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;}
+.sl-lb{font-size:8.5px;color:var(--mu);letter-spacing:1.5px;text-transform:uppercase;}
+.sl-vl{font-family:var(--f3);font-size:9px;font-weight:600;color:var(--cy);}
+.slider{width:100%;height:3px;-webkit-appearance:none;appearance:none;
+  background:linear-gradient(to right,var(--cy) 0%,var(--cy) var(--pct,50%),rgba(255,255,255,0.06) var(--pct,50%));
+  border-radius:2px;outline:none;cursor:pointer;}
+.slider::-webkit-slider-thumb{-webkit-appearance:none;width:13px;height:13px;border-radius:50%;
+  background:radial-gradient(circle at 40% 35%,#fff 0%,var(--cy) 60%);
+  border:2px solid var(--bg);box-shadow:0 0 8px rgba(0,212,255,0.5);cursor:pointer;}
+.ni{width:100%;background:rgba(0,0,0,0.5);border:1px solid var(--b1);color:var(--go);
+  padding:9px 11px;border-radius:4px;font-family:var(--f3);font-size:11px;font-weight:600;
+  letter-spacing:2px;text-transform:uppercase;outline:none;transition:all 0.2s;}
+.ni:focus{border-color:var(--go);}
+.ni::placeholder{color:var(--mu);font-family:var(--f2);}
+.sex-row{display:flex;gap:6px;margin-bottom:2px;}
+.sex-btn{flex:1;padding:8px 5px;border-radius:4px;border:1px solid var(--b0);
+  background:linear-gradient(135deg,rgba(0,0,0,0.4),rgba(255,255,255,0.02));
+  color:var(--mu);font-family:var(--f2);font-size:10px;font-weight:700;letter-spacing:1.5px;
+  text-transform:uppercase;cursor:pointer;transition:all 0.2s;text-align:center;}
+.sex-btn.on{border-color:var(--cy);color:var(--cy);background:linear-gradient(135deg,rgba(0,212,255,0.1),rgba(0,212,255,0.03));}
+.sel{width:100%;background:rgba(0,0,0,0.5);border:1px solid var(--b1);color:var(--tx);
+  padding:8px 28px 8px 10px;border-radius:4px;font-family:var(--f1);font-size:11px;
+  outline:none;cursor:pointer;-webkit-appearance:none;appearance:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='7'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%2300d4ff' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 10px center;}
+.sel option{background:#070c1a;}
+/* AURA PANEL */
+.a-panel{display:flex;flex-direction:column;gap:7px;}
+.god-btn{width:100%;padding:10px;border-radius:6px;border:1px solid rgba(255,215,0,0.45);
+  background:linear-gradient(135deg,rgba(255,215,0,0.1),rgba(255,100,0,0.07));
+  color:var(--go);font-family:var(--f2);font-size:9.5px;font-weight:700;
+  letter-spacing:2px;text-transform:uppercase;cursor:pointer;transition:all 0.2s;
+  display:flex;align-items:center;justify-content:center;gap:6px;}
+.god-btn:hover{background:linear-gradient(135deg,rgba(255,215,0,0.18),rgba(255,100,0,0.12));
+  box-shadow:0 0 22px rgba(255,215,0,0.18);}
+.god-btn.on{background:linear-gradient(135deg,rgba(255,215,0,0.24),rgba(255,100,0,0.18));
+  box-shadow:0 0 32px rgba(255,215,0,0.28),inset 0 0 20px rgba(255,215,0,0.04);
+  animation:godPulse 2s ease-in-out infinite;}
+@keyframes godPulse{0%,100%{box-shadow:0 0 28px rgba(255,215,0,0.25);}50%{box-shadow:0 0 42px rgba(255,215,0,0.5);}}
+.a-sec{font-family:var(--f2);font-size:8.5px;font-weight:700;letter-spacing:2px;color:var(--pu);
+  text-transform:uppercase;padding-bottom:4px;border-bottom:1px solid rgba(155,135,255,0.1);
+  display:flex;align-items:center;gap:3px;}
+.a-sec::before{content:'✦';opacity:0.5;font-size:7px;}
+.a-sec.new-s{color:var(--go);}
+.a-grid{display:grid;grid-template-columns:1fr 1fr;gap:5px;}
+.a-btn{display:flex;flex-direction:column;align-items:center;gap:4px;
+  background:rgba(0,0,0,0.5);border:1px solid rgba(255,255,255,0.07);
+  border-radius:7px;padding:9px 5px;cursor:pointer;transition:all 0.2s;
+  color:var(--mu);position:relative;overflow:hidden;}
+.a-btn::before{content:'';position:absolute;inset:0;
+  background:radial-gradient(circle at 50% 110%,rgba(var(--cr),var(--cg),var(--cb),0.15) 0%,transparent 60%);
+  opacity:0;transition:opacity 0.3s;}
+.a-btn:hover::before{opacity:1;}
+.a-btn:hover{border-color:rgba(255,255,255,0.16);transform:translateY(-1px);}
+.a-btn.on{border-color:var(--ac,var(--cy));
+  background:rgba(var(--cr),var(--cg),var(--cb),0.1);color:#fff;
+  box-shadow:0 0 14px rgba(var(--cr),var(--cg),var(--cb),0.25);}
+.a-btn .new-tag{position:absolute;top:3px;right:4px;font-size:6.5px;color:var(--go);
+  font-family:var(--f2);font-weight:700;letter-spacing:1px;text-transform:uppercase;}
+.a-icon{width:36px;height:36px;border-radius:6px;display:flex;align-items:center;
+  justify-content:center;font-size:17px;border:1px solid rgba(255,255,255,0.08);}
+.a-name{font-size:7.5px;text-transform:uppercase;letter-spacing:0.7px;text-align:center;line-height:1.3;}
+.a-lore{font-size:8.5px;color:var(--mu);font-style:italic;padding:7px 9px;
+  border-radius:5px;border:1px solid rgba(155,135,255,0.1);
+  background:rgba(155,135,255,0.03);line-height:1.5;min-height:36px;}
+.a-active{font-family:var(--f2);font-size:10px;font-weight:700;letter-spacing:2px;
+  text-align:center;text-transform:uppercase;padding:6px;border-radius:4px;
+  background:rgba(0,0,0,0.3);border:1px solid rgba(255,255,255,0.05);color:var(--m2);}
+.a-active.lit{color:var(--ac,var(--cy));border-color:var(--ac,var(--cy));text-shadow:0 0 10px var(--ac,var(--cy));}
+/* PRISMA PANEL */
+.pr-panel{display:flex;flex-direction:column;gap:7px;}
+.pr-sec{font-family:var(--f2);font-size:8.5px;font-weight:700;letter-spacing:2px;color:var(--gr);
+  text-transform:uppercase;padding-bottom:4px;border-bottom:1px solid rgba(0,255,136,0.1);
+  display:flex;align-items:center;gap:3px;}
+.pr-sec::before{content:'⬡';opacity:0.6;font-size:9px;}
+.pr-list{display:flex;flex-direction:column;gap:4px;max-height:175px;overflow-y:auto;
+  scrollbar-width:thin;scrollbar-color:rgba(0,255,136,0.1) transparent;}
+.pr-item{padding:8px 10px;border-radius:5px;border:1px solid var(--b0);
+  background:rgba(0,0,0,0.35);cursor:pointer;transition:all 0.2s;
+  display:flex;align-items:center;gap:8px;}
+.pr-item:hover{border-color:var(--b1);}
+.pr-item.on{border-color:rgba(0,255,136,0.38);background:rgba(0,255,136,0.04);}
+.pr-icon{font-size:14px;flex-shrink:0;}
+.pr-info{flex:1;min-width:0;}
+.pr-name{font-family:var(--f2);font-size:10px;font-weight:700;color:var(--tx);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.pr-meta{font-size:7.5px;color:var(--mu);letter-spacing:1px;text-transform:uppercase;margin-top:1px;}
+.pr-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+.pr-del{width:18px;height:18px;display:flex;align-items:center;justify-content:center;
+  border-radius:3px;font-size:9px;color:var(--mu);transition:all 0.2s;cursor:pointer;}
+.pr-del:hover{color:var(--re);}
+.pr-save{width:100%;padding:9px;border-radius:5px;border:1px solid rgba(0,255,136,0.32);
+  background:linear-gradient(135deg,rgba(0,255,136,0.09),rgba(0,255,136,0.03));
+  color:var(--gr);font-family:var(--f2);font-size:9.5px;font-weight:700;
+  letter-spacing:2px;text-transform:uppercase;cursor:pointer;transition:all 0.2s;
+  display:flex;align-items:center;justify-content:center;gap:6px;}
+.pr-save:hover{background:linear-gradient(135deg,rgba(0,255,136,0.16),rgba(0,255,136,0.07));
+  box-shadow:0 0 16px rgba(0,255,136,0.14);}
+.pr-stat{display:flex;justify-content:space-between;align-items:center;
+  padding:5px 8px;border-radius:3px;background:rgba(0,0,0,0.22);border:1px solid var(--b0);}
+.pr-sk{font-size:7.5px;color:var(--mu);letter-spacing:1.5px;text-transform:uppercase;}
+.pr-sv{font-family:var(--f3);font-size:9px;color:var(--gr);}
+.pr-exp{width:100%;padding:8px;border-radius:4px;border:1px solid rgba(0,212,255,0.2);
+  background:rgba(0,212,255,0.03);color:var(--cy);font-family:var(--f2);font-size:8.5px;
+  font-weight:700;letter-spacing:2px;text-transform:uppercase;cursor:pointer;
+  transition:all 0.2s;}
+.pr-exp:hover{background:rgba(0,212,255,0.08);}
+/* VIEWPORT */
+.vp{position:relative;overflow:hidden;
+  background:radial-gradient(ellipse at 50% 35%,#070e1e 0%,#020710 55%,#010205 100%);}
+#cc{width:100%!important;height:100%!important;display:block;}
+.vc{position:absolute;width:18px;height:18px;border-color:rgba(0,212,255,0.32);border-style:solid;z-index:2;}
+.vc-tl{top:10px;left:10px;border-width:2px 0 0 2px;}
+.vc-tr{top:10px;right:10px;border-width:2px 2px 0 0;}
+.vc-bl{bottom:10px;left:10px;border-width:0 0 2px 2px;}
+.vc-br{bottom:10px;right:10px;border-width:0 2px 2px 0;}
+.v-scan{position:absolute;inset:0;z-index:2;pointer-events:none;
+  background:repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(0,20,40,0.035) 3px,rgba(0,20,40,0.035) 4px);}
+.v-holo{position:absolute;top:0;left:0;right:0;z-index:3;pointer-events:none;height:2px;
+  background:linear-gradient(90deg,transparent,var(--cy),var(--pu),var(--cy),transparent);
+  animation:holoS 5s linear infinite;opacity:0;}
+@keyframes holoS{0%{top:0%;opacity:0;}5%{opacity:0.4;}95%{opacity:0.4;}100%{top:100%;opacity:0;}}
+.v-live{position:absolute;top:13px;left:12px;display:flex;align-items:center;gap:5px;
+  z-index:3;font-family:var(--f2);font-size:8px;letter-spacing:2px;
+  color:rgba(0,255,136,0.45);text-transform:uppercase;}
+.v-live-d{width:5px;height:5px;border-radius:50%;background:var(--gr);
+  box-shadow:0 0 5px var(--gr);animation:blink 1.5s ease-in-out infinite;}
+.v-name{position:absolute;top:13px;left:50%;transform:translateX(-50%);
+  font-family:var(--f3);font-size:11px;font-weight:700;letter-spacing:5px;
+  color:rgba(255,215,0,0.75);text-transform:uppercase;pointer-events:none;
+  white-space:nowrap;z-index:3;animation:nameG 3s ease-in-out infinite;}
+@keyframes nameG{0%,100%{text-shadow:0 0 12px rgba(255,215,0,0.28);}50%{text-shadow:0 0 24px rgba(255,215,0,0.55),0 0 50px rgba(255,215,0,0.18);}}
+.v-aura{position:absolute;top:36px;left:50%;transform:translateX(-50%);
+  font-family:var(--f2);font-size:7.5px;letter-spacing:2.5px;
+  color:rgba(155,135,255,0.32);text-transform:uppercase;pointer-events:none;
+  z-index:3;white-space:nowrap;transition:all 0.4s;}
+.v-god{position:absolute;top:13px;right:12px;font-family:var(--f2);font-size:8px;
+  font-weight:700;letter-spacing:2px;text-transform:uppercase;
+  color:rgba(255,215,0,0.55);z-index:3;display:none;}
+.v-god.on{display:block;animation:godG 1.5s ease-in-out infinite;}
+@keyframes godG{0%,100%{color:rgba(255,215,0,0.55);}50%{color:rgba(255,215,0,1);text-shadow:0 0 12px rgba(255,215,0,0.6);}}
+.v-wm{position:absolute;bottom:34px;left:50%;transform:translateX(-50%);
+  font-family:var(--f2);font-size:7.5px;font-weight:700;letter-spacing:4px;
+  color:rgba(0,212,255,0.1);text-transform:uppercase;pointer-events:none;z-index:3;white-space:nowrap;}
+.v-bloom{position:absolute;bottom:10px;left:10px;font-family:var(--f3);font-size:7px;
+  letter-spacing:1.5px;color:rgba(155,135,255,0.28);z-index:3;}
+.v-res{position:absolute;bottom:10px;right:10px;font-family:var(--f3);font-size:7px;
+  letter-spacing:1.5px;color:rgba(0,212,255,0.22);z-index:3;}
+.v-hints{position:absolute;bottom:10px;left:50%;transform:translateX(-50%);
+  display:flex;gap:9px;align-items:center;z-index:3;}
+.v-hint{font-size:7.5px;color:rgba(255,255,255,0.16);letter-spacing:1.5px;
+  text-transform:uppercase;display:flex;align-items:center;gap:3px;}
+.v-hint kbd{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.09);
+  padding:1px 4px;border-radius:2px;font-size:7px;color:rgba(255,255,255,0.3);}
+/* RIGHT */
+.rp{background:var(--panel);border-left:1px solid var(--b0);display:flex;flex-direction:column;overflow:hidden;}
+.rp-hdr{padding:10px 12px;border-bottom:1px solid var(--b0);display:flex;align-items:center;gap:7px;
+  background:rgba(0,0,0,0.16);}
+.rp-title{font-family:var(--f2);font-size:9.5px;font-weight:700;letter-spacing:2.5px;
+  text-transform:uppercase;color:var(--m2);}
+.char-card{margin:10px;padding:12px 12px 13px;border:1px solid rgba(0,212,255,0.14);
+  border-radius:5px;background:linear-gradient(135deg,rgba(0,212,255,0.03),rgba(155,135,255,0.02));
+  position:relative;overflow:hidden;}
+.char-card::before{content:'';position:absolute;top:0;left:0;width:3px;height:100%;
+  background:linear-gradient(180deg,var(--cy),var(--pu));}
+.c-name{font-family:var(--f3);font-size:12px;font-weight:700;letter-spacing:3px;
+  color:var(--go);text-transform:uppercase;margin-bottom:2px;padding-left:7px;
+  text-shadow:0 0 14px rgba(255,215,0,0.18);}
+.c-id{font-family:var(--f2);font-size:7.5px;color:var(--mu);letter-spacing:1.5px;
+  text-transform:uppercase;margin-bottom:10px;padding-left:7px;}
+.c-stats{display:flex;flex-direction:column;gap:7px;padding-left:7px;}
+.st-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:2px;}
+.st-k{font-size:7.5px;color:var(--mu);letter-spacing:1.5px;text-transform:uppercase;}
+.st-v{font-family:var(--f3);font-size:8.5px;font-weight:600;color:var(--cy);}
+.st-bar{height:2.5px;border-radius:2px;background:rgba(255,255,255,0.04);overflow:hidden;}
+.st-fill{height:100%;border-radius:2px;transition:width 0.4s cubic-bezier(0.4,0,0.2,1);}
+.st-fill.c{background:linear-gradient(90deg,var(--cy),#0af);box-shadow:0 0 4px rgba(0,212,255,0.28);}
+.st-fill.p{background:linear-gradient(90deg,var(--pu),#c8b8ff);box-shadow:0 0 4px rgba(155,135,255,0.28);}
+.st-fill.g{background:linear-gradient(90deg,var(--go),#ffa);box-shadow:0 0 4px rgba(255,215,0,0.28);}
+.traits{margin:0 10px 8px;display:flex;flex-direction:column;}
+.tr-item{padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.022);
+  display:flex;align-items:center;gap:7px;padding-left:3px;border-radius:3px;}
+.tr-ico{font-size:12px;width:15px;text-align:center;flex-shrink:0;}
+.tr-inf{flex:1;min-width:0;}
+.tr-lb{font-size:7px;color:var(--mu);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:1px;}
+.tr-vl{font-family:var(--f2);font-size:10.5px;font-weight:600;color:var(--tx);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.tr-bd{font-size:7px;font-family:var(--f2);font-weight:700;letter-spacing:1px;
+  padding:2px 5px;border-radius:2px;flex-shrink:0;}
+.tr-bd.g{background:rgba(0,255,136,0.09);color:var(--gr);border:1px solid rgba(0,255,136,0.15);}
+.tr-bd.go{background:rgba(255,215,0,0.07);color:var(--go);border:1px solid rgba(255,215,0,0.15);}
+.log-box{margin:0 10px 8px;border:1px solid var(--b0);border-radius:4px;overflow:hidden;flex-shrink:0;}
+.log-hdr{padding:5px 9px;background:rgba(155,135,255,0.05);border-bottom:1px solid var(--b0);
+  font-family:var(--f2);font-size:8px;font-weight:700;letter-spacing:2px;
+  color:var(--pu);text-transform:uppercase;display:flex;align-items:center;gap:5px;}
+.log-hdr::before{content:'⬡';font-size:9px;}
+.log-body{padding:6px 9px;background:rgba(0,0,0,0.38);max-height:85px;overflow-y:auto;
+  scrollbar-width:thin;scrollbar-color:rgba(155,135,255,0.1) transparent;}
+.ll{font-size:7.5px;letter-spacing:0.3px;margin-bottom:3px;
+  display:flex;gap:5px;align-items:flex-start;animation:lfade 0.3s ease;}
+@keyframes lfade{from{opacity:0;transform:translateY(-2px);}to{opacity:1;}}
+.ll .lp2{color:var(--pu);flex-shrink:0;font-size:8px;}
+.ll .lt{color:rgba(232,237,245,0.48);line-height:1.5;}
+.ll .lt.ok{color:var(--gr);}
+.ll .lt.wn{color:var(--go);}
+.sp{flex:1;min-height:4px;}
+.quick{padding:7px 10px;border-top:1px solid var(--b0);display:flex;flex-direction:column;gap:4px;}
+.qb{padding:7px 10px;border-radius:3px;border:1px solid var(--b0);background:rgba(0,0,0,0.28);
+  color:var(--mu);font-family:var(--f2);font-size:8.5px;font-weight:700;letter-spacing:2px;
+  text-transform:uppercase;cursor:pointer;transition:all 0.2s;text-align:center;
+  display:flex;align-items:center;justify-content:center;gap:5px;}
+.qb:hover{border-color:var(--b1);color:var(--m2);}
+.qb.alt{border-color:rgba(155,135,255,0.2);color:var(--pu);background:rgba(155,135,255,0.03);}
+.qb.alt:hover{background:rgba(155,135,255,0.08);}
+.qb.pr{border-color:rgba(0,255,136,0.2);color:var(--gr);background:rgba(0,255,136,0.03);}
+.qb.pr:hover{background:rgba(0,255,136,0.08);}
+.xstrip{display:flex;gap:4px;padding:7px 10px 10px;}
+.xb{flex:1;padding:7px 3px;border-radius:3px;border:1px solid var(--b0);
+  background:rgba(0,0,0,0.28);color:var(--mu);font-family:var(--f2);font-size:7.5px;
+  font-weight:700;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer;
+  transition:all 0.18s;display:flex;flex-direction:column;align-items:center;gap:2px;}
+.xb .xi{font-size:11px;}
+.xb:hover{border-color:var(--b1);color:var(--m2);transform:translateY(-1px);}
+.xb.sh{border-color:rgba(0,212,255,0.18);color:var(--cy);}
+/* FOOTER */
+.ftr{height:50px;flex-shrink:0;background:linear-gradient(0deg,rgba(1,2,10,0.99),rgba(1,2,10,0.8));
+  border-top:1px solid;border-image:linear-gradient(90deg,transparent,var(--pu) 30%,var(--cy) 70%,transparent) 1;
+  display:flex;align-items:center;justify-content:space-between;padding:0 18px;
+  backdrop-filter:blur(20px);}
+.f-hints{display:flex;align-items:center;gap:12px;}
+.f-hint{font-size:8.5px;color:var(--mu);letter-spacing:1px;display:flex;align-items:center;gap:3px;}
+.f-hint kbd{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.09);
+  padding:1px 5px;border-radius:2px;font-size:7.5px;color:var(--m2);}
+.f-dots{display:flex;align-items:center;gap:5px;}
+.pdot{width:5px;height:5px;border-radius:50%;background:rgba(255,255,255,0.07);transition:all 0.3s;}
+.pdot.on{background:var(--go);box-shadow:0 0 7px rgba(255,215,0,0.45);width:14px;border-radius:3px;}
+.pdot.done{background:var(--gr);box-shadow:0 0 4px rgba(0,255,136,0.28);}
+.f-btns{display:flex;align-items:center;gap:7px;}
+.fb{padding:8px 15px;border-radius:3px;font-family:var(--f2);font-size:10px;font-weight:700;
+  letter-spacing:2px;text-transform:uppercase;cursor:pointer;transition:all 0.2s;
+  border:1px solid;display:flex;align-items:center;gap:5px;}
+.fb-p{background:rgba(0,0,0,0.4);border-color:var(--b1);color:var(--mu);}
+.fb-p:hover{border-color:var(--cy);color:var(--cy);}
+.fb-n{background:linear-gradient(135deg,rgba(255,215,0,0.1),rgba(255,215,0,0.04));
+  border-color:rgba(255,215,0,0.32);color:var(--go);}
+.fb-n:hover{box-shadow:0 0 14px rgba(255,215,0,0.14);}
+.fb-c{background:linear-gradient(135deg,rgba(0,255,136,0.1),rgba(0,255,136,0.04));
+  border-color:rgba(0,255,136,0.38);color:var(--gr);display:none;}
+.fb-c.on{display:flex;}
+/* MODAL */
+.mov{position:fixed;inset:0;z-index:300;background:rgba(1,2,8,0.88);backdrop-filter:blur(16px);
+  display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;
+  transition:opacity 0.3s;}
+.mov.on{opacity:1;pointer-events:all;}
+.modal{background:var(--bg2);border:1px solid rgba(0,255,136,0.2);border-radius:7px;width:440px;
+  overflow:hidden;transform:scale(0.96) translateY(8px);
+  transition:transform 0.3s cubic-bezier(0.4,0,0.2,1);
+  box-shadow:0 0 60px rgba(0,255,136,0.04),0 20px 50px rgba(0,0,0,0.8);}
+.mov.on .modal{transform:scale(1) translateY(0);}
+.m-hdr{padding:16px 20px;border-bottom:1px solid rgba(0,255,136,0.1);
+  display:flex;align-items:center;gap:10px;
+  background:linear-gradient(135deg,rgba(0,255,136,0.04),transparent);}
+.m-title{font-family:var(--f3);font-size:11px;font-weight:700;letter-spacing:3px;color:var(--gr);text-transform:uppercase;}
+.m-sub{font-size:8px;color:var(--mu);margin-top:2px;letter-spacing:1px;}
+.m-body{padding:18px;}
+.m-cname{font-family:var(--f3);font-size:20px;font-weight:900;letter-spacing:4px;
+  color:var(--go);text-align:center;margin-bottom:14px;text-transform:uppercase;}
+.m-grid{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-bottom:12px;}
+.m-field{padding:7px 10px;border-radius:3px;background:rgba(0,0,0,0.3);border:1px solid var(--b0);}
+.m-fl{font-size:7px;color:var(--mu);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:2px;}
+.m-fv{font-family:var(--f2);font-size:10px;font-weight:700;color:var(--tx);}
+.m-msg{padding:9px 11px;border-radius:4px;border:1px solid rgba(155,135,255,0.14);
+  background:rgba(155,135,255,0.03);font-size:9px;color:rgba(232,237,245,0.48);line-height:1.6;margin-bottom:12px;}
+.m-acts{display:flex;gap:8px;justify-content:flex-end;}
+.m-cancel{padding:8px 14px;border-radius:3px;border:1px solid var(--b1);background:none;color:var(--mu);
+  font-family:var(--f2);font-size:9px;font-weight:700;letter-spacing:2px;cursor:pointer;
+  transition:all 0.2s;text-transform:uppercase;}
+.m-cancel:hover{border-color:var(--re);color:var(--re);}
+.m-spawn{padding:8px 18px;border-radius:3px;border:1px solid rgba(0,255,136,0.32);
+  background:linear-gradient(135deg,rgba(0,255,136,0.1),rgba(0,255,136,0.03));
+  color:var(--gr);font-family:var(--f2);font-size:9px;font-weight:700;letter-spacing:2px;
+  cursor:pointer;transition:all 0.2s;text-transform:uppercase;}
+.m-spawn:hover{box-shadow:0 0 14px rgba(0,255,136,0.14);}
+/* SPAWN */
+.spawn{position:fixed;inset:0;z-index:400;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;pointer-events:none;opacity:0;transition:opacity 0.5s;}
+.spawn.on{opacity:1;}
+.sp-rings{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;}
+.sp-ring{position:absolute;border-radius:50%;border:2px solid var(--gr);animation:rX 2s ease-out infinite;}
+.sp-ring:nth-child(1){width:80px;height:80px;}
+.sp-ring:nth-child(2){width:160px;height:160px;animation-delay:0.25s;}
+.sp-ring:nth-child(3){width:270px;height:270px;animation-delay:0.5s;}
+@keyframes rX{0%{transform:scale(0.4);opacity:0.8;}100%{transform:scale(2);opacity:0;}}
+.sp-text{font-family:var(--f3);font-size:44px;font-weight:900;letter-spacing:10px;color:var(--gr);
+  text-shadow:0 0 36px var(--gr),0 0 72px rgba(0,255,136,0.3);text-transform:uppercase;z-index:1;
+  animation:sPop 0.45s cubic-bezier(0.4,0,0.2,1);}
+@keyframes sPop{0%{transform:scale(0.6) translateY(14px);opacity:0;}60%{transform:scale(1.04);}100%{transform:scale(1);opacity:1;}}
+.sp-sub{font-family:var(--f2);font-size:10px;letter-spacing:5px;color:rgba(0,255,136,0.5);
+  margin-top:10px;text-transform:uppercase;z-index:1;}
+</style>
+</head>
+<body>
+
+<div id="gate">
+  <div class="g-logo">ETHER<span style="color:var(--go)">PRISMA</span></div>
+  <div class="g-sub">Alive Edition — Admin Only</div>
+  <div class="g-card">
+    <div class="g-lbl">Accès restreint</div>
+    <div class="g-badge"><span class="g-dot"></span>Propriétaire &amp; Admins seulement</div>
+    <div class="g-roles">
+      <div class="g-role ow">👑 Owner</div>
+      <div class="g-role ad">⚡ Admin</div>
+    </div>
+    <input class="g-inp" id="gp" type="password" placeholder="Mot de passe admin" autocomplete="off" maxlength="32">
+    <button class="g-btn" id="gs">▶ Accéder à EtherPrisma</button>
+    <div class="g-err" id="ge">Accès refusé — Mot de passe invalide</div>
+  </div>
+</div>
+<div id="app">
+  <header class="hdr">
+    <div style="display:flex;align-items:center">
+      <div class="h-logo">
+        <span class="h-hex">⬡</span>
+        <span class="h-name"><b>ETHER</b>PRISMA<em>Alive Edition</em></span>
+      </div>
+      <div class="h-sep"></div>
+      <nav class="h-tabs" id="htabs">
+        <div class="h-tab on" data-s="0">Identity</div>
+        <div class="h-tab" data-s="1">Face</div>
+        <div class="h-tab" data-s="2">Hair</div>
+        <div class="h-tab" data-s="3">Body</div>
+        <div class="h-tab" data-s="4">Outfit</div>
+        <div class="h-tab" data-s="5">Accs</div>
+        <div class="h-tab" data-s="6">Aura ✦</div>
+        <div class="h-tab" data-s="7">EtherPrisma ⬡</div>
+      </nav>
+    </div>
+    <div class="h-right">
+      <div class="rb ow" id="rbadge"><span class="rb-dot"></span><span id="rtxt">Owner</span></div>
+      <button class="h-out" id="logout">⎋ Déconnexion</button>
+    </div>
+  </header>
+  <main class="main">
+    <aside class="lp">
+      <nav class="lp-tabs">
+        <button class="lp-tab on" data-p="identity"><span class="ti">🪪</span>ID</button>
+        <button class="lp-tab" data-p="face"><span class="ti">😶</span>Face</button>
+        <button class="lp-tab" data-p="hair"><span class="ti">💈</span>Hair</button>
+        <button class="lp-tab" data-p="body"><span class="ti">💪</span>Body</button>
+        <button class="lp-tab" data-p="outfit"><span class="ti">👕</span>Outfit</button>
+        <button class="lp-tab" data-p="accessories"><span class="ti">💎</span>Accs</button>
+        <button class="lp-tab aura-t" data-p="aura"><span class="ti">✦</span>Aura</button>
+        <button class="lp-tab pr-t" data-p="prisma"><span class="ti">⬡</span>Prisma</button>
+      </nav>
+      <div class="lp-body">
+        <div id="panel-identity" class="lpanel on">
+          <div class="sec">Genre</div>
+          <div class="sex-row">
+            <button class="sex-btn on" data-g="male">♂ Male</button>
+            <button class="sex-btn" data-g="female">♀ Female</button>
+          </div>
+          <div class="sec">Nom</div>
+          <input class="ni" id="cname" placeholder="PRENOM_NOM" maxlength="24" value="NOUVEAU_PERSO">
+          <div class="sec" style="margin-top:8px">Nationalité</div>
+          <select id="snat" class="sel">
+            <option value="canadian">🇨🇦 Canadian</option><option value="american">🇺🇸 American</option>
+            <option value="french">🇫🇷 French</option><option value="mexican">🇲🇽 Mexican</option>
+            <option value="british">🇬🇧 British</option><option value="japanese">🇯🇵 Japanese</option>
+            <option value="haitian">🇭🇹 Haitian</option><option value="arabic">🌙 Arabic</option>
+          </select>
+          <div class="sec">Teinte de peau</div>
+          <div class="sw-row" id="sw-skin"></div>
+        </div>
+        <div id="panel-face" class="lpanel">
+          <div class="sec">Forme</div><div class="og" id="g-face"></div>
+          <div class="sec">Couleur yeux</div><div class="sw-row" id="sw-eye"></div>
+          <div class="sec">Structure</div>
+          <div class="sl-w"><div class="sl-h"><span class="sl-lb">Largeur</span><span class="sl-vl" id="v-fw">50</span></div><input type="range" class="slider" id="s-fw" min="0" max="100" value="50"></div>
+          <div class="sl-w"><div class="sl-h"><span class="sl-lb">Pommettes</span><span class="sl-vl" id="v-ch">50</span></div><input type="range" class="slider" id="s-ch" min="0" max="100" value="50"></div>
+          <div class="sl-w"><div class="sl-h"><span class="sl-lb">Mâchoire</span><span class="sl-vl" id="v-jw">50</span></div><input type="range" class="slider" id="s-jw" min="0" max="100" value="50"></div>
+          <div class="sec">Yeux</div>
+          <div class="sl-w"><div class="sl-h"><span class="sl-lb">Taille</span><span class="sl-vl" id="v-es">50</span></div><input type="range" class="slider" id="s-es" min="0" max="100" value="50"></div>
+          <div class="sl-w"><div class="sl-h"><span class="sl-lb">Écartement</span><span class="sl-vl" id="v-esp">50</span></div><input type="range" class="slider" id="s-esp" min="0" max="100" value="50"></div>
+          <div class="sec">Lèvres</div>
+          <div class="sl-w"><div class="sl-h"><span class="sl-lb">Volume</span><span class="sl-vl" id="v-lp">50</span></div><input type="range" class="slider" id="s-lp" min="0" max="100" value="50"></div>
+        </div>
+        <div id="panel-hair" class="lpanel">
+          <div class="sec">Coiffure</div><div class="og" id="g-hair"></div>
+          <div class="sec">Couleur</div><div class="sw-row" id="sw-hair"></div>
+          <div class="sec">Pilosité faciale</div><div class="og" id="g-fh"></div>
+        </div>
+        <div id="panel-body" class="lpanel">
+          <div class="sec">Morphologie</div><div class="og" id="g-body"></div>
+          <div class="sec">Mensurations</div>
+          <div class="sl-w"><div class="sl-h"><span class="sl-lb">Taille</span><span class="sl-vl" id="v-ht">50</span></div><input type="range" class="slider" id="s-ht" min="0" max="100" value="50"></div>
+          <div class="sl-w"><div class="sl-h"><span class="sl-lb">Musculature</span><span class="sl-vl" id="v-mu">45</span></div><input type="range" class="slider" id="s-mu" min="0" max="100" value="45"></div>
+          <div class="sl-w"><div class="sl-h"><span class="sl-lb">Masse</span><span class="sl-vl" id="v-fa">30</span></div><input type="range" class="slider" id="s-fa" min="10" max="90" value="30"></div>
+        </div>
+        <div id="panel-outfit" class="lpanel">
+          <div class="sec">Haut</div><div class="og" id="g-top"></div>
+          <div class="sec">Couleur haut</div><div class="sw-row" id="sw-top"></div>
+          <div class="sec">Bas</div><div class="og" id="g-pants"></div>
+          <div class="sec">Couleur bas</div><div class="sw-row" id="sw-pants"></div>
+          <div class="sec">Shoes</div><div class="og" id="g-shoes"></div>
+          <div class="sec">Couleur shoes</div><div class="sw-row" id="sw-shoes"></div>
+        </div>
+        <div id="panel-accessories" class="lpanel">
+          <div class="sec">Lunettes</div><div class="og" id="g-gls"></div>
+          <div class="sec">Couvre-chef</div><div class="og" id="g-hat"></div>
+          <div class="sec">Bijoux</div><div class="og" id="g-jwl"></div>
+        </div>
+        <div id="panel-aura" class="lpanel">
+          <div class="a-panel">
+            <div class="a-active" id="a-active-lbl">Aucune aura active</div>
+            <div class="a-lore" id="a-lore">Sélectionne une aura pour équiper ton personnage d'un pouvoir légendaire.</div>
+            <button class="god-btn" id="god-btn"><span>⚡</span><span>GODMODE — 18 AURAS</span><span>⚡</span></button>
+            <div class="a-sec">Buffs Classiques</div>
+            <div class="a-grid" id="ag-classic"></div>
+            <div class="a-sec" style="margin-top:4px">Auras Personnage</div>
+            <div class="a-grid" id="ag-char"></div>
+            <div class="a-sec new-s" style="margin-top:4px">Nouvelles Auras ✦</div>
+            <div class="a-grid" id="ag-new"></div>
+          </div>
+        </div>
+        <div id="panel-prisma" class="lpanel">
+          <div class="pr-panel">
+            <div class="pr-sec">Morphs sauvegardés</div>
+            <div class="pr-list" id="pr-list"><div style="font-size:8px;color:var(--mu);padding:12px;text-align:center;letter-spacing:1px">Aucun morph — sauvegarde ton personnage</div></div>
+            <button class="pr-save" id="pr-save">⬡ Sauvegarder le personnage actuel</button>
+            <div class="pr-sec" style="margin-top:6px">Statistiques</div>
+            <div class="pr-stat"><span class="pr-sk">Morphs enregistrés</span><span class="pr-sv" id="pr-count">0</span></div>
+            <div class="pr-stat"><span class="pr-sk">Auras disponibles</span><span class="pr-sv">18</span></div>
+            <div class="pr-stat"><span class="pr-sk">Accès</span><span class="pr-sv" id="pr-role">—</span></div>
+            <div class="pr-stat"><span class="pr-sk">Version</span><span class="pr-sv">EtherPrisma Alive v1.0</span></div>
+            <button class="pr-exp" id="pr-export" style="margin-top:4px">⬇ Exporter morphs JSON</button>
+            <button class="pr-exp" id="pr-clear" style="margin-top:4px;border-color:rgba(155,135,255,0.2);color:var(--pu)">✕ Effacer tous les morphs</button>
+          </div>
+        </div>
+      </div>
+    </aside>
+    <div class="vp">
+      <canvas id="cc"></canvas>
+      <div class="v-scan"></div><div class="v-holo"></div>
+      <div class="vc vc-tl"></div><div class="vc vc-tr"></div>
+      <div class="vc vc-bl"></div><div class="vc vc-br"></div>
+      <div class="v-live"><div class="v-live-d"></div>LIVE</div>
+      <div class="v-name" id="v-name">NOUVEAU_PERSO</div>
+      <div class="v-aura" id="v-aura"></div>
+      <div class="v-god" id="v-god">⚡ GODMODE</div>
+      <div class="v-wm">EtherPrisma — Character Preview 4K</div>
+      <div class="v-bloom">UnrealBloom ✦ GLSL</div>
+      <div class="v-res">4K ✦ HDR</div>
+      <div class="v-hints">
+        <div class="v-hint"><kbd>Drag</kbd>Rotate</div>
+        <div class="v-hint"><kbd>Scroll</kbd>Zoom</div>
+        <div class="v-hint"><kbd>G</kbd>Godmode</div>
+        <div class="v-hint"><kbd>R</kbd>Random</div>
+      </div>
+    </div>
+    <aside class="rp">
+      <div class="rp-hdr"><span style="font-size:15px">👤</span><span class="rp-title">Profil du personnage</span></div>
+      <div class="char-card">
+        <div class="c-name" id="rn">NOUVEAU_PERSO</div>
+        <div class="c-id" id="rid">ID: EP-000000 • CANADIAN</div>
+        <div class="c-stats">
+          <div class="st-row"><span class="st-k">Taille</span><span class="st-v" id="sv-ht">50%</span></div>
+          <div class="st-bar"><div class="st-fill c" id="sf-ht" style="width:50%"></div></div>
+          <div class="st-row"><span class="st-k">Muscle</span><span class="st-v" id="sv-mu">45%</span></div>
+          <div class="st-bar"><div class="st-fill p" id="sf-mu" style="width:45%"></div></div>
+          <div class="st-row"><span class="st-k">Poids</span><span class="st-v" id="sv-fa">30%</span></div>
+          <div class="st-bar"><div class="st-fill g" id="sf-fa" style="width:30%"></div></div>
+        </div>
+      </div>
+      <div class="traits">
+        <div class="tr-item"><span class="tr-ico">⚧</span><div class="tr-inf"><div class="tr-lb">Genre</div><div class="tr-vl" id="tv-g">♂ Masculin</div></div><span class="tr-bd g">SET</span></div>
+        <div class="tr-item"><span class="tr-ico">😐</span><div class="tr-inf"><div class="tr-lb">Visage</div><div class="tr-vl" id="tv-f">Regular</div></div></div>
+        <div class="tr-item"><span class="tr-ico">💪</span><div class="tr-inf"><div class="tr-lb">Morphologie</div><div class="tr-vl" id="tv-b">Regular</div></div></div>
+        <div class="tr-item"><span class="tr-ico">👕</span><div class="tr-inf"><div class="tr-lb">Haut</div><div class="tr-vl" id="tv-t">T-Shirt</div></div></div>
+        <div class="tr-item"><span class="tr-ico">✦</span><div class="tr-inf"><div class="tr-lb">Aura</div><div class="tr-vl" id="tv-a" style="color:var(--pu)">Aucune</div></div></div>
+        <div class="tr-item"><span class="tr-ico">⬡</span><div class="tr-inf"><div class="tr-lb">EtherPrisma</div><div class="tr-vl" id="tv-p" style="color:var(--gr)">Non lié</div></div></div>
+      </div>
+      <div class="log-box">
+        <div class="log-hdr">TroxT Neural Log</div>
+        <div class="log-body" id="logb"></div>
+      </div>
+      <div class="sp"></div>
+      <div class="quick">
+        <button class="qb alt" id="btn-rand">🎲 Personnage aléatoire</button>
+        <button class="qb pr" id="btn-load-pr">⬡ Charger depuis EtherPrisma</button>
+        <button class="qb" id="btn-reset">↺ Réinitialiser</button>
+      </div>
+      <div class="xstrip">
+        <button class="xb" id="btn-json"><span class="xi">⬇</span>JSON</button>
+        <button class="xb sh" id="btn-share"><span class="xi">🔗</span>Share</button>
+        <button class="xb" id="btn-emod"><span class="xi">⬡</span>Export</button>
+        <button class="xb" id="btn-morph"><span class="xi">📋</span>Morph</button>
+      </div>
+    </aside>
+  </main>
+  <footer class="ftr">
+    <div class="f-hints">
+      <div class="f-hint"><kbd>←</kbd><kbd>→</kbd>Naviguer</div>
+      <div class="f-hint"><kbd>G</kbd>Godmode</div>
+      <div class="f-hint"><kbd>A</kbd>Auras</div>
+      <div class="f-hint"><kbd>P</kbd>EtherPrisma</div>
+    </div>
+    <div class="f-dots" id="fdots">
+      <div class="pdot on"></div><div class="pdot"></div><div class="pdot"></div>
+      <div class="pdot"></div><div class="pdot"></div><div class="pdot"></div>
+      <div class="pdot"></div><div class="pdot"></div>
+    </div>
+    <div class="f-btns">
+      <button class="fb fb-p">← Précédent</button>
+      <button class="fb fb-n">Suivant →</button>
+      <button class="fb fb-c">✓ Créer le personnage</button>
+    </div>
+  </footer>
+</div>
+<div class="mov" id="cmod">
+  <div class="modal">
+    <div class="m-hdr"><span style="font-size:22px">✅</span><div><div class="m-title">Confirmer le personnage</div><div class="m-sub">TroxT va enregistrer dans EtherPrisma</div></div></div>
+    <div class="m-body">
+      <div class="m-cname" id="mc-name">NOUVEAU_PERSO</div>
+      <div class="m-grid">
+        <div class="m-field"><div class="m-fl">Genre</div><div class="m-fv" id="mc-g">♂ Masculin</div></div>
+        <div class="m-field"><div class="m-fl">Aura</div><div class="m-fv" id="mc-a">—</div></div>
+        <div class="m-field"><div class="m-fl">Morphologie</div><div class="m-fv" id="mc-b">Regular</div></div>
+        <div class="m-field"><div class="m-fl">Coiffure</div><div class="m-fv" id="mc-h">Crew Cut</div></div>
+        <div class="m-field"><div class="m-fl">Haut</div><div class="m-fv" id="mc-t">T-Shirt</div></div>
+        <div class="m-field"><div class="m-fl">ID Morph</div><div class="m-fv" id="mc-id">EP-000000</div></div>
+      </div>
+      <div class="m-msg">⬡ EtherPrisma : Ce personnage sera sauvegardé comme morph réutilisable. Utilisable via <strong>/morph [ID]</strong> sur ton serveur EtherzRP.</div>
+      <div class="m-acts">
+        <button class="m-cancel">✕ Annuler</button>
+        <button class="m-spawn">▶ Enregistrer dans EtherPrisma</button>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="spawn" id="spawn">
+  <div class="sp-rings"><div class="sp-ring"></div><div class="sp-ring"></div><div class="sp-ring"></div></div>
+  <div class="sp-text">SPAWNÉ</div>
+  <div class="sp-sub">⬡ EtherPrisma — Morph enregistré</div>
+</div>
+
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}</script>
+<script type="module">
+
+// ═══ GATE ═══════════════════════════════════════════════════════════════════
+const CREDS={'EW-OWNER-2025':'owner','ADMIN-TROXT':'admin','ETHERWORLD-ADM':'admin','admin':'admin'};
+let role=null;
+const gate=document.getElementById('gate'),app=document.getElementById('app');
+const gp=document.getElementById('gp'),ge=document.getElementById('ge');
+const rbadge=document.getElementById('rbadge'),rtxt=document.getElementById('rtxt');
+function tryLogin(){
+  const pw=gp.value.trim(),r=CREDS[pw];
+  if(r){
+    role=r; gate.style.cssText='opacity:0;transition:opacity 0.5s;pointer-events:none';
+    setTimeout(()=>{gate.style.display='none';app.classList.add('on');initApp();},500);
+    if(r==='owner'){rbadge.className='rb ow';rtxt.textContent='👑 Owner';}
+    else{rbadge.className='rb ad';rtxt.textContent='⚡ Admin';}
+    document.getElementById('pr-role').textContent=r.toUpperCase();
+    addLog('Auth : '+r.toUpperCase()+' — EtherPrisma Alive','ok');
+  } else {
+    ge.classList.add('show');gp.style.borderColor='var(--re)';gp.value='';
+    setTimeout(()=>{ge.classList.remove('show');gp.style.borderColor='';},3000);
+  }
+}
+document.getElementById('gs').addEventListener('click',tryLogin);
+gp.addEventListener('keydown',e=>{if(e.key==='Enter')tryLogin();});
+document.getElementById('logout').addEventListener('click',()=>{
+  app.classList.remove('on');gate.style.cssText='display:flex;opacity:1;';gp.value='';role=null;
+  if(renderer){activeAuras.forEach(a=>a.dispose());activeAuras=[];godActive=false;}
+});
+
+// ═══ THREE.JS SCENE ══════════════════════════════════════════════════════════
+import * as THREE from 'three';
+import{OrbitControls}from 'three/addons/controls/OrbitControls.js';
+import{EffectComposer}from 'three/addons/postprocessing/EffectComposer.js';
+import{RenderPass}from 'three/addons/postprocessing/RenderPass.js';
+import{UnrealBloomPass}from 'three/addons/postprocessing/UnrealBloomPass.js';
+import{OutputPass}from 'three/addons/postprocessing/OutputPass.js';
+
+let renderer,scene,camera,controls,composer;
+let charGroup,auraGroup,time=0,prevT=0;
+let activeAuras=[],godActive=false;
+let rimLight,keyLight;
+
+function initScene(){
+  const canvas=document.getElementById('cc');
+  const vp=document.querySelector('.vp');
+  scene=new THREE.Scene();
+  scene.background=new THREE.Color(0x010209);
+  scene.fog=new THREE.FogExp2(0x010209,0.038);
+  renderer=new THREE.WebGLRenderer({canvas,antialias:true,powerPreference:'high-performance'});
+  renderer.setPixelRatio(Math.min(devicePixelRatio,2.5));
+  renderer.shadowMap.enabled=true;
+  renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+  renderer.toneMapping=THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure=1.65;
+  renderer.outputColorSpace=THREE.SRGBColorSpace;
+  camera=new THREE.PerspectiveCamera(46,1,0.1,300);
+  camera.position.set(0,2.4,7);
+  controls=new OrbitControls(camera,canvas);
+  controls.enableDamping=true;controls.dampingFactor=0.038;
+  controls.target.set(0,1.6,0);
+  controls.minDistance=2.5;controls.maxDistance=18;
+  controls.minPolarAngle=0.12;controls.maxPolarAngle=Math.PI*0.55;
+  controls.autoRotate=true;controls.autoRotateSpeed=0.42;
+  composer=new EffectComposer(renderer);
+  composer.addPass(new RenderPass(scene,camera));
+  const bloom=new UnrealBloomPass(new THREE.Vector2(1,1),1.5,0.55,0.30);
+  composer.addPass(bloom);
+  composer.addPass(new OutputPass());
+  resizeVP();
+  window.addEventListener('resize',resizeVP);
+  canvas.addEventListener('pointerdown',()=>controls.autoRotate=false);
+  canvas.addEventListener('pointerup',()=>setTimeout(()=>controls.autoRotate=true,7000));
+}
+function resizeVP(){
+  const vp=document.querySelector('.vp');
+  if(!vp||!renderer)return;
+  const w=vp.clientWidth,h=vp.clientHeight;
+  renderer.setSize(w,h,false);composer.setSize(w,h);
+  if(camera){camera.aspect=w/h;camera.updateProjectionMatrix();}
+}
+
+function buildScene(){
+  scene.add(new THREE.AmbientLight(0x08091a,2.4));
+  keyLight=new THREE.DirectionalLight(0xffffff,1.5);
+  keyLight.position.set(5,10,4);keyLight.castShadow=true;
+  keyLight.shadow.mapSize.set(2048,2048);
+  keyLight.shadow.camera.near=0.1;keyLight.shadow.camera.far=40;
+  keyLight.shadow.camera.left=-6;keyLight.shadow.camera.right=6;
+  keyLight.shadow.camera.top=8;keyLight.shadow.camera.bottom=-4;
+  keyLight.shadow.bias=-0.001;scene.add(keyLight);
+  rimLight=new THREE.PointLight(0x4466ff,2.8,18);rimLight.position.set(-3,4,-3);scene.add(rimLight);
+  const fill=new THREE.PointLight(0x221144,1.2,12);fill.position.set(2,3,2);scene.add(fill);
+  const spot=new THREE.SpotLight(0x00d4ff,5,18,Math.PI*0.16,0.55,2);
+  spot.position.set(0,9,0);spot.target.position.set(0,0,0);scene.add(spot,spot.target);
+  // Reflective ground
+  const gnd=new THREE.Mesh(new THREE.CircleGeometry(20,64),
+    new THREE.MeshStandardMaterial({color:0x070710,roughness:0.06,metalness:0.92,envMapIntensity:1.2}));
+  gnd.rotation.x=-Math.PI/2;gnd.receiveShadow=true;scene.add(gnd);
+  // Platform
+  const plat=new THREE.Mesh(new THREE.CylinderGeometry(2.1,2.3,0.16,64),
+    new THREE.MeshStandardMaterial({color:0x0d0d1c,roughness:0.08,metalness:0.94}));
+  plat.position.y=0.01;plat.receiveShadow=true;plat.castShadow=true;scene.add(plat);
+  // Rune ring
+  const rMat=new THREE.MeshStandardMaterial({color:0x334466,emissive:0x1122aa,emissiveIntensity:1.4,roughness:0.1,metalness:0.95});
+  const rr=new THREE.Mesh(new THREE.TorusGeometry(1.72,0.028,8,128),rMat);
+  rr.rotation.x=-Math.PI/2;rr.position.y=0.11;scene.add(rr);
+  // Outer rings
+  [3.2,5.8,9.0].forEach((r,i)=>{
+    const m=new THREE.Mesh(new THREE.TorusGeometry(r,0.007,4,128),
+      new THREE.MeshStandardMaterial({color:0x00d4ff,emissive:0x00d4ff,
+        emissiveIntensity:0.32-i*0.08,transparent:true,opacity:0.42-i*0.1}));
+    m.rotation.x=-Math.PI/2;m.position.y=0.01;scene.add(m);
+  });
+  const grid=new THREE.GridHelper(34,34,0x08081a,0x060610);grid.position.y=0.002;scene.add(grid);
+  charGroup=new THREE.Group();scene.add(charGroup);
+  buildCharacter();
+  charGroup.position.y=0.07;
+  auraGroup=new THREE.Group();charGroup.add(auraGroup);
+}
+
+// ═══ HD CHARACTER — MeshPhysicalMaterial + smooth geometry ═══════════════
+const PR={body:null,head:null,legL:null,legR:null,lLowL:null,lLowR:null,armL:null,armR:null,foreL:null,foreR:null};
+const ANIM={t:0,spd:0,breath:0,walking:false,breathVal:0};
+
+function phyMat(c,rough=0.4,metal=0,cc=0,ccr=0.3,sheen=0,sheenC=null){
+  const m=new THREE.MeshPhysicalMaterial({color:c,roughness:rough,metalness:metal,
+    clearcoat:cc,clearcoatRoughness:ccr});
+  if(sheen){m.sheen=sheen;if(sheenC)m.sheenColor=new THREE.Color(sheenC);}
+  return m;
+}
+
+function buildCharacter(){
+  while(charGroup.children.length)charGroup.remove(charGroup.children[0]);
+  if(auraGroup)charGroup.add(auraGroup);
+  const mSkin =phyMat(0xe0a878,0.40,0,0.42,0.25,0.3,0xff9060);
+  const mShirt=phyMat(0x2d3a5c,0.62,0,0,0,0.5,0x4455aa);
+  const mShirtD=phyMat(0x1e2a44,0.68,0,0,0,0.3,0x334488);
+  const mPants=phyMat(0x1a3a2a,0.68,0,0,0,0.3,0x204a30);
+  const mPantsD=phyMat(0x122a1e,0.72,0,0,0,0.2,0x183820);
+  const mHat  =phyMat(0xcc2222,0.35,0.1,0.6,0.2);
+  const mHatBr=phyMat(0xaa1818,0.40,0.08,0.4,0.25);
+  const mShoe =phyMat(0x111111,0.45,0.2,0.72,0.15);
+  const mBelt =phyMat(0x2a1a0a,0.55,0.15,0.3,0.3);
+  const mEye  =new THREE.MeshBasicMaterial({color:0x050505});
+  const mEyeW =new THREE.MeshBasicMaterial({color:0xf5f5f5});
+  const mMouth=new THREE.MeshBasicMaterial({color:0x7a3030});
+
+  function add(geo,mat,px,py,pz,parent){
+    const m=new THREE.Mesh(geo,mat);m.position.set(px,py,pz);
+    m.castShadow=true;m.receiveShadow=true;parent.add(m);return m;
+  }
+
+  const body=new THREE.Group();charGroup.add(body);PR.body=body;
+
+  // ── Legs ──
+  const legL=new THREE.Group();legL.position.set(-0.16,0.56,0);body.add(legL);
+  add(new THREE.CylinderGeometry(0.115,0.100,0.44,14),mPants,0,-0.09,0,legL);
+  const lLowL=new THREE.Group();lLowL.position.set(0,-0.33,0);legL.add(lLowL);
+  add(new THREE.CylinderGeometry(0.098,0.082,0.38,12),mPantsD,0,-0.09,0,lLowL);
+  // Foot
+  const footLGeo=new THREE.BoxGeometry(0.24,0.10,0.34);footLGeo.computeVertexNormals();
+  add(footLGeo,mShoe,0,-0.27,0.03,lLowL);
+  PR.legL=legL;PR.lLowL=lLowL;
+
+  const legR=new THREE.Group();legR.position.set(0.16,0.56,0);body.add(legR);
+  add(new THREE.CylinderGeometry(0.115,0.100,0.44,14),mPants,0,-0.09,0,legR);
+  const lLowR=new THREE.Group();lLowR.position.set(0,-0.33,0);legR.add(lLowR);
+  add(new THREE.CylinderGeometry(0.098,0.082,0.38,12),mPantsD,0,-0.09,0,lLowR);
+  add(new THREE.BoxGeometry(0.24,0.10,0.34),mShoe,0,-0.27,0.03,lLowR);
+  PR.legR=legR;PR.lLowR=lLowR;
+
+  // ── Torso — LatheGeometry for organic HD silhouette ──
+  const pts=[
+    new THREE.Vector2(0.19,0.00),new THREE.Vector2(0.21,0.10),
+    new THREE.Vector2(0.25,0.22),new THREE.Vector2(0.30,0.40),
+    new THREE.Vector2(0.32,0.58),new THREE.Vector2(0.30,0.70),
+    new THREE.Vector2(0.22,0.78)];
+  const torsoGeo=new THREE.LatheGeometry(pts,20);torsoGeo.computeVertexNormals();
+  const torso=new THREE.Mesh(torsoGeo,mShirt);torso.position.set(0,0.72,0);
+  torso.castShadow=true;torso.receiveShadow=true;body.add(torso);
+  // Belt
+  add(new THREE.CylinderGeometry(0.215,0.215,0.07,20),mBelt,0,0.74,0,body);
+
+  // ── Arms ──
+  const armL=new THREE.Group();armL.position.set(-0.48,1.30,0);body.add(armL);
+  add(new THREE.CylinderGeometry(0.098,0.084,0.46,14),mShirt,0,-0.13,0,armL);
+  const foreL=new THREE.Group();foreL.position.set(0,-0.36,0);armL.add(foreL);
+  add(new THREE.CylinderGeometry(0.080,0.066,0.32,12),mShirtD,0,-0.08,0,foreL);
+  add(new THREE.SphereGeometry(0.072,12,10),mSkin,0,-0.24,0,foreL);
+  PR.armL=armL;PR.foreL=foreL;
+
+  const armR=new THREE.Group();armR.position.set(0.48,1.30,0);body.add(armR);
+  add(new THREE.CylinderGeometry(0.098,0.084,0.46,14),mShirt,0,-0.13,0,armR);
+  const foreR=new THREE.Group();foreR.position.set(0,-0.36,0);armR.add(foreR);
+  add(new THREE.CylinderGeometry(0.080,0.066,0.32,12),mShirtD,0,-0.08,0,foreR);
+  add(new THREE.SphereGeometry(0.072,12,10),mSkin,0,-0.24,0,foreR);
+  PR.armR=armR;PR.foreR=foreR;
+
+  // ── Head — smooth sphere ──
+  const head=new THREE.Group();head.position.set(0,1.88,0);body.add(head);
+  add(new THREE.SphereGeometry(0.26,28,22),mSkin,0,0,0,head);
+  // Neck
+  add(new THREE.CylinderGeometry(0.10,0.12,0.16,16),mSkin,0,-0.20,0,head);
+  // Eyes
+  [[-0.10,0.04,0.24],[0.10,0.04,0.24]].forEach(([x,y,z])=>{
+    const ew=new THREE.Mesh(new THREE.SphereGeometry(0.052,12,8),mEyeW);ew.position.set(x,y,z);head.add(ew);
+    const ep=new THREE.Mesh(new THREE.SphereGeometry(0.030,10,8),mEye);ep.position.set(x,y,z+0.026);head.add(ep);
+  });
+  // Mouth
+  const mo=new THREE.Mesh(new THREE.BoxGeometry(0.12,0.028,0.01),mMouth);mo.position.set(0,-0.10,0.26);head.add(mo);
+  // Hat — cylinder with smooth edges
+  const hatTop=new THREE.Mesh(new THREE.CylinderGeometry(0.24,0.28,0.20,16),mHat);hatTop.position.set(0,0.33,0);head.add(hatTop);
+  const hatBr=new THREE.Mesh(new THREE.CylinderGeometry(0.40,0.40,0.04,20),mHatBr);hatBr.position.set(0,0.22,0.04);head.add(hatBr);
+  PR.head=head;
+
+  // Floating sword prop
+  const sword=new THREE.Group();
+  const blade=new THREE.Mesh(new THREE.BoxGeometry(0.038,1.05,0.11),phyMat(0x8899bb,0.1,0.9,0.8,0.1));
+  blade.position.y=0.52;sword.add(blade);
+  sword.add(new THREE.Mesh(new THREE.BoxGeometry(0.26,0.058,0.08),phyMat(0x665522,0.35,0.7)));
+  const hm=new THREE.Mesh(new THREE.CylinderGeometry(0.022,0.022,0.30,10),phyMat(0x331100,0.75,0.2));
+  hm.position.y=-0.18;sword.add(hm);
+  sword.position.set(0.70,1.02,0.10);sword.rotation.z=0.14;
+  charGroup.add(sword);
+}
+
+// ═══ LIVING AURA — GLSL ShaderMaterial + Spring Physics ══════════════════
+const AURA_VERT=`uniform float uT;
+uniform float uBreath;
+uniform float uFreq;
+uniform float uAmp;
+uniform float uLayer;
+uniform float uBodyBreath;
+varying float vN;
+varying vec3  vWN;
+varying vec3  vPos;
+
+vec3 _m3(vec3 x){return x-floor(x*(1./289.))*289.;}
+vec4 _m4(vec4 x){return x-floor(x*(1./289.))*289.;}
+vec4 _pm(vec4 x){return _m4(((x*34.)+1.)*x);}
+vec4 _ts(vec4 r){return 1.79284291400159-.85373472095314*r;}
+float sn(vec3 v){
+  const vec2 C=vec2(1./6.,1./3.);const vec4 D=vec4(0.,.5,1.,2.);
+  vec3 i=floor(v+dot(v,C.yyy));vec3 x0=v-i+dot(i,C.xxx);
+  vec3 g=step(x0.yzx,x0.xyz);vec3 l=1.-g;
+  vec3 i1=min(g.xyz,l.zxy);vec3 i2=max(g.xyz,l.zxy);
+  vec3 x1=x0-i1+C.xxx;vec3 x2=x0-i2+C.yyy;vec3 x3=x0-D.yyy;
+  i=_m3(i);
+  vec4 p=_pm(_pm(_pm(i.z+vec4(0.,i1.z,i2.z,1.))+i.y+vec4(0.,i1.y,i2.y,1.))+i.x+vec4(0.,i1.x,i2.x,1.));
+  float n_=.142857142857;vec3 ns=n_*D.wyz-D.xzx;
+  vec4 j=p-49.*floor(p*ns.z*ns.z);
+  vec4 xx=floor(j*ns.z);vec4 yy=floor(j-7.*xx);
+  vec4 xa=xx*ns.x+ns.yyyy;vec4 ya=yy*ns.x+ns.yyyy;
+  vec4 h=1.-abs(xa)-abs(ya);
+  vec4 b0=vec4(xa.xy,ya.xy);vec4 b1=vec4(xa.zw,ya.zw);
+  vec4 s0=floor(b0)*2.+1.;vec4 s1=floor(b1)*2.+1.;
+  vec4 sh=-step(h,vec4(0.));
+  vec4 a0=b0.xzyw+s0.xzyw*sh.xxyy;vec4 a1=b1.xzyw+s1.xzyw*sh.zzww;
+  vec3 p0=vec3(a0.xy,h.x);vec3 p1=vec3(a0.zw,h.y);
+  vec3 p2=vec3(a1.xy,h.z);vec3 p3=vec3(a1.zw,h.w);
+  vec4 nm=_ts(vec4(dot(p0,p0),dot(p1,p1),dot(p2,p2),dot(p3,p3)));
+  p0*=nm.x;p1*=nm.y;p2*=nm.z;p3*=nm.w;
+  vec4 m=max(.6-vec4(dot(x0,x0),dot(x1,x1),dot(x2,x2),dot(x3,x3)),0.);
+  m=m*m;return 42.*dot(m*m,vec4(dot(p0,x0),dot(p1,x1),dot(p2,x2),dot(p3,x3)));
+}
+
+void main(){
+  vec3 pos = position;
+
+  // Multi-octave organic displacement
+  float spd = 0.28 + uLayer * 0.06;
+  float n   = sn(pos * uFreq        + uT * spd  ) * 0.52;
+  n        += sn(pos * uFreq * 2.3  + uT * 0.58 ) * 0.30;
+  n        += sn(pos * uFreq * 5.2  + uT * 1.25 ) * 0.18;
+  float disp = n * uAmp * (1.0 - uLayer * 0.10);
+  pos += normal * disp;
+
+  // Swirl — tangential twist for organic spin
+  vec3 tang = normalize(cross(normal, vec3(0.0, 1.0, 0.001)));
+  float twist = sn(pos * uFreq * 0.62 + uT * 0.20) * uAmp * 0.38;
+  pos += tang * twist * (1.0 - uLayer * 0.12);
+
+  // Body-breath synchronisation
+  pos *= uBreath + uBodyBreath * 0.040;
+  pos *= 1.0 + uLayer * 0.09;
+
+  vN   = n * 0.5 + 0.5;
+  vWN  = normalize(mat3(modelMatrix) * normal);
+  vPos = pos;
+  gl_Position = projectionMatrix * modelViewMatrix * vec4(pos, 1.0);
+}`;
+const AURA_FRAG=`uniform float uT;
+uniform float uOp;
+uniform vec3  uC1;
+uniform vec3  uC2;
+uniform float uLayer;
+varying float vN;
+varying vec3  vWN;
+varying vec3  vPos;
+
+void main(){
+  // Fresnel — silhouette edge glow
+  float fr    = pow(1.0 - abs(dot(normalize(vWN), vec3(0.0, 0.0, 1.0))), 1.75);
+
+  // Inner glow — bright hot core facing camera
+  float inner = pow(1.0 - fr, 5.5) * 0.60;
+
+  // Energy bands — pulsing horizontal scanlines
+  float band  = pow(sin(vPos.y * 7.5 + uT * 2.9) * 0.5 + 0.5, 4.0) * 0.25;
+
+  // Chromatic edge — temperature shift (edge becomes whiter/C2-tinted)
+  vec3 edgeCol = mix(uC2, vec3(1.0), 0.30);
+
+  // Compose
+  vec3 col  = mix(uC1, uC2, vN);
+  col       = mix(col, edgeCol, fr * 0.55);
+  col      += inner * (uC1 * 0.55 + 0.45);
+  col      += band  * uC2 * 0.22;
+
+  // Pulse synced per-layer
+  float pulse = sin(uT * 1.88 + vN * 6.28 + uLayer * 1.28) * 0.14 + 0.86;
+
+  float alpha = uOp * (0.12 + fr * 0.58 + inner * 0.24) * pulse;
+  alpha *= (1.0 - uLayer * 0.06);
+
+  // Feed UnrealBloom with boosted luminance
+  gl_FragColor = vec4(col * 1.78, alpha);
+}`;
+
+class LivingAura{
+  constructor(preset,group){
+    this.p=preset;this.group=group;
+    this.sPos=1.0;this.sVel=0;
+    this.phase=Math.random()*Math.PI*2;
+    this.meshes=[];this.ptMesh=null;this.ptDummy=new THREE.Object3D();
+    this.ptStates=[];this.light=null;
+    this._build();
+  }
+  _build(){
+    const{c1,c2,freq,amp,layers,lc,li,pts}=this.p;
+    for(let l=0;l<layers;l++){
+      const uni={
+        uT:{value:0},uBreath:{value:1.0},uFreq:{value:freq*(1-l*0.08)},
+        uAmp:{value:amp*(1-l*0.12)},uLayer:{value:l},uBodyBreath:{value:0},
+        uOp:{value:0.22-l*0.04},
+        uC1:{value:new THREE.Color(c1[0],c1[1],c1[2])},
+        uC2:{value:new THREE.Color(c2[0],c2[1],c2[2])},
+      };
+      const mat=new THREE.ShaderMaterial({uniforms:uni,vertexShader:AURA_VERT,
+        fragmentShader:AURA_FRAG,transparent:true,side:THREE.DoubleSide,
+        depthWrite:false,blending:THREE.AdditiveBlending});
+      // CapsuleGeometry — body silhouette shape
+      const geo=new THREE.CapsuleGeometry(0.55,1.55,12,22);
+      const mesh=new THREE.Mesh(geo,mat);
+      mesh.position.y=1.18;mesh.scale.z=0.68;mesh.renderOrder=l;
+      this.group.add(mesh);this.meshes.push({mesh,uni});
+    }
+    // Particle system — InstancedMesh
+    const cnt=pts||80;
+    const pGeo=new THREE.SphereGeometry(0.018,5,4);
+    const pMat=new THREE.MeshStandardMaterial({
+      color:new THREE.Color(c1[0],c1[1],c1[2]),
+      emissive:new THREE.Color(c1[0],c1[1],c1[2]),
+      emissiveIntensity:5,transparent:true,roughness:0,metalness:0,
+      blending:THREE.AdditiveBlending,depthWrite:false,
+    });
+    this.ptMesh=new THREE.InstancedMesh(pGeo,pMat,cnt);
+    this.ptMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+    this.group.add(this.ptMesh);
+    for(let i=0;i<cnt;i++){
+      this.ptStates.push({
+        angle:(i/cnt)*Math.PI*2,r:0.55+Math.random()*0.6,
+        y:-0.1+Math.random()*3.2,vy:(Math.random()-0.5)*0.016,
+        speed:0.2+Math.random()*0.35,phase:Math.random()*Math.PI*2,
+        size:0.5+Math.random()*0.9,
+      });
+    }
+    // Point light for glow
+    this.light=new THREE.PointLight(lc,0,12);
+    this.light.position.set(0,2.0,0.4);
+    this.group.add(this.light);
+  }
+  update(t,dt,bodyBreath){
+    const{bspd,k,damp,li}=this.p;
+    // Spring physics — gives natural slow→fast→slow breathing
+    const target=1.0+Math.sin(t*bspd+this.phase)*0.10;
+    this.sVel+=(target-this.sPos)*k;
+    this.sVel*=damp;
+    this.sPos+=this.sVel;
+    // Update shader uniforms
+    this.meshes.forEach(({mesh,uni},l)=>{
+      uni.uT.value=t;
+      uni.uBreath.value=this.sPos;
+      uni.uBodyBreath.value=bodyBreath;
+      // Gentle individual rotation for life
+      mesh.rotation.y+=dt*0.04*(l%2===0?1:-1);
+      mesh.rotation.x=Math.sin(t*0.25+this.phase)*0.06;
+    });
+    // Light pulse synced with spring
+    if(this.light)this.light.intensity=li*(0.7+this.sVel*30+Math.sin(t*2+this.phase)*0.2);
+    // Particles
+    this.ptStates.forEach((p,i)=>{
+      p.angle+=p.speed*dt*0.9;
+      p.y+=p.vy;
+      if(p.y>3.3)p.y=-0.1;if(p.y<-0.1)p.y=3.3;
+      // Orbit radius breathes with aura spring
+      const r=(p.r+Math.sin(t*1.1+p.phase)*0.18)*this.sPos;
+      this.ptDummy.position.set(Math.cos(p.angle)*r,p.y,Math.sin(p.angle)*r*0.68);
+      const sc=p.size*(0.55+Math.abs(Math.sin(t*2.2+p.phase))*0.6)*0.025;
+      this.ptDummy.scale.setScalar(sc);
+      this.ptDummy.updateMatrix();
+      this.ptMesh.setMatrixAt(i,this.ptDummy.matrix);
+    });
+    this.ptMesh.instanceMatrix.needsUpdate=true;
+    this.ptMesh.material.opacity=0.6+Math.sin(t*1.8+this.phase)*0.25;
+  }
+  dispose(){
+    this.meshes.forEach(({mesh})=>{
+      mesh.geometry.dispose();mesh.material.dispose();this.group.remove(mesh);
+    });
+    if(this.ptMesh){this.ptMesh.geometry.dispose();this.ptMesh.material.dispose();this.group.remove(this.ptMesh);}
+    if(this.light)this.group.remove(this.light);
+    this.meshes=[];this.ptStates=[];
+  }
+}
+
+// ═══ 18 AURA PRESETS ═════════════════════════════════════════════════════════
+const PRESETS={
+  divine:  {c1:[1.0,0.88,0.20],c2:[1.0,1.0,0.78],freq:1.10,amp:0.18,bspd:0.65,k:0.025,damp:0.88,layers:2,lc:0xffe066,li:4.0,pts:80},
+  void:    {c1:[0.50,0.15,0.95],c2:[0.80,0.40,1.0],freq:1.45,amp:0.26,bspd:0.45,k:0.020,damp:0.90,layers:3,lc:0xaa44ff,li:3.5,pts:90},
+  blood:   {c1:[1.0,0.06,0.06], c2:[1.0,0.38,0.0],freq:1.30,amp:0.22,bspd:0.92,k:0.035,damp:0.85,layers:2,lc:0xff2200,li:4.2,pts:85},
+  frost:   {c1:[0.0,0.82,1.0],  c2:[0.60,0.96,1.0],freq:1.80,amp:0.15,bspd:0.50,k:0.022,damp:0.92,layers:3,lc:0x00ccff,li:3.5,pts:100},
+  nature:  {c1:[0.10,1.0,0.40], c2:[0.60,1.0,0.20],freq:1.00,amp:0.24,bspd:0.60,k:0.026,damp:0.87,layers:2,lc:0x22ff66,li:3.8,pts:80},
+  chaos:   {c1:[1.0,0.50,0.0],  c2:[1.0,0.90,0.0],freq:2.50,amp:0.34,bspd:1.25,k:0.040,damp:0.82,layers:3,lc:0xff8800,li:4.8,pts:110},
+  lichking:{c1:[0.40,0.75,1.0], c2:[0.85,0.96,1.0],freq:1.40,amp:0.19,bspd:0.40,k:0.018,damp:0.93,layers:3,lc:0x44aaff,li:3.8,pts:90},
+  dhunter: {c1:[0.60,0.0,1.0],  c2:[1.0,0.30,0.0],freq:2.00,amp:0.28,bspd:1.00,k:0.032,damp:0.84,layers:3,lc:0x8800ff,li:4.2,pts:100},
+  bmage:   {c1:[1.0,0.15,0.0],  c2:[1.0,0.70,0.0],freq:1.60,amp:0.25,bspd:0.80,k:0.030,damp:0.86,layers:2,lc:0xff2200,li:4.2,pts:95},
+  archmage:{c1:[0.0,0.65,1.0],  c2:[0.60,0.0,1.0],freq:1.30,amp:0.17,bspd:0.55,k:0.024,damp:0.90,layers:3,lc:0x0088ff,li:3.8,pts:90},
+  warlord: {c1:[1.0,0.55,0.0],  c2:[1.0,0.22,0.0],freq:1.70,amp:0.28,bspd:0.88,k:0.033,damp:0.84,layers:2,lc:0xff6600,li:4.8,pts:85},
+  timegod: {c1:[0.90,0.90,1.0], c2:[0.40,0.80,1.0],freq:0.90,amp:0.15,bspd:0.28,k:0.016,damp:0.94,layers:4,lc:0xaaaaff,li:3.2,pts:80},
+  firegod: {c1:[1.0,0.40,0.0],  c2:[1.0,0.90,0.0],freq:2.20,amp:0.32,bspd:1.15,k:0.038,damp:0.82,layers:3,lc:0xff4400,li:5.2,pts:110},
+  crystal: {c1:[0.20,0.90,0.90],c2:[0.80,0.50,1.0],freq:1.50,amp:0.13,bspd:0.44,k:0.020,damp:0.93,layers:4,lc:0x44ffcc,li:3.2,pts:90},
+  storm:   {c1:[0.20,0.60,1.0], c2:[0.92,0.96,1.0],freq:3.00,amp:0.26,bspd:1.55,k:0.045,damp:0.80,layers:2,lc:0x4488ff,li:5.2,pts:120},
+  abyssal: {c1:[0.50,0.0,0.80], c2:[0.15,0.0,0.50],freq:1.20,amp:0.30,bspd:0.34,k:0.018,damp:0.92,layers:4,lc:0x6600aa,li:3.8,pts:100},
+  solar:   {c1:[1.0,0.86,0.0],  c2:[1.0,0.50,0.0],freq:1.40,amp:0.20,bspd:0.70,k:0.028,damp:0.87,layers:3,lc:0xffcc00,li:5.2,pts:100},
+  quantum: {c1:[0.80,0.20,1.0], c2:[0.20,0.80,1.0],freq:1.80,amp:0.22,bspd:0.62,k:0.026,damp:0.88,layers:4,lc:0xaa22ff,li:4.2,pts:110},
+};
+
+// ═══ AURA UI DATA ════════════════════════════════════════════════════════════
+const AURA_ALL={
+  divine:   {name:'Bouclier Divin',lore:'"La Lumière Sacrée te protège de tout mal."',icon:'✦',bg:'linear-gradient(135deg,#332a00,#665500)',c:'#ffe066',cr:255,cg:224,cb:102},
+  void:     {name:'Vide Éternel',lore:'"L\'obscurité entre les étoiles répond à ton appel."',icon:'◈',bg:'linear-gradient(135deg,#1a0033,#3a0066)',c:'#b06fff',cr:176,cg:111,cb:255},
+  blood:    {name:'Rage de Sang',lore:'"Chaque blessure renforce ta fureur."',icon:'♦',bg:'linear-gradient(135deg,#330000,#660000)',c:'#ff3333',cr:255,cg:51,cb:51},
+  frost:    {name:'Nova de Givre',lore:'"Le souffle de Northrend fige tout sur son passage."',icon:'❄',bg:'linear-gradient(135deg,#001a2e,#003355)',c:'#00d4ff',cr:0,cg:212,cb:255},
+  nature:   {name:'Âme Ancienne',lore:'"Tu deviens une constellation vivante."',icon:'✿',bg:'linear-gradient(135deg,#001a0a,#003318)',c:'#44ff88',cr:68,cg:255,cb:136},
+  chaos:    {name:'Chaos Primordial',lore:'"La réalité tremble devant ton pouvoir instable."',icon:'☯',bg:'linear-gradient(135deg,#1a0a00,#331500)',c:'#ff9900',cr:255,cg:153,cb:0},
+  lichking: {name:'Roi Liche',lore:'"Toi qui traques la mort — prends garde qu\'elle ne te traque." — Arthas',icon:'☠',bg:'linear-gradient(135deg,#000a1a,#001a33)',c:'#88ccff',cr:136,cg:204,cb:255},
+  dhunter:  {name:'Chasseur Démon',lore:'"Nous sommes ce qui reste quand tout a brûlé." — Illidan',icon:'⚡',bg:'linear-gradient(135deg,#1a001a,#330033)',c:'#aa00ff',cr:170,cg:0,cb:255},
+  bmage:    {name:'Mage du Sang',lore:'"Le sang est le prix du pouvoir." — Kael\'thas',icon:'🩸',bg:'linear-gradient(135deg,#200000,#3a0000)',c:'#ff4400',cr:255,cg:68,cb:0},
+  archmage: {name:'Archimage',lore:'"La magie est la langue de l\'univers." — Jaina',icon:'✧',bg:'linear-gradient(135deg,#00001a,#000033)',c:'#00aaff',cr:0,cg:170,cb:255},
+  warlord:  {name:'Seigneur Guerre',lore:'"La guerre forge les légendes." — Grommash',icon:'⚔',bg:'linear-gradient(135deg,#1a0a00,#2a1000)',c:'#ffaa00',cr:255,cg:170,cb:0},
+  timegod:  {name:'Dieu du Temps',lore:'"Le passé, le présent, le futur — une seule illusion." — Nozdormu',icon:'∞',bg:'linear-gradient(135deg,#0a0a1a,#111122)',c:'#ffffff',cr:255,cg:255,cb:255},
+  firegod:  {name:'Dieu du Feu',lore:'"Les cieux s\'embrasent à ton passage."',icon:'🔥',bg:'linear-gradient(135deg,#330800,#661000)',c:'#ff6600',cr:255,cg:102,cb:0,isNew:true},
+  crystal:  {name:'Cristal Éternel',lore:'"Chaque facette reflète un univers différent."',icon:'💎',bg:'linear-gradient(135deg,#001a33,#003355)',c:'#88ffee',cr:136,cg:255,cb:238,isNew:true},
+  storm:    {name:'Tempête Électrique',lore:'"L\'ionosphère s\'incline devant ta foudre."',icon:'⛈',bg:'linear-gradient(135deg,#001133,#002266)',c:'#44aaff',cr:68,cg:170,cb:255,isNew:true},
+  abyssal:  {name:'Abyssal',lore:'"Depuis les profondeurs du néant — ils répondent."',icon:'🌑',bg:'linear-gradient(135deg,#050010,#0a0020)',c:'#8800cc',cr:136,cg:0,cb:204,isNew:true},
+  solar:    {name:'Couronne Solaire',lore:'"Tu portes l\'étoile en toi. Le soleil s\'incline."',icon:'☀',bg:'linear-gradient(135deg,#331a00,#664400)',c:'#ffdd00',cr:255,cg:221,cb:0,isNew:true},
+  quantum:  {name:'Nexus Quantique',lore:'"Singularité. Tu es le centre de tout."',icon:'🔮',bg:'linear-gradient(135deg,#100020,#200040)',c:'#cc44ff',cr:204,cg:68,cb:255,isNew:true},
+};
+const CL=['divine','void','blood','frost','nature','chaos'];
+const CH=['lichking','dhunter','bmage','archmage','warlord','timegod'];
+const NW=['firegod','crystal','storm','abyssal','solar','quantum'];
+
+let currentAura=null;
+
+function clearAllAuras(){
+  activeAuras.forEach(a=>a.dispose());activeAuras=[];
+  currentAura=null;godActive=false;
+  rimLight.color.set(0x4466ff);rimLight.intensity=2.8;
+}
+
+function selectAura(id){
+  if(godActive)deactivateGod();
+  clearAllAuras();
+  const a=new LivingAura(PRESETS[id],auraGroup);
+  activeAuras.push(a);currentAura=id;
+  const d=AURA_ALL[id];
+  S.activeAura=id;
+  // UI sync
+  document.querySelectorAll('.a-btn').forEach(b=>b.classList.toggle('on',b.dataset.id===id));
+  const lbl=document.getElementById('a-active-lbl');
+  if(lbl){lbl.textContent=d.name;lbl.className='a-active lit';lbl.style.setProperty('--ac',d.c);}
+  const lore=document.getElementById('a-lore');if(lore){lore.textContent=d.lore;}
+  const vaura=document.getElementById('v-aura');if(vaura){vaura.textContent='✦ '+d.name;vaura.style.color=d.c+'aa';}
+  const tva=document.getElementById('tv-a');if(tva){tva.textContent=d.name;tva.style.color=d.c;}
+  rimLight.color.set(d.c);rimLight.intensity=3.5;
+  addLog('✦ Aura : '+d.name,'ok');
+}
+
+function activateGod(){
+  clearAllAuras();godActive=true;
+  Object.keys(PRESETS).forEach((id,i)=>{
+    const a=new LivingAura({...PRESETS[id],
+      layers:Math.max(1,PRESETS[id].layers-1),
+      amp:PRESETS[id].amp*0.6,
+      li:PRESETS[id].li*0.45,
+      pts:Math.floor((PRESETS[id].pts||80)*0.4)},auraGroup);
+    activeAuras.push(a);
+  });
+  document.querySelectorAll('.a-btn').forEach(b=>b.classList.add('on'));
+  document.getElementById('god-btn').classList.add('on');
+  document.getElementById('a-active-lbl').textContent='⚡ GODMODE — 18 AURAS';
+  document.getElementById('a-active-lbl').className='a-active lit';
+  document.getElementById('a-active-lbl').style.setProperty('--ac','#ffd700');
+  document.getElementById('v-god').classList.add('on');
+  document.getElementById('v-aura').textContent='✦ GODMODE ✦ 18 AURAS';
+  document.getElementById('tv-a').textContent='⚡ GODMODE';
+  document.getElementById('tv-a').style.color='#ffd700';
+  rimLight.color.set(0xffffff);rimLight.intensity=5;
+  S.activeAura='godmode';
+  addLog('⚡ GODMODE — 18 auras actives','wn');
+}
+
+function deactivateGod(){
+  godActive=false;
+  document.getElementById('god-btn').classList.remove('on');
+  document.getElementById('v-god').classList.remove('on');
+  clearAllAuras();
+  const lbl=document.getElementById('a-active-lbl');
+  if(lbl){lbl.textContent='Aucune aura active';lbl.className='a-active';}
+  document.getElementById('v-aura').textContent='';
+  document.getElementById('tv-a').textContent='Aucune';document.getElementById('tv-a').style.color='var(--pu)';
+  addLog('Godmode désactivé');
+}
+
+// ═══ ANIMATION LOOP ══════════════════════════════════════════════════════════
+function animate(ts){
+  requestAnimationFrame(animate);
+  const dt=Math.min(0.05,prevT>0?(ts*0.001-prevT):0.016);
+  prevT=ts*0.001;time=ts*0.001;
+  if(!charGroup)return;
+
+  // Body breathing — drives aura sync
+  ANIM.breath+=dt*1.6;
+  const breathVal=Math.sin(ANIM.breath);
+  ANIM.breathVal=breathVal;
+  const breathOff=breathVal*0.007;
+
+  // Walk cycle demo
+  const walkCycle=time%9;
+  ANIM.walking=walkCycle>5.5;
+  const tgtSpd=ANIM.walking?0.55:0;
+  ANIM.spd=THREE.MathUtils.lerp(ANIM.spd,tgtSpd,1-Math.exp(-dt*12));
+
+  if(ANIM.walking){
+    ANIM.t+=dt*9;
+    const sw=Math.sin(ANIM.t)*0.48*ANIM.spd,co=Math.cos(ANIM.t);
+    if(PR.legL)PR.legL.rotation.x=sw;if(PR.legR)PR.legR.rotation.x=-sw;
+    if(PR.lLowL)PR.lLowL.rotation.x=Math.max(0,-co)*0.45*ANIM.spd;
+    if(PR.lLowR)PR.lLowR.rotation.x=Math.max(0,co)*0.45*ANIM.spd;
+    if(PR.armL)PR.armL.rotation.x=-sw*0.8;if(PR.armR)PR.armR.rotation.x=sw*0.8;
+    if(PR.foreL)PR.foreL.rotation.x=-0.12-Math.max(0,co)*0.28*ANIM.spd;
+    if(PR.foreR)PR.foreR.rotation.x=-0.12-Math.max(0,-co)*0.28*ANIM.spd;
+  } else {
+    const dc=Math.exp(-dt*6);
+    if(PR.legL)PR.legL.rotation.x*=dc;if(PR.legR)PR.legR.rotation.x*=dc;
+    if(PR.armL)PR.armL.rotation.x*=dc;if(PR.armR)PR.armR.rotation.x*=dc;
+    if(PR.lLowL)PR.lLowL.rotation.x*=dc;if(PR.lLowR)PR.lLowR.rotation.x*=dc;
+    if(PR.foreL)PR.foreL.rotation.x=THREE.MathUtils.lerp(PR.foreL.rotation.x,-0.07,1-dc);
+    if(PR.foreR)PR.foreR.rotation.x=THREE.MathUtils.lerp(PR.foreR.rotation.x,-0.07,1-dc);
+  }
+  if(PR.body)PR.body.position.y=breathOff;
+  charGroup.position.y=0.07+breathOff*0.4;
+
+  // Update all living auras — pass body breath for sync
+  activeAuras.forEach(a=>a.update(time,dt,breathVal));
+
+  // God mode light animation
+  if(godActive){
+    const gc=new THREE.Color().setHSL((time*0.08)%1,1,0.5);
+    rimLight.color.copy(gc);rimLight.intensity=4.5+Math.sin(time*1.2)*1.5;
+  }
+
+  charGroup.rotation.y=Math.sin(time*0.17)*0.42;
+  controls.update();
+  composer.render();
+}
+
+// ═══ UI SYSTEM ═══════════════════════════════════════════════════════════════
+const SKIN_C=['#fde0c4','#f5cba7','#e8a87c','#d48b5a','#b06040','#7a3e20','#5c2810','#3a1808'];
+const HAIR_C=['#0a0502','#2a1206','#4a2010','#7c3a1a','#b06030','#c8a050','#e8d080','#f0f0f0','#c0c0c0','#606060','#b03020','#ff4080','#4060d0','#20a060'];
+const EYE_C=['#1a3a8c','#204a20','#7c3a10','#106868','#5c5c6c','#802860','#c04010','#18284c'];
+const OUT_C=['#0f0f14','#1a1a2e','#2a1a3e','#1a2a3e','#1e3a1e','#3a1a1a','#2a3a10','#8a6a10','#6a3020','#3a2a4e','#d0d0d0','#e8e8e0'];
+const HAIR_S=['Buzz','Crew Cut','Side Part','Slick Back','Undercut','Long Wavy','Mohawk','Afro','Bald','Quiff'];
+const FACE_S=['Regular','Carré','Rond','Ovale','Diamant','Cœur'];
+const BODY_T=['Slim','Regular','Athletic','Stocky','Heavy'];
+const FH_S=["Clean","5 O'Clock","Goatee","Full Beard","Handlebar","None"];
+const TOPS=['T-Shirt','Hoodie','Dress Shirt','Bomber','Tank Top','Suit Jacket','Turtleneck'];
+const PANTS=['Slim Jeans','Chinos','Shorts','Track Pants','Cargo','Joggers'];
+const SHOES=['Sneakers','Chelsea Boots','Oxford','Sandals','High-Tops','Timbs'];
+const GLASSES=['None','Aviators','Round','Wayfarer','Sports'];
+const HATS=['None','Snapback','Beanie','Fedora','Cap','Beret'];
+const JEWELRY=['None','Chain','Pendant','Dog Tags','Pearl'];
+const SPANEL=['identity','face','hair','body','outfit','accessories','aura','prisma'];
+
+const S={step:0,gender:'male',name:'NOUVEAU_PERSO',nationality:'canadian',skin:1,
+  faceShape:0,eyeColor:0,faceWidth:50,cheekH:50,jawWidth:50,eyeSize:50,eyeSpacing:50,lipSize:50,
+  hairStyle:1,hairColor:0,facialHair:0,bodyType:1,height:50,muscular:45,fatness:30,
+  topStyle:0,topColor:1,pantsStyle:0,pantsColor:1,shoesStyle:0,shoesColor:0,
+  glassesStyle:0,hatStyle:0,jewelryStyle:0,activeAura:null};
+
+function addLog(msg,cls=''){
+  const b=document.getElementById('logb');if(!b)return;
+  const l=document.createElement('div');l.className='ll';
+  l.innerHTML=`<span class="lp2">▸</span><span class="lt ${cls}">${msg}</span>`;
+  b.appendChild(l);b.scrollTop=b.scrollHeight;
+  while(b.children.length>30)b.removeChild(b.firstChild);
+}
+
+function mkSw(sel,cols,key,cb){
+  const c=document.querySelector(sel);if(!c)return;c.innerHTML='';
+  cols.forEach((col,i)=>{
+    const sw=document.createElement('div');sw.className='sw'+(i===S[key]?' on':'');
+    sw.style.background=col;
+    sw.addEventListener('click',()=>{c.querySelectorAll('.sw').forEach(s=>s.classList.remove('on'));sw.classList.add('on');S[key]=i;cb();updateSummary();});
+    c.appendChild(sw);
+  });
+}
+function mkOg(sel,items,key,icons,cb){
+  const c=document.querySelector(sel);if(!c)return;c.innerHTML='';
+  items.forEach((lbl,i)=>{
+    const el=document.createElement('div');el.className='op'+(i===S[key]?' on':'');
+    el.innerHTML=icons?`<span class="oi">${icons[i]}</span>${lbl}`:lbl;
+    el.addEventListener('click',()=>{c.querySelectorAll('.op').forEach(o=>o.classList.remove('on'));el.classList.add('on');S[key]=i;cb();updateSummary();});
+    c.appendChild(el);
+  });
+}
+function mkSl(id,key,cb){
+  const sl=document.getElementById('s-'+id),vl=document.getElementById('v-'+id);
+  if(!sl)return;sl.value=S[key];
+  const p=((sl.value-sl.min)/(sl.max-sl.min))*100;sl.style.setProperty('--pct',p+'%');
+  if(vl)vl.textContent=S[key];
+  sl.addEventListener('input',e=>{
+    S[key]=parseInt(e.target.value);if(vl)vl.textContent=S[key];
+    const p2=((sl.value-sl.min)/(sl.max-sl.min))*100;sl.style.setProperty('--pct',p2+'%');
+    cb();updateSummary();
+  });
+}
+
+function buildAuraBtns(){
+  function mk(cid,ids){
+    const cont=document.getElementById(cid);if(!cont)return;cont.innerHTML='';
+    ids.forEach(id=>{
+      const d=AURA_ALL[id];
+      const btn=document.createElement('div');btn.className='a-btn';btn.dataset.id=id;
+      btn.style.setProperty('--ac',d.c);btn.style.setProperty('--cr',d.cr);
+      btn.style.setProperty('--cg',d.cg);btn.style.setProperty('--cb',d.cb);
+      btn.innerHTML=`${d.isNew?'<span class="new-tag">NEW</span>':''}<div class="a-icon" style="background:${d.bg}">${d.icon}</div><div class="a-name">${d.name}</div>`;
+      btn.addEventListener('click',()=>selectAura(id));
+      cont.appendChild(btn);
+    });
+  }
+  mk('ag-classic',CL);mk('ag-char',CH);mk('ag-new',NW);
+}
+
+function setStep(s){
+  S.step=Math.max(0,Math.min(7,s));
+  document.querySelectorAll('.lp-tab').forEach(b=>b.classList.remove('on'));
+  document.querySelectorAll('.lpanel').forEach(p=>p.classList.remove('on'));
+  const t=document.querySelector(`[data-p="${SPANEL[S.step]}"]`);if(t)t.classList.add('on');
+  const p=document.getElementById('panel-'+SPANEL[S.step]);if(p)p.classList.add('on');
+  document.querySelectorAll('.pdot').forEach((d,i)=>{d.classList.toggle('on',i===S.step);d.classList.toggle('done',i<S.step);});
+  document.querySelectorAll('.h-tab').forEach((el,i)=>el.classList.toggle('on',i===S.step));
+  document.querySelector('.fb-c').classList.toggle('on',S.step===7);
+}
+
+function updateSummary(){
+  const nm=document.getElementById('cname')?.value?.toUpperCase()||'NOUVEAU_PERSO';S.name=nm;
+  document.getElementById('rn').textContent=nm;document.getElementById('v-name').textContent=nm;
+  document.getElementById('rid').textContent=`ID: EP-${String(Date.now()).slice(-6)} · ${S.nationality.toUpperCase()}`;
+  [['tv-g',S.gender==='male'?'♂ Masculin':'♀ Féminin'],
+   ['tv-f',FACE_S[S.faceShape]],['tv-b',BODY_T[S.bodyType]],['tv-t',TOPS[S.topStyle]]
+  ].forEach(([id,v])=>{const el=document.getElementById(id);if(el)el.textContent=v;});
+  [['ht','height','c'],['mu','muscular','p'],['fa','fatness','g']].forEach(([id,key,cls])=>{
+    const f=document.getElementById('sf-'+id),t=document.getElementById('sv-'+id);
+    if(f){f.style.width=S[key]+'%';f.className='st-fill '+cls;}if(t)t.textContent=S[key]+'%';
+  });
+}
+
+// ═══ ETHERPRISMA ═════════════════════════════════════════════════════════════
+let prMorphs=JSON.parse(localStorage.getItem('ep_alive_morphs')||'[]');
+
+function savePR(){localStorage.setItem('ep_alive_morphs',JSON.stringify(prMorphs));renderPR();document.getElementById('pr-count').textContent=prMorphs.length;}
+
+function renderPR(){
+  const list=document.getElementById('pr-list');if(!list)return;
+  if(!prMorphs.length){list.innerHTML='<div style="font-size:8px;color:var(--mu);padding:12px;text-align:center;letter-spacing:1px">Aucun morph sauvegardé</div>';return;}
+  const AC={divine:'#ffe066',void:'#b06fff',blood:'#ff3333',frost:'#00d4ff',nature:'#44ff88',chaos:'#ff9900',lichking:'#88ccff',dhunter:'#aa00ff',bmage:'#ff4400',archmage:'#00aaff',warlord:'#ffaa00',timegod:'#ffffff',firegod:'#ff6600',crystal:'#88ffee',storm:'#44aaff',abyssal:'#8800cc',solar:'#ffdd00',quantum:'#cc44ff',godmode:'#ffd700'};
+  list.innerHTML=prMorphs.map(m=>`
+    <div class="pr-item" data-mid="${m.id}">
+      <span class="pr-icon">${m.gender==='female'?'👩':'👤'}</span>
+      <div class="pr-info"><div class="pr-name">${m.name}</div>
+      <div class="pr-meta">${m.id} · ${m.activeAura||'—'} · ${m.role||'?'}</div></div>
+      ${m.activeAura?`<div class="pr-dot" style="background:${AC[m.activeAura]||'#fff'};box-shadow:0 0 5px ${AC[m.activeAura]||'#fff'}"></div>`:''}
+      <div class="pr-del" data-did="${m.id}">✕</div>
+    </div>`).join('');
+  list.querySelectorAll('.pr-item').forEach(el=>{
+    el.addEventListener('click',e=>{if(e.target.dataset.did)return;const m=prMorphs.find(x=>x.id===el.dataset.mid);if(m){Object.assign(S,m);document.getElementById('cname').value=m.name;if(m.activeAura==='godmode')activateGod();else if(m.activeAura&&PRESETS[m.activeAura])selectAura(m.activeAura);updateSummary();addLog('⬡ Morph chargé : '+m.name,'ok');document.getElementById('tv-p').textContent=m.id;}});
+  });
+  list.querySelectorAll('.pr-del').forEach(el=>{
+    el.addEventListener('click',e=>{e.stopPropagation();prMorphs=prMorphs.filter(x=>x.id!==el.dataset.did);savePR();addLog('Morph supprimé');});
+  });
+}
+
+function createMorph(){
+  const id='EP-'+Date.now().toString(36).toUpperCase().slice(-6);
+  const m={id,name:S.name,role,timestamp:new Date().toISOString(),
+    gender:S.gender,nationality:S.nationality,skin:S.skin,faceShape:S.faceShape,
+    hairStyle:S.hairStyle,hairColor:S.hairColor,bodyType:S.bodyType,
+    height:S.height,muscular:S.muscular,fatness:S.fatness,
+    topStyle:S.topStyle,pantsStyle:S.pantsStyle,shoesStyle:S.shoesStyle,
+    glassesStyle:S.glassesStyle,hatStyle:S.hatStyle,jewelryStyle:S.jewelryStyle,
+    activeAura:S.activeAura,command:`/morph ${id}`};
+  prMorphs.unshift(m);if(prMorphs.length>60)prMorphs=prMorphs.slice(0,60);
+  savePR();return m;
+}
+
+// ═══ INIT UI ═════════════════════════════════════════════════════════════════
+function initUI(){
+  const HI=['✂️','✂️','🔀','↩️','⬆️','🌊','⚡','🔵','🪩','☝️'];
+  const FI=['😐','🟥','⭕','🥚','💎','❤️'];
+  const BI=['🪄','👤','💪','🏋️','🐘'];
+  const FHI=['😊','🧔','🧔','🧔','〰️','🔘'];
+  const TI=['👕','🧥','👔','💥','🎽','🤵','🐢'];
+  const PI=['👖','👖','🩳','🩱','🎒','🩳'];
+  const SI=['👟','👢','👞','🩴','👟','🥾'];
+  const GLI=['🚫','🕶️','⭕','🔲','🏃'];
+  const HATI=['🚫','🧢','🎿','🎩','🧢','🎨'];
+  const JWI=['🚫','⛓️','📿','🪖','📿'];
+
+  mkSw('#sw-skin',SKIN_C,'skin',()=>{});
+  mkSw('#sw-eye',EYE_C,'eyeColor',()=>{});
+  mkSw('#sw-hair',HAIR_C,'hairColor',()=>{});
+  mkSw('#sw-top',OUT_C,'topColor',()=>{});
+  mkSw('#sw-pants',OUT_C,'pantsColor',()=>{});
+  mkSw('#sw-shoes',OUT_C,'shoesColor',()=>{});
+  mkOg('#g-face',FACE_S,'faceShape',FI,()=>addLog('Visage → '+FACE_S[S.faceShape]));
+  mkOg('#g-hair',HAIR_S,'hairStyle',HI,()=>addLog('Coiffure → '+HAIR_S[S.hairStyle]));
+  mkOg('#g-fh',FH_S,'facialHair',FHI,()=>{});
+  mkOg('#g-body',BODY_T,'bodyType',BI,()=>addLog('Morpho → '+BODY_T[S.bodyType],'ok'));
+  mkOg('#g-top',TOPS,'topStyle',TI,()=>addLog('Haut → '+TOPS[S.topStyle]));
+  mkOg('#g-pants',PANTS,'pantsStyle',PI,()=>addLog('Bas → '+PANTS[S.pantsStyle]));
+  mkOg('#g-shoes',SHOES,'shoesStyle',SI,()=>{});
+  mkOg('#g-gls',GLASSES,'glassesStyle',GLI,()=>{});
+  mkOg('#g-hat',HATS,'hatStyle',HATI,()=>{});
+  mkOg('#g-jwl',JEWELRY,'jewelryStyle',JWI,()=>{});
+  ['fw','ch','jw','es','esp','lp','ht','mu','fa'].forEach(id=>{
+    const keys={fw:'faceWidth',ch:'cheekH',jw:'jawWidth',es:'eyeSize',esp:'eyeSpacing',lp:'lipSize',ht:'height',mu:'muscular',fa:'fatness'};
+    mkSl(id,keys[id],()=>updateSummary());
+  });
+
+  document.querySelectorAll('.sex-btn').forEach(btn=>btn.addEventListener('click',()=>{
+    document.querySelectorAll('.sex-btn').forEach(b=>b.classList.remove('on'));btn.classList.add('on');
+    S.gender=btn.dataset.g;addLog('Genre → '+(S.gender==='male'?'Masculin':'Féminin'));updateSummary();
+  }));
+  document.getElementById('cname').addEventListener('input',()=>updateSummary());
+  document.getElementById('snat')?.addEventListener('change',e=>{S.nationality=e.target.value;updateSummary();});
+
+  buildAuraBtns();
+
+  // God mode
+  document.getElementById('god-btn').addEventListener('click',()=>{if(godActive)deactivateGod();else activateGod();});
+
+  // Tabs + steps
+  document.querySelector('.fb-p').addEventListener('click',()=>setStep(S.step-1));
+  document.querySelector('.fb-n').addEventListener('click',()=>setStep(S.step+1));
+  document.querySelectorAll('.h-tab').forEach((el,i)=>el.addEventListener('click',()=>setStep(i)));
+  document.querySelectorAll('.lp-tab').forEach(btn=>btn.addEventListener('click',()=>{
+    document.querySelectorAll('.lp-tab').forEach(b=>b.classList.remove('on'));
+    document.querySelectorAll('.lpanel').forEach(p=>p.classList.remove('on'));
+    btn.classList.add('on');
+    const p=document.getElementById('panel-'+btn.dataset.p);if(p)p.classList.add('on');
+  }));
+
+  // EtherPrisma
+  document.getElementById('pr-save').addEventListener('click',()=>{
+    const m=createMorph();document.getElementById('tv-p').textContent=m.id;
+    addLog('⬡ Sauvegardé → '+m.name+' ['+m.id+']','ok');
+  });
+  document.getElementById('pr-export').addEventListener('click',()=>{
+    const blob=new Blob([JSON.stringify(prMorphs,null,2)],{type:'application/json'});
+    const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`ep_alive_${Date.now()}.json`;a.click();
+    addLog('⬇ Export JSON','ok');
+  });
+  document.getElementById('pr-clear').addEventListener('click',()=>{
+    if(!confirm('Effacer tous les morphs ?'))return;
+    prMorphs=[];savePR();addLog('EtherPrisma vidé');
+  });
+  document.getElementById('btn-load-pr').addEventListener('click',()=>setStep(7));
+
+  // Random
+  document.getElementById('btn-rand').addEventListener('click',()=>{
+    const r=arr=>Math.floor(Math.random()*arr.length);
+    S.skin=r(SKIN_C);S.hairStyle=r(HAIR_S);S.hairColor=r(HAIR_C);S.eyeColor=r(EYE_C);
+    S.faceShape=r(FACE_S);S.bodyType=r(BODY_T);S.topStyle=r(TOPS);S.topColor=r(OUT_C);
+    S.pantsStyle=r(PANTS);S.pantsColor=r(OUT_C);S.shoesStyle=r(SHOES);
+    const allIds=[...CL,...CH,...NW];
+    if(Math.random()<0.12)activateGod();else if(Math.random()<0.9)selectAura(allIds[r(allIds)]);
+    mkSw('#sw-skin',SKIN_C,'skin',()=>{});
+    addLog('🎲 Aléatoire généré','ok');updateSummary();
+  });
+
+  // Reset
+  document.getElementById('btn-reset').addEventListener('click',()=>{
+    if(godActive)deactivateGod();else{clearAllAuras();
+      document.querySelectorAll('.a-btn').forEach(b=>b.classList.remove('on'));
+      const lbl=document.getElementById('a-active-lbl');if(lbl){lbl.textContent='Aucune aura active';lbl.className='a-active';}
+      document.getElementById('v-aura').textContent='';
+      document.getElementById('tv-a').textContent='Aucune';document.getElementById('tv-a').style.color='var(--pu)';
+      S.activeAura=null;
+    }
+    addLog('↺ Réinitialisé');updateSummary();
+  });
+
+  // Confirm modal
+  const cmod=document.getElementById('cmod');
+  document.querySelector('.fb-c').addEventListener('click',()=>{
+    const mid='EP-'+Date.now().toString(36).toUpperCase().slice(-6);
+    document.getElementById('mc-name').textContent=S.name;
+    document.getElementById('mc-g').textContent=S.gender==='male'?'♂ Masculin':'♀ Féminin';
+    document.getElementById('mc-a').textContent=godActive?'⚡ GODMODE':S.activeAura?AURA_ALL[S.activeAura]?.name||S.activeAura:'—';
+    document.getElementById('mc-b').textContent=BODY_T[S.bodyType];
+    document.getElementById('mc-h').textContent=HAIR_S[S.hairStyle];
+    document.getElementById('mc-t').textContent=TOPS[S.topStyle];
+    document.getElementById('mc-id').textContent=mid;
+    cmod.classList.add('on');
+  });
+  document.querySelector('.m-cancel').addEventListener('click',()=>cmod.classList.remove('on'));
+  document.querySelector('.m-spawn').addEventListener('click',()=>{
+    cmod.classList.remove('on');const m=createMorph();
+    document.getElementById('tv-p').textContent=m.id;
+    const sp=document.getElementById('spawn');sp.classList.add('on');
+    addLog('✅ "'+S.name+'" enregistré ['+m.id+']','ok');
+    setTimeout(()=>sp.classList.remove('on'),3200);
+  });
+
+  // Export JSON
+  document.getElementById('btn-json').addEventListener('click',()=>{
+    const blob=new Blob([JSON.stringify({...S,role,timestamp:new Date().toISOString()},null,2)],{type:'application/json'});
+    const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`ep_${S.name}_${Date.now()}.json`;a.click();
+    addLog('⬇ Export JSON','ok');
+  });
+
+  // Clipboard morph
+  document.getElementById('btn-morph').addEventListener('click',()=>{
+    const id='EP-'+Date.now().toString(36).toUpperCase().slice(-6);
+    const data={command:`/morph ${id}`,name:S.name,aura:S.activeAura,role,id};
+    navigator.clipboard?.writeText(JSON.stringify(data,null,2)).then(()=>addLog('📋 Morph copié','ok'));
+  });
+
+  // Keyboard
+  document.addEventListener('keydown',e=>{
+    if(e.target.matches('input,select,textarea'))return;
+    if(e.key==='ArrowRight')setStep(S.step+1);if(e.key==='ArrowLeft')setStep(S.step-1);
+    if(e.key==='Escape')cmod.classList.remove('on');
+    if(e.key==='r'||e.key==='R')document.getElementById('btn-rand').click();
+    if(e.key==='g'||e.key==='G'){if(godActive)deactivateGod();else activateGod();}
+    if(e.key==='a'||e.key==='A')setStep(6);
+    if(e.key==='p'||e.key==='P')setStep(7);
+  });
+
+  setStep(0);updateSummary();renderPR();
+  addLog('EtherPrisma Alive v1.0 — Online','ok');
+  addLog('UnrealBloom + GLSL Shader System','ok');
+  addLog('HD Character — MeshPhysicalMaterial','ok');
+  addLog('18 auras vivantes prêtes','ok');
+  addLog('Accès : '+(role?.toUpperCase()||'—'),'ok');
+}
+
+// ═══ MAIN INIT ════════════════════════════════════════════════════════════════
+function initApp(){
+  initScene();buildScene();initUI();
+  animate(0);
+}
+
+</script>
+</body>
+</html>

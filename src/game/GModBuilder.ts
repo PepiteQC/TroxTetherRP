@@ -115,7 +115,6 @@ export class GModBuilder {
 
   private createGhostMesh(item: CatalogItem) {
     this.ghostMesh = new THREE.Group();
-    this.ghostMesh.name = "ghost_mesh_group"; // FIX: Permet au GameManager de l'exclure des collisions caméra
     this.ghostMesh.userData = { itemId: item.id };
 
     // Draw main transparent box bounding
@@ -156,7 +155,7 @@ export class GModBuilder {
     const item = this.getItemById(activeItemId);
     if (!item) return null;
 
-    const uuid = 'prop_' + Math.random().toString(36).substring(2, 9);
+    const uuid = 'prop_' + Math.random().toString(36).substr(2, 9);
     const position = { x: this.ghostMesh.position.x, y: this.ghostMesh.position.y, z: this.ghostMesh.position.z };
     const rotation = { x: this.ghostMesh.rotation.x, y: this.ghostMesh.rotation.y, z: this.ghostMesh.rotation.z };
 
@@ -204,7 +203,7 @@ export class GModBuilder {
       // Add point light at bulb height
       const lampLight = new THREE.PointLight(0xffdf9e, 2.5, 8);
       lampLight.position.y = 1.6;
-      lampLight.castShadow = true;
+      lampLight.castShadow = false; // Disabled to avoid exceeding MAX_TEXTURE_IMAGE_UNITS
       propGroup.add(lampLight);
 
       // Emissive bulb shade
@@ -262,7 +261,7 @@ export class GModBuilder {
       // Real Fire point light
       const fireLight = new THREE.PointLight(0xf97316, 4.0, 10);
       fireLight.position.set(0, 0.7, 0);
-      fireLight.castShadow = true;
+      fireLight.castShadow = false; // Disabled to avoid exceeding MAX_TEXTURE_IMAGE_UNITS
       propGroup.add(fireLight);
     } else if (item.id === 'marble_island') {
       // Elegant gold trim border at the bottom
@@ -325,7 +324,7 @@ export class GModBuilder {
       // Real light emission
       const ringLight = new THREE.PointLight(0xfff5db, 3.8, 12);
       ringLight.position.set(0, 0.3, 0);
-      ringLight.castShadow = true;
+      ringLight.castShadow = false; // Disabled to avoid exceeding MAX_TEXTURE_IMAGE_UNITS
       propGroup.add(ringLight);
     } else if (item.id === 'potted_palm') {
       // Stylish geometric ceramic planter pot

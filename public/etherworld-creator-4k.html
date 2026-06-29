@@ -1,0 +1,2034 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EtherWorld — Character Creator 4K | Admin Edition</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Exo+2:wght@300;400;500;600;700&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ═══════════════════════════════════════════════
+   ETHERWORLD CHARACTER CREATOR 4K — ADMIN EDITION
+   Owner + Admin access only
+═══════════════════════════════════════════════ */
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{
+  --bg:#03040a;--bg2:#060b14;--bg3:#0a1020;
+  --panel:rgba(4,7,16,0.96);
+  --border:rgba(0,212,255,0.1);--border2:rgba(0,212,255,0.28);--border3:rgba(0,212,255,0.55);
+  --cyan:#00d4ff;--cyan2:#00a8cc;
+  --gold:#ffd700;--gold2:#c8a200;
+  --purple:#9b87ff;--purple2:#7b6fff;
+  --red:#ff4466;--green:#00ff88;
+  --text:#e8edf5;--muted:#4a5a70;--muted2:#7a8a9a;
+  --font:'Exo 2',sans-serif;--font2:'Rajdhani',sans-serif;--font3:'Orbitron',monospace;
+}
+html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(--text);font-family:var(--font);user-select:none;}
+
+/* ── GRAIN OVERLAY ── */
+body::after{content:'';position:fixed;inset:0;z-index:9999;pointer-events:none;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
+  opacity:0.45;}
+
+/* ═══ ADMIN LOGIN GATE ═══ */
+#admin-gate{
+  position:fixed;inset:0;z-index:5000;
+  background:radial-gradient(ellipse at 50% 40%,#060d1a 0%,#020408 70%,#000 100%);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:32px;
+}
+.gate-logo{font-family:var(--font3);font-size:32px;font-weight:900;letter-spacing:6px;color:var(--cyan);
+  text-shadow:0 0 30px var(--cyan),0 0 60px rgba(0,212,255,0.3);
+  animation:gateGlow 3s ease-in-out infinite;}
+@keyframes gateGlow{0%,100%{text-shadow:0 0 20px var(--cyan);}50%{text-shadow:0 0 40px var(--cyan),0 0 80px rgba(0,212,255,0.4),0 0 120px rgba(0,212,255,0.2);}}
+.gate-sub{font-family:var(--font2);font-size:11px;letter-spacing:4px;color:var(--muted2);text-transform:uppercase;margin-top:-24px;}
+.gate-card{
+  background:rgba(4,8,18,0.95);border:1px solid var(--border2);border-radius:12px;
+  padding:32px 40px;display:flex;flex-direction:column;gap:18px;width:380px;
+  box-shadow:0 0 60px rgba(0,212,255,0.06),0 20px 60px rgba(0,0,0,0.8);
+}
+.gate-title{font-family:var(--font2);font-size:13px;letter-spacing:3px;color:var(--muted2);text-transform:uppercase;text-align:center;}
+.gate-badge{display:flex;align-items:center;gap:8px;padding:8px 14px;border-radius:6px;
+  background:rgba(255,215,0,0.06);border:1px solid rgba(255,215,0,0.2);
+  font-family:var(--font2);font-size:10px;letter-spacing:2px;color:var(--gold);text-transform:uppercase;
+  justify-content:center;}
+.gate-badge-dot{width:6px;height:6px;border-radius:50%;background:var(--red);box-shadow:0 0 8px var(--red);animation:blink 1.5s ease-in-out infinite;}
+@keyframes blink{0%,100%{opacity:1;}50%{opacity:0.3;}}
+.gate-input{
+  background:rgba(0,0,0,0.5);border:1px solid var(--border2);color:var(--cyan);
+  padding:12px 16px;border-radius:6px;font-family:var(--font3);font-size:13px;
+  font-weight:600;letter-spacing:3px;outline:none;transition:all 0.2s;text-align:center;
+}
+.gate-input::placeholder{color:var(--muted);font-family:var(--font2);letter-spacing:1px;font-size:11px;}
+.gate-input:focus{border-color:var(--cyan);box-shadow:0 0 0 2px rgba(0,212,255,0.1),0 0 16px rgba(0,212,255,0.08);}
+.gate-btn{
+  padding:13px;border-radius:6px;border:1px solid rgba(0,212,255,0.35);
+  background:linear-gradient(135deg,rgba(0,212,255,0.14),rgba(0,212,255,0.06));
+  color:var(--cyan);font-family:var(--font2);font-size:12px;font-weight:700;
+  letter-spacing:3px;text-transform:uppercase;cursor:pointer;transition:all 0.2s;
+}
+.gate-btn:hover{background:linear-gradient(135deg,rgba(0,212,255,0.22),rgba(0,212,255,0.1));box-shadow:0 0 20px rgba(0,212,255,0.15);}
+.gate-error{font-size:10px;color:var(--red);letter-spacing:1.5px;text-align:center;text-transform:uppercase;min-height:16px;opacity:0;transition:opacity 0.3s;}
+.gate-error.show{opacity:1;}
+.gate-roles{display:flex;gap:8px;}
+.gate-role{flex:1;padding:8px 4px;border-radius:5px;border:1px solid var(--border);
+  background:rgba(255,255,255,0.02);font-family:var(--font2);font-size:9px;
+  letter-spacing:1.5px;color:var(--muted);text-transform:uppercase;text-align:center;}
+.gate-role.owner{border-color:rgba(255,215,0,0.3);color:var(--gold);}
+.gate-role.admin{border-color:rgba(0,212,255,0.3);color:var(--cyan);}
+
+/* ═══ MAIN APP (hidden until auth) ═══ */
+#app{display:none;width:100%;height:100%;flex-direction:column;}
+#app.visible{display:flex;}
+
+/* ═══ HEADER ═══ */
+.cc-header{
+  height:56px;flex-shrink:0;
+  background:linear-gradient(180deg,rgba(3,4,10,0.99),rgba(3,4,10,0.88));
+  border-bottom:1px solid;
+  border-image:linear-gradient(90deg,transparent,var(--cyan) 25%,var(--purple) 75%,transparent) 1;
+  display:flex;align-items:center;justify-content:space-between;padding:0 18px;
+  backdrop-filter:blur(20px);position:relative;z-index:200;
+}
+.cc-logo{display:flex;align-items:center;gap:8px;}
+.cc-logo-hex{font-size:22px;color:var(--cyan);filter:drop-shadow(0 0 8px var(--cyan));animation:hexPulse 3s ease-in-out infinite;}
+@keyframes hexPulse{0%,100%{filter:drop-shadow(0 0 6px var(--cyan));}50%{filter:drop-shadow(0 0 18px var(--cyan)) drop-shadow(0 0 40px rgba(0,212,255,0.4));}}
+.cc-logo-text{font-family:var(--font3);font-size:12px;font-weight:700;letter-spacing:3px;color:var(--text);}
+.cc-logo-text strong{color:var(--cyan);}
+.cc-sep{width:1px;height:28px;background:linear-gradient(180deg,transparent,var(--border3),transparent);margin:0 12px;}
+.cc-title-block{display:flex;flex-direction:column;}
+.cc-title{font-family:var(--font2);font-size:12px;font-weight:700;letter-spacing:3px;color:var(--gold);text-transform:uppercase;text-shadow:0 0 10px rgba(255,215,0,0.3);}
+.cc-subtitle{font-size:9px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;}
+.hdr-center{display:flex;align-items:center;gap:6px;}
+.cc-step{display:flex;align-items:center;gap:4px;font-family:var(--font2);font-size:9px;font-weight:700;letter-spacing:1px;color:var(--muted);padding:4px 8px;border-radius:3px;border:1px solid transparent;cursor:pointer;transition:all 0.2s;text-transform:uppercase;}
+.cc-step.active{color:var(--gold);border-color:rgba(255,215,0,0.2);background:rgba(255,215,0,0.05);}
+.cc-step.done{color:var(--green);border-color:rgba(0,255,136,0.12);}
+.cc-step .sn{width:16px;height:16px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:8px;font-family:var(--font3);background:rgba(255,255,255,0.04);border:1px solid currentColor;flex-shrink:0;}
+.cc-step-arr{color:var(--muted);font-size:9px;}
+.hdr-right{display:flex;align-items:center;gap:8px;}
+.role-badge{display:flex;align-items:center;gap:6px;padding:4px 10px;border-radius:3px;font-family:var(--font2);font-size:9px;letter-spacing:1.5px;text-transform:uppercase;}
+.role-badge.owner{border:1px solid rgba(255,215,0,0.4);background:rgba(255,215,0,0.07);color:var(--gold);}
+.role-badge.admin{border:1px solid rgba(0,212,255,0.3);background:rgba(0,212,255,0.06);color:var(--cyan);}
+.role-badge-dot{width:6px;height:6px;border-radius:50%;animation:blink 2s ease-in-out infinite;}
+.role-badge.owner .role-badge-dot{background:var(--gold);box-shadow:0 0 6px var(--gold);}
+.role-badge.admin .role-badge-dot{background:var(--cyan);box-shadow:0 0 6px var(--cyan);}
+.cc-logout{background:none;border:1px solid var(--border2);color:var(--muted2);padding:5px 12px;border-radius:3px;font-family:var(--font2);font-size:10px;cursor:pointer;transition:all 0.2s;letter-spacing:1px;text-transform:uppercase;}
+.cc-logout:hover{border-color:var(--red);color:var(--red);}
+
+/* ═══ MAIN LAYOUT ═══ */
+.cc-main{flex:1;display:grid;grid-template-columns:300px 1fr 280px;overflow:hidden;min-height:0;}
+
+/* ═══ LEFT PANEL ═══ */
+.cc-left{background:var(--panel);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden;position:relative;}
+.cc-left::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--cyan),transparent);opacity:0.3;}
+.cc-tab-nav{display:flex;border-bottom:1px solid var(--border);overflow-x:auto;scrollbar-width:none;background:rgba(0,0,0,0.25);}
+.cc-tab-nav::-webkit-scrollbar{display:none;}
+.cc-tab-btn{flex:1;min-width:46px;padding:8px 3px 7px;background:none;border:none;border-bottom:2px solid transparent;color:var(--muted);font-family:var(--font2);font-size:8px;font-weight:700;letter-spacing:0.8px;text-transform:uppercase;cursor:pointer;transition:all 0.2s;display:flex;flex-direction:column;align-items:center;gap:2px;}
+.cc-tab-btn .ti{font-size:14px;transition:transform 0.2s;}
+.cc-tab-btn:hover{color:var(--muted2);}
+.cc-tab-btn.active{color:var(--gold);border-bottom-color:var(--gold);background:rgba(255,215,0,0.04);}
+.cc-tab-btn.active .ti{filter:drop-shadow(0 0 4px var(--gold));}
+/* Aura tab special */
+.cc-tab-btn.aura-tab{color:var(--purple);}
+.cc-tab-btn.aura-tab.active{color:var(--purple);border-bottom-color:var(--purple);background:rgba(155,135,255,0.05);}
+
+.cc-tab-content{flex:1;overflow-y:auto;padding:12px 12px 18px;scrollbar-width:thin;scrollbar-color:rgba(0,212,255,0.15) transparent;}
+.cc-tab-content::-webkit-scrollbar{width:3px;}
+.cc-tab-content::-webkit-scrollbar-thumb{background:rgba(0,212,255,0.15);border-radius:2px;}
+.cc-panel{display:none;animation:panelIn 0.22s ease;}
+.cc-panel.active{display:block;}
+@keyframes panelIn{from{opacity:0;transform:translateY(5px);}to{opacity:1;transform:none;}}
+.cc-sec{font-family:var(--font2);font-size:9px;font-weight:700;letter-spacing:2px;color:var(--cyan);text-transform:uppercase;margin:12px 0 6px;padding-bottom:4px;border-bottom:1px solid rgba(0,212,255,0.08);display:flex;align-items:center;gap:4px;}
+.cc-sec:first-child{margin-top:0;}
+.cc-sec::before{content:'▸';opacity:0.5;font-size:7px;}
+
+/* GENDER */
+.gender-toggle{display:flex;gap:6px;margin-bottom:2px;}
+.gender-btn{flex:1;padding:9px 6px;border-radius:4px;border:1px solid var(--border);background:linear-gradient(135deg,rgba(0,0,0,0.4),rgba(255,255,255,0.02));color:var(--muted);font-family:var(--font2);font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer;transition:all 0.2s;text-align:center;}
+.gender-btn.active{border-color:var(--cyan2);color:var(--cyan);background:linear-gradient(135deg,rgba(0,212,255,0.12),rgba(0,168,204,0.05));box-shadow:0 0 14px rgba(0,212,255,0.08);}
+
+/* NAME */
+.cc-name-input{width:100%;background:rgba(0,0,0,0.5);border:1px solid var(--border2);color:var(--gold);padding:9px 12px;border-radius:4px;font-family:var(--font3);font-size:11px;font-weight:600;letter-spacing:2px;text-transform:uppercase;outline:none;transition:all 0.2s;}
+.cc-name-input:focus{border-color:var(--gold2);box-shadow:0 0 0 2px rgba(255,215,0,0.08);}
+.cc-name-input::placeholder{color:var(--muted);font-family:var(--font2);}
+.cc-hint{font-size:8px;color:var(--muted);letter-spacing:1.5px;margin-top:3px;text-transform:uppercase;}
+
+/* SELECT */
+.cc-select{width:100%;background:rgba(0,0,0,0.5);border:1px solid var(--border2);color:var(--text);padding:8px 28px 8px 10px;border-radius:4px;font-family:var(--font);font-size:11px;outline:none;cursor:pointer;transition:border-color 0.2s;-webkit-appearance:none;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='7' viewBox='0 0 10 7'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%2300d4ff' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;}
+.cc-select option{background:#0a0f1c;}
+
+/* SWATCHES */
+.cc-swatches{display:flex;flex-wrap:wrap;gap:6px;}
+.cc-swatch{width:24px;height:24px;border-radius:50%;border:2px solid rgba(255,255,255,0.08);cursor:pointer;transition:all 0.15s;flex-shrink:0;position:relative;}
+.cc-swatch:hover{transform:scale(1.2);border-color:rgba(255,255,255,0.35);}
+.cc-swatch.active{border-color:#fff;box-shadow:0 0 0 2px var(--cyan),0 0 12px rgba(0,212,255,0.4);transform:scale(1.1);}
+.cc-swatch.active::after{content:'✓';position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:10px;color:rgba(255,255,255,0.9);font-weight:800;text-shadow:0 1px 2px rgba(0,0,0,0.6);}
+
+/* OPTION GRID */
+.cc-opt-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(64px,1fr));gap:5px;}
+.cc-opt{padding:8px 4px 6px;border-radius:4px;border:1px solid var(--border);background:linear-gradient(160deg,rgba(255,255,255,0.02),rgba(0,0,0,0.3));color:var(--muted);font-size:8.5px;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;text-align:center;cursor:pointer;transition:all 0.18s;display:flex;flex-direction:column;align-items:center;gap:4px;position:relative;overflow:hidden;}
+.cc-opt .oi{font-size:18px;line-height:1;transition:transform 0.2s;}
+.cc-opt:hover{border-color:var(--border2);color:var(--muted2);}
+.cc-opt:hover .oi{transform:scale(1.15);}
+.cc-opt.active{border-color:rgba(255,215,0,0.45);color:var(--gold);background:linear-gradient(160deg,rgba(255,215,0,0.1),rgba(255,215,0,0.03));}
+.cc-opt.active .oi{filter:drop-shadow(0 0 4px var(--gold));}
+
+/* SLIDER */
+.cc-sl-wrap{margin-bottom:8px;}
+.cc-sl-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;}
+.cc-sl-label{font-size:9px;color:var(--muted);letter-spacing:1.5px;text-transform:uppercase;}
+.cc-sl-val{font-family:var(--font3);font-size:10px;font-weight:600;color:var(--cyan);min-width:26px;text-align:right;}
+.cc-slider{width:100%;height:3px;-webkit-appearance:none;appearance:none;background:linear-gradient(to right,var(--cyan) 0%,var(--cyan) var(--pct,50%),rgba(255,255,255,0.07) var(--pct,50%));border-radius:2px;outline:none;cursor:pointer;}
+.cc-slider::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:radial-gradient(circle at 40% 35%,#fff 0%,var(--cyan) 60%);border:2px solid var(--bg);box-shadow:0 0 8px rgba(0,212,255,0.6);cursor:pointer;}
+
+/* ACCESSORIES */
+.acc-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;}
+.acc-card{padding:9px 6px;border-radius:4px;border:1px solid var(--border);background:linear-gradient(145deg,rgba(255,255,255,0.02),rgba(0,0,0,0.3));display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;transition:all 0.2s;text-align:center;}
+.acc-card .ai{font-size:22px;transition:transform 0.2s;}
+.acc-card .an{font-size:8.5px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;font-weight:700;}
+.acc-card:hover{border-color:var(--border2);}
+.acc-card:hover .ai{transform:scale(1.15);}
+.acc-card.active{border-color:var(--purple);background:rgba(155,135,255,0.08);}
+.acc-card.active .an{color:var(--purple);}
+
+/* ─── AURA PANEL ─── */
+.aura-panel-inner{display:flex;flex-direction:column;gap:8px;}
+.aura-section-title{font-family:var(--font2);font-size:9px;font-weight:700;letter-spacing:2px;color:var(--purple);text-transform:uppercase;padding-bottom:5px;border-bottom:1px solid rgba(155,135,255,0.12);display:flex;align-items:center;gap:4px;}
+.aura-section-title::before{content:'✦';opacity:0.6;font-size:8px;}
+.aura-btn-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;}
+.aura-btn{display:flex;flex-direction:column;align-items:center;gap:4px;background:rgba(0,0,0,0.5);border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:10px 6px;cursor:pointer;transition:all 0.2s;color:var(--muted);}
+.aura-btn:hover{border-color:rgba(255,255,255,0.2);background:rgba(255,255,255,0.04);transform:translateY(-1px);}
+.aura-btn.active{border-color:var(--aura-c,var(--cyan));background:rgba(var(--aura-cr,0),var(--aura-cg,212),var(--aura-cb,255),0.1);color:#fff;box-shadow:0 0 12px rgba(var(--aura-cr,0),var(--aura-cg,212),var(--aura-cb,255),0.2);}
+.aura-icon{width:38px;height:38px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:18px;border:1px solid rgba(255,255,255,0.08);}
+.aura-name{font-size:8.5px;text-transform:uppercase;letter-spacing:0.8px;text-align:center;line-height:1.3;}
+.aura-lore{font-size:9px;color:var(--muted);font-style:italic;letter-spacing:0.3px;padding:8px 10px;border-radius:5px;border:1px solid rgba(155,135,255,0.1);background:rgba(155,135,255,0.03);line-height:1.5;min-height:44px;transition:all 0.3s;}
+.aura-active-label{font-family:var(--font2);font-size:10px;font-weight:700;letter-spacing:2px;text-align:center;text-transform:uppercase;padding:6px;border-radius:4px;background:rgba(0,0,0,0.3);border:1px solid rgba(255,255,255,0.06);color:var(--muted2);}
+.aura-active-label.lit{color:var(--aura-c,var(--cyan));border-color:var(--aura-c,var(--cyan));text-shadow:0 0 10px var(--aura-c,var(--cyan));}
+
+/* ANIM PANEL */
+.model-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;transition:all 0.3s;}
+.model-dot.procedural{background:var(--purple);box-shadow:0 0 6px rgba(155,135,255,0.5);}
+.model-dot.glb{background:var(--green);box-shadow:0 0 6px rgba(0,255,136,0.5);animation:blink 1.5s ease-in-out infinite;}
+.model-dot.loading{background:var(--gold);box-shadow:0 0 6px rgba(255,215,0,0.5);animation:blink 0.6s ease-in-out infinite;}
+.model-indicator{display:flex;align-items:center;gap:8px;padding:6px 10px;border-radius:4px;background:rgba(0,0,0,0.3);border:1px solid var(--border);font-family:var(--font2);font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted2);}
+.model-grid{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-bottom:6px;}
+.model-btn{padding:9px 5px;border-radius:4px;border:1px solid var(--border);background:linear-gradient(145deg,rgba(255,255,255,0.02),rgba(0,0,0,0.3));color:var(--muted);font-family:var(--font2);font-size:8.5px;font-weight:700;letter-spacing:0.8px;text-transform:uppercase;cursor:pointer;transition:all 0.2s;text-align:center;display:flex;flex-direction:column;align-items:center;gap:4px;}
+.model-btn .mbi{font-size:18px;transition:transform 0.2s;}
+.model-btn:hover{border-color:var(--border2);color:var(--muted2);}
+.model-btn:hover .mbi{transform:scale(1.15);}
+.model-btn.active{border-color:rgba(0,255,136,0.4);color:var(--green);background:rgba(0,255,136,0.05);}
+.proc-btn{width:100%;padding:8px 10px;border-radius:4px;border:1px solid rgba(155,135,255,0.22);background:rgba(155,135,255,0.05);color:var(--purple);font-family:var(--font2);font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer;transition:all 0.2s;margin-bottom:6px;}
+.proc-btn:hover{border-color:rgba(155,135,255,0.45);background:rgba(155,135,255,0.1);}
+.anim-only{opacity:0.3;pointer-events:none;transition:opacity 0.4s;}
+.glb-active .anim-only{opacity:1;pointer-events:all;}
+.anim-btns{display:flex;gap:5px;margin-bottom:5px;}
+.anim-btn{flex:1;padding:8px 4px;border-radius:3px;border:1px solid var(--border);background:rgba(0,0,0,0.3);color:var(--muted);font-family:var(--font2);font-size:9px;font-weight:700;letter-spacing:0.8px;text-transform:uppercase;cursor:pointer;transition:all 0.2s;text-align:center;}
+.anim-btn:hover{border-color:var(--border2);color:var(--muted2);}
+.anim-btn.active{border-color:rgba(0,212,255,0.4);color:var(--cyan);background:rgba(0,212,255,0.07);}
+
+/* ═══ VIEWPORT ═══ */
+.cc-viewport{position:relative;overflow:hidden;background:radial-gradient(ellipse at 50% 35%,#0a1525 0%,#050a12 55%,#020508 100%);}
+#cc-canvas{width:100%!important;height:100%!important;display:block;}
+.vp-corner{position:absolute;width:20px;height:20px;border-color:rgba(0,212,255,0.4);border-style:solid;z-index:2;}
+.vp-corner-tl{top:10px;left:10px;border-width:2px 0 0 2px;}
+.vp-corner-tr{top:10px;right:10px;border-width:2px 2px 0 0;}
+.vp-corner-bl{bottom:10px;left:10px;border-width:0 0 2px 2px;}
+.vp-corner-br{bottom:10px;right:10px;border-width:0 2px 2px 0;}
+.vp-scan{position:absolute;inset:0;z-index:2;pointer-events:none;background:repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(0,20,40,0.05) 3px,rgba(0,20,40,0.05) 4px);}
+.vp-holo{position:absolute;top:0;left:0;right:0;z-index:3;pointer-events:none;height:2px;background:linear-gradient(90deg,transparent,var(--cyan),var(--purple),var(--cyan),transparent);animation:holoScan 4s linear infinite;opacity:0;}
+@keyframes holoScan{0%{top:0%;opacity:0;}5%{opacity:0.6;}95%{opacity:0.6;}100%{top:100%;opacity:0;}}
+.vp-live{position:absolute;top:16px;left:12px;display:flex;align-items:center;gap:5px;z-index:3;font-family:var(--font2);font-size:8.5px;letter-spacing:2px;color:rgba(0,255,136,0.55);text-transform:uppercase;}
+.vp-live-dot{width:5px;height:5px;border-radius:50%;background:var(--green);box-shadow:0 0 5px var(--green);animation:blink 1.5s ease-in-out infinite;}
+.vp-char-name{position:absolute;top:16px;left:50%;transform:translateX(-50%);font-family:var(--font3);font-size:12px;font-weight:700;letter-spacing:5px;color:rgba(255,215,0,0.8);text-transform:uppercase;pointer-events:none;white-space:nowrap;animation:nameGlow 3s ease-in-out infinite;z-index:3;}
+@keyframes nameGlow{0%,100%{text-shadow:0 0 12px rgba(255,215,0,0.35);}50%{text-shadow:0 0 22px rgba(255,215,0,0.65),0 0 45px rgba(255,215,0,0.2);}}
+.vp-aura-label{position:absolute;top:40px;left:50%;transform:translateX(-50%);font-family:var(--font2);font-size:8px;letter-spacing:2.5px;color:rgba(155,135,255,0.4);text-transform:uppercase;pointer-events:none;z-index:3;white-space:nowrap;transition:all 0.4s;}
+.vp-watermark{position:absolute;bottom:40px;left:50%;transform:translateX(-50%);font-family:var(--font2);font-size:8px;font-weight:700;letter-spacing:4px;color:rgba(0,212,255,0.14);text-transform:uppercase;pointer-events:none;z-index:3;white-space:nowrap;}
+.vp-rotate-hint{position:absolute;top:16px;right:12px;font-size:8px;color:rgba(255,255,255,0.18);letter-spacing:1px;text-transform:uppercase;z-index:3;pointer-events:none;}
+.vp-info{position:absolute;bottom:10px;left:50%;transform:translateX(-50%);display:flex;gap:12px;align-items:center;z-index:3;}
+.vp-info-item{font-size:8px;color:rgba(255,255,255,0.2);letter-spacing:1.5px;text-transform:uppercase;display:flex;align-items:center;gap:3px;}
+.vp-info-item kbd{background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);padding:1px 4px;border-radius:2px;font-size:7px;}
+.vp-res-badge{position:absolute;bottom:10px;right:10px;font-family:var(--font3);font-size:8px;letter-spacing:1.5px;color:rgba(0,212,255,0.3);z-index:3;}
+.vp-loading{position:absolute;inset:0;z-index:10;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;background:rgba(3,4,10,0.88);backdrop-filter:blur(8px);opacity:0;pointer-events:none;transition:opacity 0.3s;}
+.vp-loading.active{opacity:1;pointer-events:all;}
+.vp-loading-ring{width:48px;height:48px;border-radius:50%;border:3px solid rgba(0,212,255,0.1);border-top-color:var(--cyan);border-right-color:var(--purple);animation:spin 1s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.vp-loading-text{font-family:var(--font2);font-size:12px;font-weight:700;letter-spacing:2px;color:var(--cyan);text-transform:uppercase;}
+
+/* ═══ RIGHT PANEL ═══ */
+.cc-right{background:var(--panel);border-left:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden;position:relative;}
+.cc-right::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--purple),transparent);opacity:0.4;}
+.rp-hdr{padding:11px 12px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:7px;background:rgba(0,0,0,0.18);}
+.rp-title{font-family:var(--font2);font-size:10px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:var(--muted2);}
+.cc-char-card{margin:10px;padding:12px 12px 14px;border:1px solid rgba(0,212,255,0.18);border-radius:5px;background:linear-gradient(135deg,rgba(0,212,255,0.04),rgba(155,135,255,0.03));position:relative;overflow:hidden;}
+.cc-char-card::before{content:'';position:absolute;top:0;left:0;width:3px;height:100%;background:linear-gradient(180deg,var(--cyan),var(--purple));}
+.cc-char-name-d{font-family:var(--font3);font-size:13px;font-weight:700;letter-spacing:3px;color:var(--gold);text-transform:uppercase;margin-bottom:3px;padding-left:7px;text-shadow:0 0 14px rgba(255,215,0,0.25);}
+.cc-char-id{font-family:var(--font2);font-size:8px;color:var(--muted);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:12px;padding-left:7px;}
+.cc-char-stats{display:flex;flex-direction:column;gap:8px;padding-left:7px;}
+.stat-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:2px;}
+.stat-key{font-size:8px;color:var(--muted);letter-spacing:1.5px;text-transform:uppercase;}
+.stat-val{font-family:var(--font3);font-size:9px;font-weight:600;color:var(--cyan);}
+.stat-bar{height:3px;border-radius:2px;background:rgba(255,255,255,0.05);overflow:hidden;}
+.stat-fill{height:100%;border-radius:2px;transition:width 0.4s cubic-bezier(0.4,0,0.2,1);}
+.stat-fill.cyan{background:linear-gradient(90deg,var(--cyan2),var(--cyan));box-shadow:0 0 5px rgba(0,212,255,0.35);}
+.stat-fill.purple{background:linear-gradient(90deg,var(--purple2),var(--purple));box-shadow:0 0 5px rgba(155,135,255,0.35);}
+.stat-fill.gold{background:linear-gradient(90deg,var(--gold2),var(--gold));box-shadow:0 0 5px rgba(255,215,0,0.35);}
+.cc-traits{margin:0 10px 10px;display:flex;flex-direction:column;}
+.trait-item{padding:7px 0;border-bottom:1px solid rgba(255,255,255,0.03);display:flex;align-items:center;gap:8px;padding-left:3px;border-radius:3px;transition:background 0.2s;}
+.trait-item:hover{background:rgba(255,255,255,0.015);}
+.trait-icon{font-size:13px;width:18px;text-align:center;flex-shrink:0;}
+.trait-info{flex:1;min-width:0;}
+.trait-label{font-size:7.5px;color:var(--muted);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:1px;}
+.trait-value{font-family:var(--font2);font-size:11px;font-weight:600;color:var(--text);letter-spacing:0.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.trait-badge{font-size:7.5px;font-family:var(--font2);font-weight:700;letter-spacing:1px;padding:2px 5px;border-radius:2px;flex-shrink:0;}
+.trait-badge.green{background:rgba(0,255,136,0.1);color:var(--green);border:1px solid rgba(0,255,136,0.18);}
+.trait-badge.gold{background:rgba(255,215,0,0.08);color:var(--gold);border:1px solid rgba(255,215,0,0.18);}
+.cc-log{margin:0 10px 10px;border:1px solid var(--border);border-radius:4px;overflow:hidden;flex-shrink:0;}
+.cc-log-hdr{padding:5px 9px;background:rgba(155,135,255,0.07);border-bottom:1px solid var(--border);font-family:var(--font2);font-size:8px;font-weight:700;letter-spacing:2px;color:var(--purple);text-transform:uppercase;display:flex;align-items:center;gap:5px;}
+.cc-log-hdr::before{content:'⬡';font-size:10px;}
+.cc-log-body{padding:7px 9px;background:rgba(0,0,0,0.4);max-height:100px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:rgba(155,135,255,0.15) transparent;}
+.cc-log-line{font-size:8.5px;letter-spacing:0.3px;margin-bottom:3px;display:flex;gap:5px;align-items:flex-start;animation:logFade 0.3s ease;}
+@keyframes logFade{from{opacity:0;transform:translateY(-2px);}to{opacity:1;}}
+.cc-log-line .lp{color:var(--purple);flex-shrink:0;font-size:9px;}
+.cc-log-line .lt{color:rgba(232,237,245,0.55);line-height:1.5;}
+.cc-log-line .lt.success{color:var(--green);}
+.cc-log-line .lt.warn{color:var(--gold);}
+.cc-spacer{flex:1;min-height:6px;}
+.cc-quick{padding:8px 10px;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:5px;}
+.cc-qbtn{padding:7px 10px;border-radius:3px;border:1px solid var(--border);background:rgba(0,0,0,0.3);color:var(--muted);font-family:var(--font2);font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;cursor:pointer;transition:all 0.2s;text-align:center;display:flex;align-items:center;justify-content:center;gap:6px;}
+.cc-qbtn:hover{border-color:var(--border2);color:var(--muted2);}
+.cc-qbtn.alt{border-color:rgba(155,135,255,0.22);color:var(--purple);background:rgba(155,135,255,0.05);}
+.cc-qbtn.alt:hover{background:rgba(155,135,255,0.1);}
+.cc-export-strip{display:flex;gap:4px;padding:8px 10px 10px;}
+.cc-xbtn{flex:1;padding:7px 3px;border-radius:3px;border:1px solid var(--border);background:rgba(0,0,0,0.3);color:var(--muted);font-family:var(--font2);font-size:8px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer;transition:all 0.18s;display:flex;flex-direction:column;align-items:center;gap:3px;}
+.cc-xbtn .xi{font-size:12px;}
+.cc-xbtn:hover{border-color:var(--border2);color:var(--muted2);transform:translateY(-1px);}
+.cc-xbtn.share{border-color:rgba(0,212,255,0.22);color:var(--cyan);}
+
+/* ═══ FOOTER ═══ */
+.cc-footer{height:58px;flex-shrink:0;background:linear-gradient(0deg,rgba(3,4,10,0.99),rgba(3,4,10,0.85));border-top:1px solid;border-image:linear-gradient(90deg,transparent,var(--purple) 30%,var(--cyan) 70%,transparent) 1;display:flex;align-items:center;justify-content:space-between;padding:0 20px;backdrop-filter:blur(20px);}
+.footer-hints{display:flex;align-items:center;gap:14px;}
+.footer-hint{font-size:9px;color:var(--muted);letter-spacing:1px;display:flex;align-items:center;gap:3px;}
+.footer-hint kbd{background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);padding:1px 5px;border-radius:2px;font-size:8px;color:var(--muted2);}
+.footer-dots{display:flex;align-items:center;gap:5px;}
+.prog-dot{width:5px;height:5px;border-radius:50%;background:rgba(255,255,255,0.08);transition:all 0.3s cubic-bezier(0.4,0,0.2,1);}
+.prog-dot.active{background:var(--gold);box-shadow:0 0 8px rgba(255,215,0,0.5);width:18px;border-radius:3px;}
+.prog-dot.done{background:var(--green);box-shadow:0 0 5px rgba(0,255,136,0.3);}
+.footer-btns{display:flex;align-items:center;gap:8px;}
+.cc-btn{padding:9px 18px;border-radius:3px;font-family:var(--font2);font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;cursor:pointer;transition:all 0.2s;border:1px solid;display:flex;align-items:center;gap:6px;}
+.cc-btn-prev{background:rgba(0,0,0,0.4);border-color:var(--border2);color:var(--muted);}
+.cc-btn-prev:hover{border-color:var(--cyan);color:var(--cyan);}
+.cc-btn-next{background:linear-gradient(135deg,rgba(255,215,0,0.12),rgba(255,215,0,0.05));border-color:rgba(255,215,0,0.4);color:var(--gold);}
+.cc-btn-next:hover{box-shadow:0 0 16px rgba(255,215,0,0.18);}
+.cc-btn-confirm{background:linear-gradient(135deg,rgba(0,255,136,0.14),rgba(0,255,136,0.06));border-color:rgba(0,255,136,0.45);color:var(--green);display:none;}
+.cc-btn-confirm.visible{display:flex;}
+.cc-btn-confirm:hover{box-shadow:0 0 18px rgba(0,255,136,0.2);}
+
+/* ═══ MODAL ═══ */
+.cc-modal-overlay{position:fixed;inset:0;z-index:300;background:rgba(2,3,8,0.88);backdrop-filter:blur(14px);display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity 0.3s;}
+.cc-modal-overlay.visible{opacity:1;pointer-events:all;}
+.cc-modal{background:var(--bg2);border:1px solid rgba(0,255,136,0.25);border-radius:7px;width:460px;overflow:hidden;transform:scale(0.96) translateY(10px);transition:transform 0.3s cubic-bezier(0.4,0,0.2,1);box-shadow:0 0 50px rgba(0,255,136,0.06),0 20px 50px rgba(0,0,0,0.6);}
+.cc-modal-overlay.visible .cc-modal{transform:scale(1) translateY(0);}
+.cc-modal-hdr{padding:18px 20px;border-bottom:1px solid rgba(0,255,136,0.12);display:flex;align-items:center;gap:10px;background:linear-gradient(135deg,rgba(0,255,136,0.05),transparent);}
+.cc-modal-icon{font-size:24px;}
+.cc-modal-title{font-family:var(--font3);font-size:13px;font-weight:700;letter-spacing:3px;color:var(--green);text-transform:uppercase;text-shadow:0 0 10px rgba(0,255,136,0.3);}
+.cc-modal-sub{font-size:9px;color:var(--muted);margin-top:2px;letter-spacing:1px;}
+.cc-modal-body{padding:20px;}
+.cc-modal-cname{font-family:var(--font3);font-size:22px;font-weight:900;letter-spacing:4px;color:var(--gold);text-align:center;margin-bottom:18px;text-transform:uppercase;text-shadow:0 0 24px rgba(255,215,0,0.3);}
+.cc-modal-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:16px;}
+.cc-modal-field{padding:8px 10px;border-radius:3px;background:rgba(0,0,0,0.3);border:1px solid var(--border);}
+.cc-modal-field-label{font-size:7.5px;color:var(--muted);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:2px;}
+.cc-modal-field-val{font-family:var(--font2);font-size:11px;font-weight:700;color:var(--text);letter-spacing:0.5px;}
+.cc-modal-msg{padding:10px 12px;border-radius:4px;border:1px solid rgba(155,135,255,0.18);background:rgba(155,135,255,0.04);font-size:10px;color:rgba(232,237,245,0.55);line-height:1.6;margin-bottom:16px;}
+.cc-modal-actions{display:flex;gap:8px;justify-content:flex-end;}
+.cc-modal-cancel{padding:9px 16px;border-radius:3px;border:1px solid var(--border2);background:none;color:var(--muted);font-family:var(--font2);font-size:10px;font-weight:700;letter-spacing:2px;cursor:pointer;transition:all 0.2s;text-transform:uppercase;}
+.cc-modal-cancel:hover{border-color:var(--red);color:var(--red);}
+.cc-modal-spawn{padding:9px 20px;border-radius:3px;border:1px solid rgba(0,255,136,0.4);background:linear-gradient(135deg,rgba(0,255,136,0.12),rgba(0,255,136,0.05));color:var(--green);font-family:var(--font2);font-size:10px;font-weight:700;letter-spacing:2px;cursor:pointer;transition:all 0.2s;text-transform:uppercase;}
+.cc-modal-spawn:hover{box-shadow:0 0 16px rgba(0,255,136,0.18);}
+
+/* ═══ SPAWN ANIM ═══ */
+.cc-spawn{position:fixed;inset:0;z-index:400;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none;opacity:0;transition:opacity 0.5s;background:radial-gradient(ellipse at center,rgba(0,255,136,0.03) 0%,transparent 70%);}
+.cc-spawn.active{opacity:1;}
+.cc-spawn-rings{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;}
+.cc-spawn-ring{position:absolute;border-radius:50%;border:2px solid var(--green);animation:ringX 2s ease-out infinite;}
+.cc-spawn-ring:nth-child(1){width:90px;height:90px;}
+.cc-spawn-ring:nth-child(2){width:180px;height:180px;animation-delay:0.28s;}
+.cc-spawn-ring:nth-child(3){width:290px;height:290px;animation-delay:0.56s;}
+@keyframes ringX{0%{transform:scale(0.4);opacity:0.8;}100%{transform:scale(1.9);opacity:0;}}
+.cc-spawn-text{font-family:var(--font3);font-size:48px;font-weight:900;letter-spacing:10px;color:var(--green);text-shadow:0 0 36px var(--green),0 0 72px rgba(0,255,136,0.35);text-transform:uppercase;z-index:1;animation:spawnPop 0.45s cubic-bezier(0.4,0,0.2,1);}
+@keyframes spawnPop{0%{transform:scale(0.6) translateY(16px);opacity:0;}60%{transform:scale(1.05);}100%{transform:scale(1);opacity:1;}}
+.cc-spawn-sub{font-family:var(--font2);font-size:11px;letter-spacing:5px;color:rgba(0,255,136,0.6);margin-top:12px;text-transform:uppercase;z-index:1;}
+</style>
+</head>
+<body>
+
+<!-- ═══ ADMIN LOGIN GATE ═══ -->
+<div id="admin-gate">
+  <div class="gate-logo">ETHER<span style="color:#ffd700">WORLD</span></div>
+  <div class="gate-sub">Character Creator — Admin Edition</div>
+  <div class="gate-card">
+    <div class="gate-title">Accès restreint</div>
+    <div class="gate-badge"><span class="gate-badge-dot"></span>Propriétaire &amp; Administrateurs seulement</div>
+    <div class="gate-roles">
+      <div class="gate-role owner">👑 Owner</div>
+      <div class="gate-role admin">⚡ Admin</div>
+    </div>
+    <input class="gate-input" id="gate-pass" type="password" placeholder="Mot de passe admin" autocomplete="off" maxlength="32">
+    <button class="gate-btn" id="gate-submit">▶ Accéder au système</button>
+    <div class="gate-error" id="gate-error">Accès refusé — Mot de passe invalide</div>
+  </div>
+</div>
+
+<!-- ═══ MAIN APP ═══ -->
+<div id="app">
+
+<!-- HEADER -->
+<header class="cc-header">
+  <div style="display:flex;align-items:center;gap:0">
+    <div class="cc-logo">
+      <span class="cc-logo-hex">⬡</span>
+      <span class="cc-logo-text">ETHER<strong>WORLD</strong></span>
+    </div>
+    <div class="cc-sep"></div>
+    <div class="cc-title-block">
+      <span class="cc-title">Character Creator</span>
+      <span class="cc-subtitle">4K Admin Edition — TroxT Powered</span>
+    </div>
+  </div>
+  <div class="hdr-center" id="hdr-steps">
+    <div class="cc-step active" data-step="0"><span class="sn">1</span>Identity</div>
+    <span class="cc-step-arr">›</span>
+    <div class="cc-step" data-step="1"><span class="sn">2</span>Visage</div>
+    <span class="cc-step-arr">›</span>
+    <div class="cc-step" data-step="2"><span class="sn">3</span>Hair</div>
+    <span class="cc-step-arr">›</span>
+    <div class="cc-step" data-step="3"><span class="sn">4</span>Body</div>
+    <span class="cc-step-arr">›</span>
+    <div class="cc-step" data-step="4"><span class="sn">5</span>Outfit</div>
+    <span class="cc-step-arr">›</span>
+    <div class="cc-step" data-step="5"><span class="sn">6</span>Accs</div>
+    <span class="cc-step-arr">›</span>
+    <div class="cc-step" data-step="6"><span class="sn">7</span>Aura</div>
+    <span class="cc-step-arr">›</span>
+    <div class="cc-step" data-step="7"><span class="sn">8</span>Anim</div>
+  </div>
+  <div class="hdr-right">
+    <div class="role-badge owner" id="role-badge"><span class="role-badge-dot"></span><span id="role-text">Owner</span></div>
+    <button class="cc-logout" id="btn-logout">⎋ Déconnexion</button>
+  </div>
+</header>
+
+<!-- MAIN -->
+<main class="cc-main">
+
+<!-- LEFT PANEL -->
+<aside class="cc-left">
+  <nav class="cc-tab-nav">
+    <button class="cc-tab-btn active" data-panel="identity"><span class="ti">🪪</span>ID</button>
+    <button class="cc-tab-btn" data-panel="face"><span class="ti">😶</span>Face</button>
+    <button class="cc-tab-btn" data-panel="hair"><span class="ti">💈</span>Hair</button>
+    <button class="cc-tab-btn" data-panel="body"><span class="ti">💪</span>Body</button>
+    <button class="cc-tab-btn" data-panel="outfit"><span class="ti">👕</span>Outfit</button>
+    <button class="cc-tab-btn" data-panel="accessories"><span class="ti">💎</span>Accs</button>
+    <button class="cc-tab-btn aura-tab" data-panel="aura"><span class="ti">✦</span>Aura</button>
+    <button class="cc-tab-btn" data-panel="animations"><span class="ti">🎬</span>Anim</button>
+  </nav>
+  <div class="cc-tab-content">
+
+    <!-- IDENTITY -->
+    <div id="panel-identity" class="cc-panel active">
+      <div class="cc-sec">Genre</div>
+      <div class="gender-toggle">
+        <button class="gender-btn active" data-gender="male">♂ Male</button>
+        <button class="gender-btn" data-gender="female">♀ Female</button>
+      </div>
+      <div class="cc-sec">Nom du personnage</div>
+      <input class="cc-name-input" placeholder="PRENOM_NOM" maxlength="24" value="NOUVEAU_PERSO">
+      <p class="cc-hint">Format : PRENOM_NOM</p>
+      <div class="cc-sec">Nationalité</div>
+      <select id="sel-nationality" class="cc-select">
+        <option value="canadian">🇨🇦 Canadian</option>
+        <option value="american">🇺🇸 American</option>
+        <option value="french">🇫🇷 French</option>
+        <option value="mexican">🇲🇽 Mexican</option>
+        <option value="british">🇬🇧 British</option>
+        <option value="italian">🇮🇹 Italian</option>
+        <option value="russian">🇷🇺 Russian</option>
+        <option value="japanese">🇯🇵 Japanese</option>
+        <option value="haitian">🇭🇹 Haitian</option>
+        <option value="arabic">🌙 Arabic</option>
+      </select>
+      <div class="cc-sec">Teinte de peau</div>
+      <div class="cc-swatches" id="sw-skin"></div>
+    </div>
+
+    <!-- FACE -->
+    <div id="panel-face" class="cc-panel">
+      <div class="cc-sec">Forme du visage</div>
+      <div class="cc-opt-grid" id="grid-face-shape"></div>
+      <div class="cc-sec">Couleur des yeux</div>
+      <div class="cc-swatches" id="sw-eye"></div>
+      <div class="cc-sec">Structure faciale</div>
+      <div class="cc-sl-wrap"><div class="cc-sl-hdr"><span class="cc-sl-label">Largeur</span><span class="cc-sl-val" id="sl-face-width-v">50</span></div><input type="range" class="cc-slider" id="sl-face-width" min="0" max="100" value="50"></div>
+      <div class="cc-sl-wrap"><div class="cc-sl-hdr"><span class="cc-sl-label">Pommettes</span><span class="cc-sl-val" id="sl-cheek-h-v">50</span></div><input type="range" class="cc-slider" id="sl-cheek-h" min="0" max="100" value="50"></div>
+      <div class="cc-sl-wrap"><div class="cc-sl-hdr"><span class="cc-sl-label">Mâchoire</span><span class="cc-sl-val" id="sl-jaw-w-v">50</span></div><input type="range" class="cc-slider" id="sl-jaw-w" min="0" max="100" value="50"></div>
+      <div class="cc-sec">Nez</div>
+      <div class="cc-sl-wrap"><div class="cc-sl-hdr"><span class="cc-sl-label">Taille</span><span class="cc-sl-val" id="sl-nose-size-v">50</span></div><input type="range" class="cc-slider" id="sl-nose-size" min="0" max="100" value="50"></div>
+      <div class="cc-sl-wrap"><div class="cc-sl-hdr"><span class="cc-sl-label">Arête</span><span class="cc-sl-val" id="sl-nose-bridge-v">50</span></div><input type="range" class="cc-slider" id="sl-nose-bridge" min="0" max="100" value="50"></div>
+      <div class="cc-sec">Yeux</div>
+      <div class="cc-sl-wrap"><div class="cc-sl-hdr"><span class="cc-sl-label">Taille</span><span class="cc-sl-val" id="sl-eye-size-v">50</span></div><input type="range" class="cc-slider" id="sl-eye-size" min="0" max="100" value="50"></div>
+      <div class="cc-sl-wrap"><div class="cc-sl-hdr"><span class="cc-sl-label">Écartement</span><span class="cc-sl-val" id="sl-eye-space-v">50</span></div><input type="range" class="cc-slider" id="sl-eye-space" min="0" max="100" value="50"></div>
+      <div class="cc-sec">Lèvres</div>
+      <div class="cc-sl-wrap"><div class="cc-sl-hdr"><span class="cc-sl-label">Volume</span><span class="cc-sl-val" id="sl-lip-v">50</span></div><input type="range" class="cc-slider" id="sl-lip" min="0" max="100" value="50"></div>
+    </div>
+
+    <!-- HAIR -->
+    <div id="panel-hair" class="cc-panel">
+      <div class="cc-sec">Coiffure</div>
+      <div class="cc-opt-grid" id="grid-hair-style"></div>
+      <div class="cc-sec">Couleur</div>
+      <div class="cc-swatches" id="sw-hair-color"></div>
+      <div class="cc-sec">Pilosité faciale</div>
+      <div class="cc-opt-grid" id="grid-facial"></div>
+    </div>
+
+    <!-- BODY -->
+    <div id="panel-body" class="cc-panel">
+      <div class="cc-sec">Morphologie</div>
+      <div class="cc-opt-grid" id="grid-body-type"></div>
+      <div class="cc-sec">Mensurations</div>
+      <div class="cc-sl-wrap"><div class="cc-sl-hdr"><span class="cc-sl-label">Taille</span><span class="cc-sl-val" id="sl-height-v">50</span></div><input type="range" class="cc-slider" id="sl-height" min="0" max="100" value="50"></div>
+      <div class="cc-sl-wrap"><div class="cc-sl-hdr"><span class="cc-sl-label">Musculature</span><span class="cc-sl-val" id="sl-muscular-v">45</span></div><input type="range" class="cc-slider" id="sl-muscular" min="0" max="100" value="45"></div>
+      <div class="cc-sl-wrap"><div class="cc-sl-hdr"><span class="cc-sl-label">Masse</span><span class="cc-sl-val" id="sl-fatness-v">30</span></div><input type="range" class="cc-slider" id="sl-fatness" min="10" max="90" value="30"></div>
+    </div>
+
+    <!-- OUTFIT -->
+    <div id="panel-outfit" class="cc-panel">
+      <div class="cc-sec">Haut</div><div class="cc-opt-grid" id="grid-top-style"></div>
+      <div class="cc-sec">Couleur haut</div><div class="cc-swatches" id="sw-top-color"></div>
+      <div class="cc-sec">Bas</div><div class="cc-opt-grid" id="grid-pants-style"></div>
+      <div class="cc-sec">Couleur bas</div><div class="cc-swatches" id="sw-pants-color"></div>
+      <div class="cc-sec">Chaussures</div><div class="cc-opt-grid" id="grid-shoes-style"></div>
+      <div class="cc-sec">Couleur shoes</div><div class="cc-swatches" id="sw-shoes-color"></div>
+    </div>
+
+    <!-- ACCESSORIES -->
+    <div id="panel-accessories" class="cc-panel">
+      <div class="cc-sec">Lunettes</div><div class="acc-grid" id="grid-glasses"></div>
+      <div class="cc-sec">Couleur monture</div><div class="cc-swatches" id="sw-glasses-color"></div>
+      <div class="cc-sec">Couvre-chef</div><div class="acc-grid" id="grid-hat"></div>
+      <div class="cc-sec">Couleur chapeau</div><div class="cc-swatches" id="sw-hat-color"></div>
+      <div class="cc-sec">Bijoux</div><div class="acc-grid" id="grid-jewelry"></div>
+    </div>
+
+    <!-- ✦ AURA PANEL ✦ -->
+    <div id="panel-aura" class="cc-panel">
+      <div class="aura-panel-inner">
+        <div class="aura-active-label" id="aura-active-label">Aucune aura active</div>
+        <div class="aura-lore" id="aura-lore-text" style="color:var(--muted);text-align:center;font-size:9px;padding-top:12px;">Sélectionne une aura pour équiper ton personnage d'un pouvoir légendaire.</div>
+
+        <div class="aura-section-title">Buffs Classiques</div>
+        <div class="aura-btn-grid" id="aura-classic-grid"></div>
+
+        <div class="aura-section-title" style="margin-top:4px;">Auras Personnage</div>
+        <div class="aura-btn-grid" id="aura-char-grid"></div>
+
+        <div style="margin-top:8px;padding:8px 10px;border-radius:4px;background:rgba(0,0,0,0.3);border:1px solid var(--border);font-family:var(--font2);font-size:8.5px;color:var(--muted);letter-spacing:0.5px;line-height:1.6;">
+          <span style="color:var(--purple);font-weight:700;">✦ Conseil :</span> Les auras sont visibles en temps réel dans la scène 3D centrale. Utilise l'onglet <span style="color:var(--cyan);">Anim</span> pour charger un modèle GLB et voir l'aura sur ton avatar personnalisé.
+        </div>
+      </div>
+    </div>
+
+    <!-- ANIMATIONS -->
+    <div id="panel-animations" class="cc-panel">
+      <div class="cc-sec">Modèle 3D</div>
+      <div class="model-indicator" id="model-mode-indicator">
+        <span class="model-dot procedural"></span>
+        <span id="model-mode-text">Mode : Personnage procédural</span>
+      </div>
+      <div class="model-grid">
+        <button class="model-btn active" id="btn-xbot"><span class="mbi">🤖</span><span>Xbot Mixamo</span></button>
+        <label class="model-btn" for="input-glb-upload"><span class="mbi">📁</span><span>Upload GLB</span><input type="file" accept=".glb" id="input-glb-upload" style="display:none"></label>
+        <button class="model-btn" id="btn-rpm"><span class="mbi">🌐</span><span>Ready Player Me</span></button>
+        <label class="model-btn" for="input-img-upload"><span class="mbi">🖼️</span><span>Image → 3D</span><input type="file" accept="image/*" id="input-img-upload" style="display:none"></label>
+      </div>
+      <button class="proc-btn" id="btn-procedural">⚙️ Revenir au personnage procédural</button>
+      <div class="cc-sec anim-only">Animations de base</div>
+      <div class="anim-btns anim-only">
+        <button class="anim-btn active" data-action="idle">🧍 Idle</button>
+        <button class="anim-btn" data-action="walk">🚶 Walk</button>
+        <button class="anim-btn" data-action="run">🏃 Run</button>
+      </div>
+      <div class="cc-sec anim-only">Vitesse</div>
+      <div class="cc-sl-wrap anim-only"><div class="cc-sl-hdr"><span class="cc-sl-label">Vitesse</span><span class="cc-sl-val" id="sl-speed-v">100</span></div><input type="range" class="cc-slider" id="sl-speed" min="10" max="200" value="100"></div>
+      <div style="margin-top:8px;padding:8px 10px;border-radius:4px;border:1px solid var(--border);background:rgba(0,0,0,0.3);display:flex;flex-direction:column;gap:5px;">
+        <div style="display:flex;justify-content:space-between;"><span style="font-size:8px;color:var(--muted);text-transform:uppercase;letter-spacing:1.5px;">Technologie</span><span style="font-family:var(--font2);font-size:9px;font-weight:700;color:var(--cyan);">Three.js AnimMixer</span></div>
+        <div style="display:flex;justify-content:space-between;"><span style="font-size:8px;color:var(--muted);text-transform:uppercase;letter-spacing:1.5px;">Source</span><span style="font-family:var(--font2);font-size:9px;font-weight:700;color:var(--cyan);" id="anim-info-source">Procédural</span></div>
+      </div>
+    </div>
+
+  </div>
+</aside>
+
+<!-- VIEWPORT -->
+<div class="cc-viewport">
+  <canvas id="cc-canvas"></canvas>
+  <div class="vp-scan"></div>
+  <div class="vp-holo"></div>
+  <div class="vp-corner vp-corner-tl"></div>
+  <div class="vp-corner vp-corner-tr"></div>
+  <div class="vp-corner vp-corner-bl"></div>
+  <div class="vp-corner vp-corner-br"></div>
+  <div class="vp-loading" id="vp-loading"><div class="vp-loading-ring"></div><div class="vp-loading-text" id="vp-loading-text">Chargement…</div></div>
+  <div class="vp-live"><div class="vp-live-dot"></div>LIVE</div>
+  <div class="vp-char-name" id="vp-char-name">NOUVEAU_PERSO</div>
+  <div class="vp-aura-label" id="vp-aura-label"></div>
+  <div class="vp-watermark">TroxT — Character Preview 4K</div>
+  <div class="vp-rotate-hint">Drag to rotate</div>
+  <div class="vp-info">
+    <div class="vp-info-item"><kbd>Drag</kbd>Rotate</div>
+    <div class="vp-info-item"><kbd>Scroll</kbd>Zoom</div>
+    <div class="vp-info-item"><kbd>R</kbd>Random</div>
+    <div class="vp-info-item"><kbd>← →</kbd>Step</div>
+  </div>
+  <div class="vp-res-badge">4K ✦ HDR</div>
+</div>
+
+<!-- RIGHT PANEL -->
+<aside class="cc-right">
+  <div class="rp-hdr"><span style="font-size:16px;">👤</span><span class="rp-title">Profil du personnage</span></div>
+  <div class="cc-char-card">
+    <div class="cc-char-name-d" id="rp-name">NOUVEAU_PERSO</div>
+    <div class="cc-char-id" id="rp-id">ID: EW-000000 • CANADIAN</div>
+    <div class="cc-char-stats">
+      <div class="stat-row"><span class="stat-key">Taille</span><span class="stat-val" id="stat-height-txt">50%</span></div>
+      <div class="stat-bar"><div class="stat-fill cyan" id="stat-height-fill" style="width:50%"></div></div>
+      <div class="stat-row"><span class="stat-key">Muscle</span><span class="stat-val" id="stat-muscle-txt">45%</span></div>
+      <div class="stat-bar"><div class="stat-fill purple" id="stat-muscle-fill" style="width:45%"></div></div>
+      <div class="stat-row"><span class="stat-key">Poids</span><span class="stat-val" id="stat-weight-txt">30%</span></div>
+      <div class="stat-bar"><div class="stat-fill gold" id="stat-weight-fill" style="width:30%"></div></div>
+    </div>
+  </div>
+  <div class="cc-traits">
+    <div class="trait-item"><span class="trait-icon">⚧</span><div class="trait-info"><div class="trait-label">Genre</div><div class="trait-value" id="trait-gender">♂ Masculin</div></div><span class="trait-badge green">SET</span></div>
+    <div class="trait-item"><span class="trait-icon">😐</span><div class="trait-info"><div class="trait-label">Visage</div><div class="trait-value" id="trait-face">Regular</div></div></div>
+    <div class="trait-item"><span class="trait-icon">💪</span><div class="trait-info"><div class="trait-label">Morphologie</div><div class="trait-value" id="trait-body">Regular</div></div></div>
+    <div class="trait-item"><span class="trait-icon">👕</span><div class="trait-info"><div class="trait-label">Haut</div><div class="trait-value" id="trait-top">T-Shirt</div></div></div>
+    <div class="trait-item"><span class="trait-icon">👖</span><div class="trait-info"><div class="trait-label">Bas</div><div class="trait-value" id="trait-pants">Slim Jeans</div></div></div>
+    <div class="trait-item"><span class="trait-icon">✦</span><div class="trait-info"><div class="trait-label">Aura active</div><div class="trait-value" id="trait-aura" style="color:var(--purple);">Aucune</div></div></div>
+    <div class="trait-item"><span class="trait-icon">💎</span><div class="trait-info"><div class="trait-label">Accessoires</div><div class="trait-value" id="trait-acc">Aucun</div></div></div>
+  </div>
+  <div class="cc-log">
+    <div class="cc-log-hdr">TroxT Neural Log</div>
+    <div class="cc-log-body" id="log-body"></div>
+  </div>
+  <div class="cc-spacer"></div>
+  <div class="cc-quick">
+    <button class="cc-qbtn alt" id="btn-random">🎲 Personnage aléatoire</button>
+    <button class="cc-qbtn" id="btn-reset">↺ Réinitialiser</button>
+  </div>
+  <div class="cc-export-strip">
+    <button class="cc-xbtn" id="btn-export-json"><span class="xi">⬇</span>JSON</button>
+    <button class="cc-xbtn share" id="btn-share-link"><span class="xi">🔗</span>Share</button>
+    <button class="cc-xbtn" id="btn-export-modal"><span class="xi">⬡</span>Export</button>
+  </div>
+</aside>
+
+</main>
+
+<!-- FOOTER -->
+<footer class="cc-footer">
+  <div class="footer-hints">
+    <div class="footer-hint"><kbd>←</kbd><kbd>→</kbd>Naviguer</div>
+    <div class="footer-hint"><kbd>R</kbd>Aléatoire</div>
+    <div class="footer-hint"><kbd>A</kbd>Aura</div>
+  </div>
+  <div class="footer-dots" id="footer-dots">
+    <div class="prog-dot active"></div>
+    <div class="prog-dot"></div>
+    <div class="prog-dot"></div>
+    <div class="prog-dot"></div>
+    <div class="prog-dot"></div>
+    <div class="prog-dot"></div>
+    <div class="prog-dot"></div>
+    <div class="prog-dot"></div>
+  </div>
+  <div class="footer-btns">
+    <button class="cc-btn cc-btn-prev">← Précédent</button>
+    <button class="cc-btn cc-btn-next">Suivant →</button>
+    <button class="cc-btn cc-btn-confirm">✓ Créer le personnage</button>
+  </div>
+</footer>
+
+</div><!-- /#app -->
+
+<!-- MODAL -->
+<div class="cc-modal-overlay" id="confirm-modal">
+  <div class="cc-modal">
+    <div class="cc-modal-hdr"><span class="cc-modal-icon">✅</span><div><div class="cc-modal-title">Confirmer le personnage</div><div class="cc-modal-sub">TroxT va enregistrer dans EtherPrism</div></div></div>
+    <div class="cc-modal-body">
+      <div class="cc-modal-cname" id="modal-cname">NOUVEAU_PERSO</div>
+      <div class="cc-modal-grid">
+        <div class="cc-modal-field"><div class="cc-modal-field-label">Genre</div><div class="cc-modal-field-val" id="modal-gender">♂ Masculin</div></div>
+        <div class="cc-modal-field"><div class="cc-modal-field-label">Aura</div><div class="cc-modal-field-val" id="modal-aura">—</div></div>
+        <div class="cc-modal-field"><div class="cc-modal-field-label">Morphologie</div><div class="cc-modal-field-val" id="modal-body">Regular</div></div>
+        <div class="cc-modal-field"><div class="cc-modal-field-label">Coiffure</div><div class="cc-modal-field-val" id="modal-hair">Crew Cut</div></div>
+        <div class="cc-modal-field"><div class="cc-modal-field-label">Haut</div><div class="cc-modal-field-val" id="modal-top">T-Shirt</div></div>
+        <div class="cc-modal-field"><div class="cc-modal-field-label">ID</div><div class="cc-modal-field-val" id="modal-id">EW-000000</div></div>
+      </div>
+      <div class="cc-modal-msg">⬡ TroxT Neural Core : Votre personnage sera enregistré de façon permanente dans EtherPrism. Les données seront synchronisées avec EtherForge.</div>
+      <div class="cc-modal-actions">
+        <button class="cc-modal-cancel">✕ Annuler</button>
+        <button class="cc-modal-spawn">▶ Faire apparaître</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SPAWN ANIM -->
+<div class="cc-spawn" id="spawn-anim">
+  <div class="cc-spawn-rings"><div class="cc-spawn-ring"></div><div class="cc-spawn-ring"></div><div class="cc-spawn-ring"></div></div>
+  <div class="cc-spawn-text">SPAWNÉ</div>
+  <div class="cc-spawn-sub">⬡ TroxT — Personnage enregistré dans EtherPrism</div>
+</div>
+
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}</script>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+// ═══════════════════════════════════════════════
+//  ADMIN GATE
+// ═══════════════════════════════════════════════
+const CREDENTIALS = {
+  'EW-OWNER-2025': 'owner',
+  'ADMIN-TROXT':   'admin',
+  'ETHERWORLD-ADM':'admin',
+};
+let currentRole = null;
+
+const gate     = document.getElementById('admin-gate');
+const app      = document.getElementById('app');
+const passIn   = document.getElementById('gate-pass');
+const gateBtn  = document.getElementById('gate-submit');
+const gateErr  = document.getElementById('gate-error');
+const roleBadge= document.getElementById('role-badge');
+const roleText = document.getElementById('role-text');
+
+function tryLogin() {
+  const pw = passIn.value.trim();
+  const role = CREDENTIALS[pw];
+  if (role) {
+    currentRole = role;
+    gate.style.opacity='0'; gate.style.transition='opacity 0.5s';
+    setTimeout(()=>{ gate.style.display='none'; app.classList.add('visible'); initApp(); }, 500);
+    if (role === 'owner') { roleBadge.className='role-badge owner'; roleText.textContent='👑 Owner'; }
+    else { roleBadge.className='role-badge admin'; roleText.textContent='⚡ Admin'; }
+    addLog(`Authentifié en tant que ${role.toUpperCase()}`, 'success');
+  } else {
+    gateErr.classList.add('show');
+    passIn.style.borderColor='var(--red)';
+    passIn.value='';
+    setTimeout(()=>{ gateErr.classList.remove('show'); passIn.style.borderColor=''; }, 3000);
+  }
+}
+gateBtn.addEventListener('click', tryLogin);
+passIn.addEventListener('keydown', e => { if(e.key==='Enter') tryLogin(); });
+document.getElementById('btn-logout').addEventListener('click', ()=>{
+  app.classList.remove('visible'); gate.style.display='flex'; gate.style.opacity='1';
+  passIn.value=''; currentRole=null;
+});
+
+// ═══════════════════════════════════════════════
+//  THREE.JS SCENE — FULL AURA SYSTEM
+// ═══════════════════════════════════════════════
+let renderer, scene, camera, controls;
+let charGroup, auraGroup;
+let auraObjects=[], particles=[], ptObjects=[], time=0;
+let activeBuff=null;
+let buffLight, buffLight2, rimL, runeRingMat;
+let glbMode=false, animMixer=null;
+
+function initScene() {
+  const canvas = document.getElementById('cc-canvas');
+  const vp = document.querySelector('.cc-viewport');
+
+  scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x030407);
+  scene.fog = new THREE.FogExp2(0x030407, 0.048);
+
+  renderer = new THREE.WebGLRenderer({ canvas, antialias:true, powerPreference:'high-performance' });
+  renderer.setPixelRatio(Math.min(devicePixelRatio, 2.5));
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1.5;
+  renderer.outputColorSpace = THREE.SRGBColorSpace;
+
+  camera = new THREE.PerspectiveCamera(48, 1, 0.1, 200);
+  camera.position.set(0, 2.2, 6.5);
+
+  controls = new OrbitControls(camera, canvas);
+  controls.enableDamping=true; controls.dampingFactor=0.04;
+  controls.target.set(0,1.6,0);
+  controls.minDistance=3; controls.maxDistance=14;
+  controls.minPolarAngle=0.2; controls.maxPolarAngle=Math.PI*0.58;
+  controls.autoRotate=true; controls.autoRotateSpeed=0.5;
+
+  resizeScene();
+  window.addEventListener('resize', resizeScene);
+  canvas.addEventListener('pointerdown',()=>controls.autoRotate=false);
+  canvas.addEventListener('pointerup',()=>setTimeout(()=>controls.autoRotate=true,5000));
+}
+
+function resizeScene() {
+  const vp = document.querySelector('.cc-viewport');
+  if(!vp||!renderer) return;
+  const w=vp.clientWidth, h=vp.clientHeight;
+  renderer.setSize(w,h,false);
+  if(camera){ camera.aspect=w/h; camera.updateProjectionMatrix(); }
+}
+
+function buildScene() {
+  // Lights
+  const ambient = new THREE.AmbientLight(0x0d1222,1.8);
+  scene.add(ambient);
+  const sun = new THREE.DirectionalLight(0xffffff,1.3);
+  sun.position.set(5,10,4); sun.castShadow=true;
+  sun.shadow.mapSize.set(2048,2048);
+  sun.shadow.camera.near=0.1; sun.shadow.camera.far=40;
+  sun.shadow.camera.left=-6; sun.shadow.camera.right=6;
+  sun.shadow.camera.top=8; sun.shadow.camera.bottom=-4;
+  sun.shadow.bias=-0.001;
+  scene.add(sun);
+  rimL = new THREE.PointLight(0x4466ff,2.2,14);
+  rimL.position.set(-3,4,-3); scene.add(rimL);
+  buffLight = new THREE.PointLight(0xffffff,0,9);
+  buffLight.position.set(0,2,1.5); scene.add(buffLight);
+  buffLight2 = new THREE.PointLight(0xffffff,0,7);
+  buffLight2.position.set(0,0.5,0); scene.add(buffLight2);
+  // Spot
+  const spot = new THREE.SpotLight(0x00d4ff,4,14,Math.PI*0.2,0.5,2);
+  spot.position.set(0,8,0); spot.target.position.set(0,0,0);
+  scene.add(spot,spot.target);
+
+  // Ground
+  const gm = new THREE.MeshStandardMaterial({color:0x0a0a14,roughness:0.9,metalness:0.2});
+  const ground = new THREE.Mesh(new THREE.CircleGeometry(16,64),gm);
+  ground.rotation.x=-Math.PI/2; ground.receiveShadow=true; scene.add(ground);
+  // Platform
+  const pm = new THREE.MeshStandardMaterial({color:0x141420,roughness:0.25,metalness:0.8});
+  const plat = new THREE.Mesh(new THREE.CylinderGeometry(1.9,2.1,0.14,64),pm);
+  plat.position.y=0.01; plat.receiveShadow=true; plat.castShadow=true; scene.add(plat);
+  // Rune ring
+  const rrg = new THREE.TorusGeometry(1.65,0.026,8,128);
+  runeRingMat = new THREE.MeshStandardMaterial({color:0x334466,emissive:0x112244,emissiveIntensity:1,roughness:0.2});
+  const runeRing = new THREE.Mesh(rrg,runeRingMat);
+  runeRing.rotation.x=-Math.PI/2; runeRing.position.y=0.09; scene.add(runeRing);
+  // Grid
+  const grid = new THREE.GridHelper(30,30,0x0a0a1e,0x08081a);
+  grid.position.y=0.002; scene.add(grid);
+  // Outer glowing rings
+  [2.8,5,7.5].forEach((r,i)=>{
+    const rg=new THREE.Mesh(new THREE.TorusGeometry(r,0.006,4,128),
+      new THREE.MeshStandardMaterial({color:0x00d4ff,emissive:0x00d4ff,emissiveIntensity:0.25-i*0.06,transparent:true,opacity:0.35-i*0.08}));
+    rg.rotation.x=-Math.PI/2; rg.position.y=0.01; scene.add(rg);
+  });
+
+  buildCharacter();
+  charGroup.position.y=0.07;
+  auraGroup = new THREE.Group();
+  charGroup.add(auraGroup);
+}
+
+function bodyMat(color,roughness=0.5,metalness=0.3){return new THREE.MeshStandardMaterial({color,roughness,metalness});}
+let parts=[];
+// ── Refs into the player rig, mirrors PlayerCharacter.tsx group structure ──
+const PR = { body:null, head:null, legL:null, legR:null, lLowL:null, lLowR:null, armL:null, armR:null, foreL:null, foreR:null };
+const playerAnim = { t:0, spd:0, breath:0, walking:false };
+
+function buildCharacter(){
+  if(!charGroup){charGroup=new THREE.Group();scene.add(charGroup);}
+  while(charGroup.children.length) charGroup.remove(charGroup.children[0]);
+  if(auraGroup){charGroup.add(auraGroup);}
+  parts=[];
+
+  // ── Materials — exact palette from PlayerCharacter.tsx ──
+  const mSkin   = bodyMat(0xe0b48a,0.5,0);
+  const mShirt  = bodyMat(0x2d3a5c,0.6,0);
+  const mShirtD = bodyMat(0x1e2a44,0.65,0);
+  const mPants  = bodyMat(0x1a3a2a,0.55,0);
+  const mPantsD = bodyMat(0x122a1e,0.6,0);
+  const mHat    = bodyMat(0xcc2222,0.4,0.08);
+  const mHatBr  = bodyMat(0xaa1818,0.45,0);
+  const mShoe   = bodyMat(0x1a1a1a,0.75,0);
+  const mBelt   = bodyMat(0x2a1a0a,0.6,0.1);
+  const mEye    = new THREE.MeshBasicMaterial({color:0x050505});
+  const mEyeW   = new THREE.MeshBasicMaterial({color:0xf0f0f0});
+  const mMouth  = new THREE.MeshBasicMaterial({color:0x7a4030});
+
+  function mesh(geo,mat,px,py,pz){const m=new THREE.Mesh(geo,mat);m.position.set(px,py,pz);m.castShadow=true;m.receiveShadow=true;parts.push(m);return m;}
+
+  // ── BODY ROOT (breathing scale-pivot, like bodyRef) ──
+  const bodyGroup = new THREE.Group();
+  charGroup.add(bodyGroup);
+  PR.body = bodyGroup;
+
+  // Leg L
+  const legL = new THREE.Group(); legL.position.set(-0.16,0.56,0); bodyGroup.add(legL);
+  legL.add(mesh(new THREE.BoxGeometry(0.24,0.42,0.24),mPants,0,-0.09,0));
+  const lLowL = new THREE.Group(); lLowL.position.set(0,-0.33,0); legL.add(lLowL);
+  lLowL.add(mesh(new THREE.BoxGeometry(0.22,0.36,0.22),mPantsD,0,-0.09,0));
+  lLowL.add(mesh(new THREE.BoxGeometry(0.26,0.09,0.34),mShoe,0,-0.28,0.04));
+  PR.legL=legL; PR.lLowL=lLowL;
+
+  // Leg R
+  const legR = new THREE.Group(); legR.position.set(0.16,0.56,0); bodyGroup.add(legR);
+  legR.add(mesh(new THREE.BoxGeometry(0.24,0.42,0.24),mPants,0,-0.09,0));
+  const lLowR = new THREE.Group(); lLowR.position.set(0,-0.33,0); legR.add(lLowR);
+  lLowR.add(mesh(new THREE.BoxGeometry(0.22,0.36,0.22),mPantsD,0,-0.09,0));
+  lLowR.add(mesh(new THREE.BoxGeometry(0.26,0.09,0.34),mShoe,0,-0.28,0.04));
+  PR.legR=legR; PR.lLowR=lLowR;
+
+  // Torso
+  bodyGroup.add(mesh(new THREE.BoxGeometry(0.68,0.80,0.36),mShirt,0,1.12,0));
+  // Belt
+  bodyGroup.add(mesh(new THREE.BoxGeometry(0.70,0.07,0.38),mBelt,0,0.74,0));
+
+  // Arm L
+  const armL = new THREE.Group(); armL.position.set(-0.48,1.30,0); bodyGroup.add(armL);
+  armL.add(mesh(new THREE.BoxGeometry(0.20,0.48,0.20),mShirt,0,-0.12,0));
+  const foreL = new THREE.Group(); foreL.position.set(0,-0.36,0); armL.add(foreL);
+  foreL.add(mesh(new THREE.BoxGeometry(0.17,0.30,0.17),mShirtD,0,-0.07,0));
+  foreL.add(mesh(new THREE.BoxGeometry(0.15,0.11,0.15),mSkin,0,-0.24,0));
+  PR.armL=armL; PR.foreL=foreL;
+
+  // Arm R
+  const armR = new THREE.Group(); armR.position.set(0.48,1.30,0); bodyGroup.add(armR);
+  armR.add(mesh(new THREE.BoxGeometry(0.20,0.48,0.20),mShirt,0,-0.12,0));
+  const foreR = new THREE.Group(); foreR.position.set(0,-0.36,0); armR.add(foreR);
+  foreR.add(mesh(new THREE.BoxGeometry(0.17,0.30,0.17),mShirtD,0,-0.07,0));
+  foreR.add(mesh(new THREE.BoxGeometry(0.15,0.11,0.15),mSkin,0,-0.24,0));
+  PR.armR=armR; PR.foreR=foreR;
+
+  // Head group
+  const head = new THREE.Group(); head.position.set(0,1.88,0); bodyGroup.add(head);
+  head.add(mesh(new THREE.BoxGeometry(0.50,0.50,0.50),mSkin,0,0,0));
+  // Eyes
+  [[0.12,0.04,0.26],[-0.12,0.04,0.26]].forEach(([x,y,z])=>{
+    const ew=new THREE.Mesh(new THREE.BoxGeometry(0.11,0.085,0.01),mEyeW); ew.position.set(x,y,z); head.add(ew);
+  });
+  [[0.12,0.04,0.268],[-0.12,0.04,0.268]].forEach(([x,y,z])=>{
+    const ep=new THREE.Mesh(new THREE.BoxGeometry(0.065,0.052,0.012),mEye); ep.position.set(x,y,z); head.add(ep);
+  });
+  // Mouth
+  const mouth=new THREE.Mesh(new THREE.BoxGeometry(0.13,0.028,0.01),mMouth); mouth.position.set(0,-0.10,0.265); head.add(mouth);
+  // Hat
+  const hatTop=mesh(new THREE.CylinderGeometry(0.26,0.30,0.20,12),mHat,0,0.32,0); head.add(hatTop);
+  const hatBrim=mesh(new THREE.CylinderGeometry(0.40,0.40,0.04,16),mHatBr,0,0.21,0.05); head.add(hatBrim);
+  PR.head=head;
+
+  // Add all meshes/groups to charGroup via bodyGroup (already attached above)
+  parts.forEach(m=>{ if(!m.parent) bodyGroup.add(m); });
+
+  // Sword/weapon prop (kept from aura rig — orbits near the right hand)
+  const sword = new THREE.Group();
+  const bladeM=new THREE.Mesh(new THREE.BoxGeometry(0.04,1.1,0.12),bodyMat(0x8899bb,0.1,0.9));
+  bladeM.position.y=0.55;sword.add(bladeM);
+  sword.add(new THREE.Mesh(new THREE.BoxGeometry(0.28,0.06,0.08),bodyMat(0x665522,0.4,0.7)));
+  const hm=new THREE.Mesh(new THREE.CylinderGeometry(0.025,0.025,0.32,8),bodyMat(0x331100,0.8,0.2));
+  hm.position.y=-0.2;sword.add(hm);
+  sword.position.set(0.7,1.0,0.1);sword.rotation.z=0.15;
+  charGroup.add(sword);
+}
+  const sword=new THREE.Group();
+  const bladeM=new THREE.Mesh(new THREE.BoxGeometry(0.04,1.1,0.12),bodyMat(0x8899bb,0.1,0.9));
+  bladeM.position.y=0.55;sword.add(bladeM);
+  sword.add(new THREE.Mesh(new THREE.BoxGeometry(0.28,0.06,0.08),bodyMat(0x665522,0.4,0.7)));
+  const hm=new THREE.Mesh(new THREE.CylinderGeometry(0.025,0.025,0.32,8),bodyMat(0x331100,0.8,0.2));
+  hm.position.y=-0.2;sword.add(hm);
+  sword.position.set(0.88,1.1,0.1);sword.rotation.z=0.15;
+  charGroup.add(sword);
+}
+
+// ───────────────────────────────────────────────────────
+// PASTE THE FULL AURA SYSTEM FROM wow_auras_v2
+// (clearAuras, all 12 build functions, particle renderer)
+// ───────────────────────────────────────────────────────
+function clearAuras() {
+    auraObjects.forEach(obj => {
+        if(obj.geometry) obj.geometry.dispose();
+        if(obj.material) { if(Array.isArray(obj.material)) obj.material.forEach(m=>m.dispose()); else obj.material.dispose(); }
+        auraGroup.remove(obj);
+    });
+    auraObjects=[]; particles=[]; ptObjects=[];
+    buffLight.intensity=0; buffLight2.intensity=0;
+}
+
+// ─────────────────────────────────────────────────────────────────
+// ORIGINAL BUFFS (preserved exactly)
+// ─────────────────────────────────────────────────────────────────
+function buildDivineShield(buff) {
+    const c=buff.color;
+    const oGeo=new THREE.SphereGeometry(1.55,64,32);
+    const oMat=new THREE.MeshStandardMaterial({color:c,emissive:c,emissiveIntensity:0.3,transparent:true,opacity:0.06,side:THREE.DoubleSide,roughness:0,metalness:0.8});
+    const oS=new THREE.Mesh(oGeo,oMat); oS.position.y=1.28; oS.userData.type='divineOuter';
+    auraGroup.add(oS); auraObjects.push(oS);
+    const hGeo=new THREE.IcosahedronGeometry(1.42,2);
+    const hMat=new THREE.MeshBasicMaterial({color:buff.color2,transparent:true,opacity:0.22,wireframe:true});
+    const hS=new THREE.Mesh(hGeo,hMat); hS.position.y=1.28; hS.userData.type='divineHex';
+    auraGroup.add(hS); auraObjects.push(hS);
+    const cGeo=new THREE.SphereGeometry(1.3,32,16);
+    const cMat=new THREE.MeshStandardMaterial({color:c,emissive:c,emissiveIntensity:1.8,transparent:true,opacity:0.04,side:THREE.BackSide});
+    const core=new THREE.Mesh(cGeo,cMat); core.position.y=1.28; core.userData.type='divineCore';
+    auraGroup.add(core); auraObjects.push(core);
+    for(let i=0;i<3;i++){
+        const rG=new THREE.TorusGeometry(1.52-i*0.12,0.018+i*0.004,8,128);
+        const rM=new THREE.MeshStandardMaterial({color:c,emissive:c,emissiveIntensity:3-i*0.5,transparent:true,opacity:0.9-i*0.2,roughness:0,metalness:1});
+        const r=new THREE.Mesh(rG,rM); r.position.y=1.5+(i-1)*0.45;
+        r.userData={baseY:r.position.y,i,type:'divineRing'}; auraGroup.add(r); auraObjects.push(r);
+    }
+    const vRG=new THREE.TorusGeometry(1.52,0.015,8,128);
+    const vRM=new THREE.MeshStandardMaterial({color:buff.color2,emissive:buff.color2,emissiveIntensity:4,transparent:true,opacity:0.85,roughness:0,metalness:1});
+    const vR=new THREE.Mesh(vRG,vRM); vR.position.y=1.28; vR.userData.type='vRing';
+    auraGroup.add(vR); auraObjects.push(vR);
+    const vR2=vR.clone(); vR2.rotation.y=Math.PI/2; vR2.userData.type='vRing2';
+    auraGroup.add(vR2); auraObjects.push(vR2);
+    for(let i=0;i<90;i++) particles.push({type:'divine',angle:(i/90)*Math.PI*2+Math.random()*0.3,speed:0.5+Math.random()*0.8,r:0.4+Math.random()*1.3,y:Math.random()*3.5,size:0.022+Math.random()*0.038,alpha:0.65+Math.random()*0.35});
+    for(let i=0;i<8;i++){
+        const a=(i/8)*Math.PI*2;
+        const rG2=new THREE.BoxGeometry(0.06,0.005,0.18);
+        const rM2=new THREE.MeshStandardMaterial({color:c,emissive:c,emissiveIntensity:4,transparent:true,opacity:0.9});
+        const rune=new THREE.Mesh(rG2,rM2);
+        rune.position.set(Math.cos(a)*1.3,0.01-charGroup.position.y,Math.sin(a)*1.3);
+        rune.rotation.y=a; auraGroup.add(rune); auraObjects.push(rune);
+    }
+}
+
+function buildVoidAura(buff) {
+    const c=buff.color;
+    const vG=new THREE.SphereGeometry(1.4,64,32);
+    const vM=new THREE.MeshStandardMaterial({color:0x110022,emissive:c,emissiveIntensity:0.15,transparent:true,opacity:0.18,side:THREE.DoubleSide,roughness:1});
+    const vS=new THREE.Mesh(vG,vM); vS.position.y=1.28; vS.userData.type='voidSphere';
+    auraGroup.add(vS); auraObjects.push(vS);
+    for(let i=0;i<5;i++){
+        const pts=[]; const sA=(i/5)*Math.PI*2;
+        for(let j=0;j<=20;j++){const t=j/20,a=sA+t*Math.PI*1.5,r=0.5+t*0.8,y=t*3.2-0.2;pts.push(new THREE.Vector3(Math.cos(a)*r,y,Math.sin(a)*r));}
+        const tG=new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts),24,0.025-i*0.002,8,false);
+        const tM=new THREE.MeshStandardMaterial({color:c,emissive:c,emissiveIntensity:2.5,transparent:true,opacity:0.75-i*0.05,roughness:0});
+        const tube=new THREE.Mesh(tG,tM); tube.userData={type:'voidTube',baseAngle:sA,index:i};
+        auraGroup.add(tube); auraObjects.push(tube);
+    }
+    for(let i=0;i<6;i++){
+        const a=(i/6)*Math.PI*2;
+        const oG=new THREE.SphereGeometry(0.07,16,12);
+        const oM=new THREE.MeshStandardMaterial({color:buff.color2,emissive:buff.color2,emissiveIntensity:6,roughness:0,metalness:0});
+        const orb=new THREE.Mesh(oG,oM);
+        orb.position.set(Math.cos(a)*1.1,1.28+Math.sin(a*1.3)*0.5,Math.sin(a)*1.1);
+        orb.userData={type:'voidOrb',baseAngle:a,i}; auraGroup.add(orb); auraObjects.push(orb);
+    }
+    for(let i=0;i<160;i++) particles.push({type:'void',angle:Math.random()*Math.PI*2,r:0.15+Math.random()*1.6,y:Math.random()*3.8-0.3,vy:(Math.random()-0.5)*0.028,rotSpeed:(Math.random()-0.5)*0.07,size:0.055+Math.random()*0.09,alpha:0.35+Math.random()*0.65});
+    const pG=new THREE.TorusGeometry(1.2,0.04,8,128);
+    const pM=new THREE.MeshStandardMaterial({color:c,emissive:c,emissiveIntensity:5,transparent:true,opacity:0.9});
+    const portal=new THREE.Mesh(pG,pM); portal.rotation.x=-Math.PI/2; portal.position.y=0.02-charGroup.position.y; portal.userData.type='voidPortal';
+    auraGroup.add(portal); auraObjects.push(portal);
+    const pI=new THREE.Mesh(new THREE.CircleGeometry(1.2,64),new THREE.MeshStandardMaterial({color:0x0a0015,emissive:c,emissiveIntensity:0.5,transparent:true,opacity:0.5}));
+    pI.rotation.x=-Math.PI/2; pI.position.y=0.01-charGroup.position.y; auraGroup.add(pI); auraObjects.push(pI);
+}
+
+function buildBloodAura(buff) {
+    const c=buff.color;
+    for(let i=0;i<3;i++){
+        const bG=new THREE.SphereGeometry(1.1+i*0.18,32,16);
+        const bM=new THREE.MeshStandardMaterial({color:c,emissive:c,emissiveIntensity:0.4-i*0.1,transparent:true,opacity:0.05+i*0.02,side:THREE.DoubleSide});
+        const bS=new THREE.Mesh(bG,bM); bS.position.y=1.28; bS.userData={type:'bloodMist',i};
+        auraGroup.add(bS); auraObjects.push(bS);
+    }
+    for(let i=0;i<4;i++){
+        const a=(i/4)*Math.PI*2;
+        const rG=new THREE.TorusGeometry(0.7+i*0.22,0.022,8,96);
+        const rM=new THREE.MeshStandardMaterial({color:c,emissive:c,emissiveIntensity:4,transparent:true,opacity:0.9,roughness:0,metalness:0.8});
+        const ring=new THREE.Mesh(rG,rM); ring.position.y=1.28; ring.rotation.set(Math.cos(a)*0.8,a,Math.sin(a)*0.6);
+        ring.userData={type:'bloodRing',baseAngle:a,i}; auraGroup.add(ring); auraObjects.push(ring);
+    }
+    for(let i=0;i<140;i++) particles.push({type:'blood',angle:Math.random()*Math.PI*2,r:0.08+Math.random()*1.6,y:Math.random()*4.5,vy:0.014+Math.random()*0.028,size:0.032+Math.random()*0.058,alpha:0.7+Math.random()*0.3});
+    const rCs=[c,buff.color2];
+    for(let i=0;i<6;i++){const a=(i/6)*Math.PI*2;for(let j=0;j<3;j++){const rG2=new THREE.BoxGeometry(0.05,0.005,0.12+j*0.04);const rM2=new THREE.MeshStandardMaterial({color:rCs[j%2],emissive:rCs[j%2],emissiveIntensity:5,transparent:true,opacity:0.9});const rune=new THREE.Mesh(rG2,rM2);const r=0.6+j*0.4;rune.position.set(Math.cos(a+j*0.2)*r,0.01-charGroup.position.y,Math.sin(a+j*0.2)*r);rune.rotation.y=a;auraGroup.add(rune);auraObjects.push(rune);}}
+    for(let i=0;i<8;i++){const a=(i/8)*Math.PI*2;const sG=new THREE.ConeGeometry(0.04,0.45,6);const sM=new THREE.MeshStandardMaterial({color:0xddccaa,emissive:c,emissiveIntensity:0.8,roughness:0.3,metalness:0.6});const spike=new THREE.Mesh(sG,sM);spike.position.set(Math.cos(a)*1.1,1.28+Math.sin(a*2)*0.3,Math.sin(a)*1.1);spike.lookAt(0,1.5,0);spike.rotateX(-Math.PI/2);spike.userData={type:'bloodSpike',angle:a,baseY:spike.position.y};auraGroup.add(spike);auraObjects.push(spike);}
+}
+
+function buildFrostAura(buff) {
+    const c=buff.color;
+    for(let d=0;d<2;d++){const fG=new THREE.IcosahedronGeometry(1.3+d*0.2,d);const fM=new THREE.MeshStandardMaterial({color:buff.color2,emissive:c,emissiveIntensity:0.6,transparent:true,opacity:0.08+d*0.04,side:THREE.DoubleSide,roughness:0,metalness:0.95,wireframe:d===0});const frost=new THREE.Mesh(fG,fM);frost.position.y=1.28;frost.userData={type:'frostShell',d};auraGroup.add(frost);auraObjects.push(frost);}
+    for(let i=0;i<12;i++){const a=(i/12)*Math.PI*2;const h=(i%3)*0.7+0.8;const sG=new THREE.ConeGeometry(0.055-(i%3)*0.01,0.38,6);const sM=new THREE.MeshStandardMaterial({color:buff.color2,emissive:c,emissiveIntensity:2,transparent:true,opacity:0.88,roughness:0,metalness:0.95});const shard=new THREE.Mesh(sG,sM);const r=1.0+(i%3)*0.15;shard.position.set(Math.cos(a)*r,h,Math.sin(a)*r);shard.lookAt(0,h,0);shard.rotateX(-Math.PI/2);shard.userData={type:'frostShard',angle:a,r,baseH:h,i};auraGroup.add(shard);auraObjects.push(shard);}
+    for(let i=0;i<5;i++){const rG=new THREE.TorusGeometry(0.5+i*0.22,0.012,6,96);const rM=new THREE.MeshStandardMaterial({color:c,emissive:c,emissiveIntensity:5,transparent:true,opacity:0.7,roughness:0,metalness:1});const ring=new THREE.Mesh(rG,rM);ring.position.y=1.5+(i-2)*0.35;ring.rotation.x=i*0.3;ring.userData={type:'frostRing',i,baseY:ring.position.y};auraGroup.add(ring);auraObjects.push(ring);}
+    for(let i=0;i<200;i++) particles.push({type:'frost',angle:Math.random()*Math.PI*2,r:0.1+Math.random()*1.8,y:Math.random()*4,vy:-(0.009+Math.random()*0.02),vAngle:(Math.random()-0.5)*0.035,size:0.012+Math.random()*0.038,alpha:0.55+Math.random()*0.45});
+    for(let i=0;i<3;i++){const hG=new THREE.TorusGeometry(0.5+i*0.4,0.015,6,6);const hM=new THREE.MeshStandardMaterial({color:c,emissive:c,emissiveIntensity:3,transparent:true,opacity:0.7});const hex=new THREE.Mesh(hG,hM);hex.rotation.x=-Math.PI/2;hex.position.y=0.005-charGroup.position.y;hex.userData={type:'frostHex',i};auraGroup.add(hex);auraObjects.push(hex);}
+}
+
+function buildNatureAura(buff) {
+    const c=buff.color;
+    const sG=new THREE.SphereGeometry(0.9,32,16);const sM=new THREE.MeshStandardMaterial({color:buff.color2,emissive:c,emissiveIntensity:1.2,transparent:true,opacity:0.15,side:THREE.DoubleSide});
+    const sB=new THREE.Mesh(sG,sM);sB.position.y=1.28;sB.userData.type='natureStar';auraGroup.add(sB);auraObjects.push(sB);
+    for(let ring=0;ring<3;ring++){const lc=8+ring*4;for(let i=0;i<lc;i++){const a=(i/lc)*Math.PI*2;const r=0.7+ring*0.3;const lG=new THREE.ConeGeometry(0.04-ring*0.005,0.25,5);const lM=new THREE.MeshStandardMaterial({color:c,emissive:c,emissiveIntensity:3,transparent:true,opacity:0.7,roughness:0.2,metalness:0.3});const leaf=new THREE.Mesh(lG,lM);const h=0.8+ring*0.6+(i%3)*0.25;leaf.position.set(Math.cos(a)*r,h,Math.sin(a)*r);leaf.lookAt(0,h,0);leaf.rotateX(-Math.PI/2);leaf.userData={type:'natureLeaf',angle:a,r,ring,i,baseH:h};auraGroup.add(leaf);auraObjects.push(leaf);}}
+    for(let i=0;i<5;i++){const a=(i/5)*Math.PI*2;const oG=new THREE.IcosahedronGeometry(0.06,1);const oM=new THREE.MeshStandardMaterial({color:buff.color2,emissive:buff.color2,emissiveIntensity:8,roughness:0,metalness:0});const orb=new THREE.Mesh(oG,oM);orb.position.set(Math.cos(a)*1.2,1.28+Math.sin(a*2)*0.6,Math.sin(a)*1.2);orb.userData={type:'natureStar2',angle:a,i};auraGroup.add(orb);auraObjects.push(orb);}
+    for(let v=0;v<4;v++){const pts=[];const sA=(v/4)*Math.PI*2;for(let j=0;j<=30;j++){const t=j/30,a=sA+t*Math.PI*3,r=0.2+t*0.9;pts.push(new THREE.Vector3(Math.cos(a)*r,t*3.2-0.1,Math.sin(a)*r));}const tG=new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts),30,0.018,6,false);const tM=new THREE.MeshStandardMaterial({color:c,emissive:c,emissiveIntensity:2,transparent:true,opacity:0.6});const vine=new THREE.Mesh(tG,tM);vine.userData={type:'natureVine',v};auraGroup.add(vine);auraObjects.push(vine);}
+    for(let i=0;i<160;i++) particles.push({type:'nature',angle:Math.random()*Math.PI*2,r:0.15+Math.random()*1.4,y:Math.random()*3.8,vy:0.01+Math.random()*0.018,vAngle:0.015+Math.random()*0.04,size:0.022+Math.random()*0.045,alpha:0.6+Math.random()*0.4});
+    for(let i=0;i<4;i++){const rG=new THREE.TorusGeometry(0.35+i*0.35,0.01,6,64);const rM=new THREE.MeshStandardMaterial({color:c,emissive:c,emissiveIntensity:4,transparent:true,opacity:0.7});const sR=new THREE.Mesh(rG,rM);sR.rotation.x=-Math.PI/2;sR.position.y=0.005-charGroup.position.y;sR.userData={type:'natureCircle',i};auraGroup.add(sR);auraObjects.push(sR);}
+}
+
+function buildChaosAura(buff) {
+    const c=buff.color,c2=buff.color2;
+    const cC=[c,c2,new THREE.Color(1,0.1,0.1),new THREE.Color(0.8,0,1)];
+    for(let i=0;i<4;i++){const cG=new THREE.OctahedronGeometry(1.1+i*0.15,i);const cM=new THREE.MeshStandardMaterial({color:cC[i],emissive:cC[i],emissiveIntensity:0.5,transparent:true,opacity:0.07,side:THREE.DoubleSide,wireframe:i<2});const chaos=new THREE.Mesh(cG,cM);chaos.position.y=1.28;chaos.userData={type:'chaosShell',i,rotSpeed:(i%2===0?1:-1)*0.4};auraGroup.add(chaos);auraObjects.push(chaos);}
+    for(let i=0;i<8;i++){const aG=new THREE.TorusGeometry(0.6+Math.random()*0.7,0.01+Math.random()*0.015,4,64);const aC=cC[i%4];const aM=new THREE.MeshStandardMaterial({color:aC,emissive:aC,emissiveIntensity:5,transparent:true,opacity:0.7});const arc=new THREE.Mesh(aG,aM);arc.position.y=1.28;arc.rotation.set(Math.random()*Math.PI,Math.random()*Math.PI,Math.random()*Math.PI);arc.userData={type:'chaosArc',rotX:(Math.random()-0.5)*0.04,rotY:(Math.random()-0.5)*0.06,i};auraGroup.add(arc);auraObjects.push(arc);}
+    for(let i=0;i<16;i++){const sG=new THREE.TetrahedronGeometry(0.07+Math.random()*0.05);const sC=cC[i%4];const sM=new THREE.MeshStandardMaterial({color:sC,emissive:sC,emissiveIntensity:4,roughness:0,metalness:0.9});const shard=new THREE.Mesh(sG,sM);const a=(i/16)*Math.PI*2,r=0.9+Math.random()*0.5,h=0.5+Math.random()*2.5;shard.position.set(Math.cos(a)*r,h,Math.sin(a)*r);shard.userData={type:'chaosShard',angle:a,r,h,rotSpeed:Math.random()*0.1};auraGroup.add(shard);auraObjects.push(shard);}
+    for(let i=0;i<200;i++) particles.push({type:'chaos',angle:Math.random()*Math.PI*2,r:0.05+Math.random()*1.8,y:Math.random()*4-0.3,vy:(Math.random()-0.5)*0.038,vAngle:(Math.random()-0.5)*0.1,colorIdx:i%4,size:0.018+Math.random()*0.055,alpha:0.55+Math.random()*0.45});
+    for(let i=0;i<5;i++){const a1=(i/5)*Math.PI*2-Math.PI/2,a2=((i+2)/5)*Math.PI*2-Math.PI/2;const pts=[new THREE.Vector3(Math.cos(a1)*1.2,0,Math.sin(a1)*1.2),new THREE.Vector3(Math.cos(a2)*1.2,0,Math.sin(a2)*1.2)];const lG=new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts),2,0.018,6,false);const lM=new THREE.MeshStandardMaterial({color:cC[i%4],emissive:cC[i%4],emissiveIntensity:4,transparent:true,opacity:0.8});const line=new THREE.Mesh(lG,lM);line.position.y=0.01-charGroup.position.y;auraGroup.add(line);auraObjects.push(line);}
+}
+
+// ─────────────────────────────────────────────────────────────────
+// ★ NOUVELLES AURAS DE PERSONNAGE
+// ─────────────────────────────────────────────────────────────────
+
+// ── ROI LICHE ──────────────────────────────────────────────────────
+function buildLichKing(buff) {
+    const c=buff.color, c2=buff.color2, c3=buff.color3;
+
+    // Domaine de la mort : sphère de givre spectral en couches
+    for(let i=0;i<3;i++){
+        const sg=new THREE.SphereGeometry(1.6-i*0.12,48,24);
+        const sm=new THREE.MeshStandardMaterial({color:c3,emissive:c,emissiveIntensity:0.2+i*0.1,transparent:true,opacity:0.04+i*0.015,side:THREE.DoubleSide,roughness:0.1,metalness:0.9});
+        const ss=new THREE.Mesh(sg,sm); ss.position.y=1.28; ss.userData={type:'lichSphere',i};
+        auraGroup.add(ss); auraObjects.push(ss);
+    }
+
+    // Couche de runes nordiques sur l'armure (fragments icosaédriques)
+    const runeGeo=new THREE.IcosahedronGeometry(1.5,3);
+    const runeMat=new THREE.MeshBasicMaterial({color:c2,transparent:true,opacity:0.12,wireframe:true});
+    const runeShell=new THREE.Mesh(runeGeo,runeMat); runeShell.position.y=1.28; runeShell.userData.type='lichRune';
+    auraGroup.add(runeShell); auraObjects.push(runeShell);
+
+    // Frostmourne : épée spectrale flottante
+    const bladeGrp=new THREE.Group();
+    const bladeMesh=new THREE.Mesh(new THREE.BoxGeometry(0.055,1.6,0.14),
+        new THREE.MeshStandardMaterial({color:c2,emissive:c,emissiveIntensity:3,roughness:0,metalness:1,transparent:true,opacity:0.9}));
+    bladeMesh.position.y=0.8;
+    bladeGrp.add(bladeMesh);
+    const cross=new THREE.Mesh(new THREE.BoxGeometry(0.5,0.07,0.1),
+        new THREE.MeshStandardMaterial({color:c3,emissive:c,emissiveIntensity:4,roughness:0,metalness:1}));
+    bladeGrp.add(cross);
+    bladeGrp.position.set(-1.3,2.2,0.2); bladeGrp.rotation.z=-0.2;
+    bladeGrp.userData={type:'lichSword',baseY:2.2,baseX:-1.3};
+    auraGroup.add(bladeGrp); auraObjects.push(bladeGrp);
+
+    // Âmes torturées (12 orbes spiralant autour du corps)
+    for(let i=0;i<12;i++){
+        const a=(i/12)*Math.PI*2;
+        const sg2=new THREE.SphereGeometry(0.055+Math.random()*0.03,10,8);
+        const sm2=new THREE.MeshStandardMaterial({color:c2,emissive:c2,emissiveIntensity:8,roughness:0,transparent:true,opacity:0.85});
+        const soul=new THREE.Mesh(sg2,sm2);
+        soul.position.set(Math.cos(a)*1.0,0.5+i*0.2,Math.sin(a)*1.0);
+        soul.userData={type:'lichSoul',angle:a,baseH:0.5+i*0.2,i,speed:0.3+Math.random()*0.3,r:0.8+Math.random()*0.5};
+        auraGroup.add(soul); auraObjects.push(soul);
+    }
+
+    // Couronnes de givre (3 torii à différentes hauteurs + inclinaisons)
+    const crownData=[[0.6,0.06,0.5],[0.85,0.07,1.2],[1.1,0.05,1.9]];
+    crownData.forEach(([rx,thick,y],i)=>{
+        const rg=new THREE.TorusGeometry(rx,thick,8,80);
+        const rm=new THREE.MeshStandardMaterial({color:c2,emissive:c,emissiveIntensity:5,transparent:true,opacity:0.9,roughness:0,metalness:1});
+        const ring=new THREE.Mesh(rg,rm); ring.position.y=y; ring.rotation.x=i*0.4-0.3;
+        ring.userData={type:'lichCrown',i,baseY:y}; auraGroup.add(ring); auraObjects.push(ring);
+    });
+
+    // Nécro-portail au sol (pentagramme + cercle)
+    const portalRing=new THREE.Mesh(new THREE.TorusGeometry(1.4,0.04,8,128),
+        new THREE.MeshStandardMaterial({color:c,emissive:c,emissiveIntensity:6,transparent:true,opacity:0.95}));
+    portalRing.rotation.x=-Math.PI/2; portalRing.position.y=0.02-charGroup.position.y; portalRing.userData.type='lichPortal';
+    auraGroup.add(portalRing); auraObjects.push(portalRing);
+    const innerCircle=new THREE.Mesh(new THREE.CircleGeometry(1.4,64),
+        new THREE.MeshStandardMaterial({color:0x001122,emissive:c3,emissiveIntensity:0.8,transparent:true,opacity:0.45}));
+    innerCircle.rotation.x=-Math.PI/2; innerCircle.position.y=0.01-charGroup.position.y;
+    auraGroup.add(innerCircle); auraObjects.push(innerCircle);
+
+    // Fragments de givre qui pleuvent
+    for(let i=0;i<180;i++) particles.push({type:'lichfrost',angle:Math.random()*Math.PI*2,r:0.05+Math.random()*2.0,y:Math.random()*4.5,vy:-(0.01+Math.random()*0.025),vAngle:(Math.random()-0.5)*0.028,size:0.018+Math.random()*0.04,alpha:0.6+Math.random()*0.4});
+
+    // Halo nécrotique sur la tête
+    const haloGeo=new THREE.TorusGeometry(0.38,0.025,8,64);
+    const haloMat=new THREE.MeshStandardMaterial({color:c2,emissive:c,emissiveIntensity:8,transparent:true,opacity:0.95,roughness:0,metalness:1});
+    const halo=new THREE.Mesh(haloGeo,haloMat); halo.position.y=2.9; halo.rotation.x=0.15; halo.userData.type='lichHalo';
+    auraGroup.add(halo); auraObjects.push(halo);
+}
+
+// ── CHASSEUR DE DÉMONS ────────────────────────────────────────────
+function buildDemonHunter(buff) {
+    const c=buff.color, c2=buff.color2, c3=buff.color3;
+
+    // Métamorphose infernale : forme d'ombre violette avec ailes démoniaques
+    // Corps d'ombre
+    const shadowGeo=new THREE.SphereGeometry(0.85,32,16);
+    const shadowMat=new THREE.MeshStandardMaterial({color:0x0d0020,emissive:c,emissiveIntensity:0.4,transparent:true,opacity:0.25,side:THREE.DoubleSide});
+    const shadow=new THREE.Mesh(shadowGeo,shadowMat); shadow.position.y=1.28; shadow.userData.type='dhShadow';
+    auraGroup.add(shadow); auraObjects.push(shadow);
+
+    // Aile gauche (courbe BézierTube)
+    function makeWing(side) {
+        const pts=[];
+        const sx=side;
+        for(let j=0;j<=20;j++){
+            const t=j/20;
+            const x=sx*(0.3+t*1.8);
+            const y=1.28+Math.sin(t*Math.PI)*1.4-t*0.5;
+            const z=-0.2+t*0.3;
+            pts.push(new THREE.Vector3(x,y,z));
+        }
+        const wg=new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts),20,0.04-0.001,6,false);
+        const wm=new THREE.MeshStandardMaterial({color:c,emissive:c,emissiveIntensity:3,transparent:true,opacity:0.85,roughness:0});
+        const wing=new THREE.Mesh(wg,wm); wing.userData={type:'dhWing',side};
+        auraGroup.add(wing); auraObjects.push(wing);
+        // Membranes (3 segments fins entre veines)
+        for(let k=0;k<3;k++){
+            const mPts=[];
+            const tBase=k*0.28;
+            for(let j=0;j<=10;j++){
+                const t=tBase+j/10*(0.25);
+                const x2=sx*(0.3+t*1.8);
+                const y2=1.28+Math.sin(t*Math.PI)*1.4-t*0.5;
+                const z2=-0.2+t*0.3;
+                mPts.push(new THREE.Vector3(x2+sx*(j/10)*0.3,y2-j*0.08,z2));
+            }
+            if(mPts.length>=2){
+                const mg=new THREE.TubeGeometry(new THREE.CatmullRomCurve3(mPts),8,0.012,4,false);
+                const mm=new THREE.MeshStandardMaterial({color:c,emissive:c,emissiveIntensity:2,transparent:true,opacity:0.45});
+                const mem=new THREE.Mesh(mg,mm); mem.userData={type:'dhMem',side,k};
+                auraGroup.add(mem); auraObjects.push(mem);
+            }
+        }
+    }
+    makeWing(1); makeWing(-1);
+
+    // Yeux de fel (2 orbes verts sur le casque)
+    [[-0.14,2.43,0.23],[0.14,2.43,0.23]].forEach(([x,y,z],i)=>{
+        const eg=new THREE.SphereGeometry(0.055,12,8);
+        const em=new THREE.MeshStandardMaterial({color:c3,emissive:c3,emissiveIntensity:12,roughness:0,metalness:0});
+        const eye=new THREE.Mesh(eg,em); eye.position.set(x,y,z); eye.userData={type:'dhEye',i};
+        auraGroup.add(eye); auraObjects.push(eye);
+    });
+
+    // Lames du chaos (2 glaives rotatifs)
+    function makeGlaive(side, height) {
+        const grp=new THREE.Group();
+        // Arc de la lame
+        const ag=new THREE.TorusGeometry(0.35,0.025,6,48,Math.PI*1.5);
+        const am=new THREE.MeshStandardMaterial({color:c2,emissive:c2,emissiveIntensity:5,roughness:0,metalness:1});
+        grp.add(new THREE.Mesh(ag,am));
+        // Pointe
+        const pg=new THREE.ConeGeometry(0.03,0.3,6);
+        const pm=new THREE.MeshStandardMaterial({color:c,emissive:c,emissiveIntensity:4,roughness:0,metalness:1});
+        const pt=new THREE.Mesh(pg,pm); pt.position.set(side*0.35,0,0); pt.rotation.z=side*Math.PI/2;
+        grp.add(pt);
+        grp.position.set(side*1.4,height,0.3);
+        grp.userData={type:'dhGlaive',side,baseY:height,baseX:side*1.4};
+        auraGroup.add(grp); auraObjects.push(grp);
+    }
+    makeGlaive(1,1.8); makeGlaive(-1,2.2);
+
+    // Torrent de fel (particules vert/violet montantes)
+    for(let i=0;i<220;i++) {
+        const isFel=i%3!==0;
+        particles.push({type:'dh',angle:Math.random()*Math.PI*2,r:0.03+Math.random()*1.7,y:Math.random()*4.5,vy:0.018+Math.random()*0.035,vAngle:(Math.random()-0.5)*0.07,size:0.02+Math.random()*0.04,alpha:0.6+Math.random()*0.4,isFel});
+    }
+
+    // Rune pentagonale au sol
+    for(let i=0;i<5;i++){
+        const a1=(i/5)*Math.PI*2-Math.PI/2, a2=((i+2)/5)*Math.PI*2-Math.PI/2;
+        const pts=[new THREE.Vector3(Math.cos(a1)*1.1,0,Math.sin(a1)*1.1),new THREE.Vector3(Math.cos(a2)*1.1,0,Math.sin(a2)*1.1)];
+        const lg=new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts),2,0.02,4,false);
+        const lm=new THREE.MeshStandardMaterial({color:i%2===0?c:c3,emissive:i%2===0?c:c3,emissiveIntensity:5,transparent:true,opacity:0.85});
+        const line=new THREE.Mesh(lg,lm); line.position.y=0.01-charGroup.position.y;
+        auraGroup.add(line); auraObjects.push(line);
+    }
+
+    // Traînée d'ombre sur le sol
+    const trailGeo=new THREE.CircleGeometry(1.1,64);
+    const trailMat=new THREE.MeshStandardMaterial({color:0x0a0020,emissive:c,emissiveIntensity:0.6,transparent:true,opacity:0.4});
+    const trail=new THREE.Mesh(trailGeo,trailMat); trail.rotation.x=-Math.PI/2; trail.position.y=0.005-charGroup.position.y;
+    auraGroup.add(trail); auraObjects.push(trail);
+}
+
+// ── MAGE DU SANG ──────────────────────────────────────────────────
+function buildBloodMage(buff) {
+    const c=buff.color, c2=buff.color2, c3=buff.color3;
+
+    // Phoenix de sang encerclant le personnage
+    function makePhoenixTrail(idx) {
+        const pts=[];
+        const offset=(idx/3)*Math.PI*2;
+        for(let j=0;j<=40;j++){
+            const t=j/40;
+            const a=offset+t*Math.PI*4;
+            const r=0.5+Math.sin(t*Math.PI)*0.9;
+            const y=t*3.5-0.2;
+            pts.push(new THREE.Vector3(Math.cos(a)*r,y,Math.sin(a)*r));
+        }
+        const tg=new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts),40,0.03+idx*0.008,8,false);
+        const tm=new THREE.MeshStandardMaterial({color:idx===0?c:c2,emissive:idx===0?c:c2,emissiveIntensity:3+idx,transparent:true,opacity:0.8});
+        const trail=new THREE.Mesh(tg,tm); trail.userData={type:'bmPhoenix',idx};
+        auraGroup.add(trail); auraObjects.push(trail);
+    }
+    makePhoenixTrail(0); makePhoenixTrail(1); makePhoenixTrail(2);
+
+    // Sphère de plasma de sang (cœur)
+    const plasmaGeo=new THREE.SphereGeometry(0.7,32,16);
+    const plasmaMat=new THREE.MeshStandardMaterial({color:c3,emissive:c,emissiveIntensity:1.5,transparent:true,opacity:0.12,side:THREE.DoubleSide});
+    const plasma=new THREE.Mesh(plasmaGeo,plasmaMat); plasma.position.y=1.28; plasma.userData.type='bmPlasma';
+    auraGroup.add(plasma); auraObjects.push(plasma);
+
+    // Cristaux de sang orbitants (géométrie octaédrique)
+    for(let i=0;i<10;i++){
+        const a=(i/10)*Math.PI*2;
+        const h=0.5+Math.random()*2.5;
+        const r=0.5+Math.random()*0.8;
+        const cg2=new THREE.OctahedronGeometry(0.08+Math.random()*0.05);
+        const cm2=new THREE.MeshStandardMaterial({color:i%2===0?c:c2,emissive:i%2===0?c:c2,emissiveIntensity:4,roughness:0,metalness:0.9,transparent:true,opacity:0.9});
+        const crystal=new THREE.Mesh(cg2,cm2);
+        crystal.position.set(Math.cos(a)*r,h,Math.sin(a)*r);
+        crystal.userData={type:'bmCrystal',angle:a,r,baseH:h,i,rotSpeed:0.03+Math.random()*0.05};
+        auraGroup.add(crystal); auraObjects.push(crystal);
+    }
+
+    // Flammes de sang (cônes ascendants)
+    for(let i=0;i<6;i++){
+        const a=(i/6)*Math.PI*2;
+        const fg=new THREE.ConeGeometry(0.12,0.7,8);
+        const fm=new THREE.MeshStandardMaterial({color:c,emissive:c,emissiveIntensity:3,transparent:true,opacity:0.5});
+        const flame=new THREE.Mesh(fg,fm);
+        flame.position.set(Math.cos(a)*0.9,0.4,Math.sin(a)*0.9);
+        flame.userData={type:'bmFlame',angle:a,baseH:0.4};
+        auraGroup.add(flame); auraObjects.push(flame);
+    }
+
+    // Anneau de sigils ardents
+    const sigRing=new THREE.Mesh(new THREE.TorusGeometry(1.3,0.04,8,128),
+        new THREE.MeshStandardMaterial({color:c2,emissive:c2,emissiveIntensity:6,transparent:true,opacity:0.95,roughness:0,metalness:1}));
+    sigRing.rotation.x=-Math.PI/2; sigRing.position.y=0.09; sigRing.userData.type='bmSigil';
+    auraGroup.add(sigRing); auraObjects.push(sigRing);
+
+    // Traits de feu (8 rayons partant du centre)
+    for(let i=0;i<8;i++){
+        const a=(i/8)*Math.PI*2;
+        const pts2=[new THREE.Vector3(0,0,0),new THREE.Vector3(Math.cos(a)*1.2,0,Math.sin(a)*1.2)];
+        const lg=new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts2),2,0.015,4,false);
+        const lm=new THREE.MeshStandardMaterial({color:c,emissive:c,emissiveIntensity:4,transparent:true,opacity:0.6});
+        const ray=new THREE.Mesh(lg,lm); ray.position.y=0.01-charGroup.position.y;
+        ray.userData={type:'bmRay',angle:a}; auraGroup.add(ray); auraObjects.push(ray);
+    }
+
+    // Particules de braises
+    for(let i=0;i<220;i++) particles.push({type:'bloodmage',angle:Math.random()*Math.PI*2,r:0.05+Math.random()*1.6,y:Math.random()*4.5,vy:0.016+Math.random()*0.032,vAngle:(Math.random()-0.5)*0.055,size:0.018+Math.random()*0.045,alpha:0.65+Math.random()*0.35,hot:Math.random()>0.4});
+
+    buffLight2.color.set(buff.lightColor); buffLight2.intensity=2.5;
+}
+
+// ── ARCHIMAGE ─────────────────────────────────────────────────────
+function buildArchmage(buff) {
+    const c=buff.color, c2=buff.color2, c3=buff.color3;
+
+    // Tempête arcaniste : galaxie miniature autour du personnage
+    // Nébuleuse de fond
+    const nebGeo=new THREE.SphereGeometry(2.0,48,24);
+    const nebMat=new THREE.MeshStandardMaterial({color:0x00001a,emissive:c2,emissiveIntensity:0.08,transparent:true,opacity:0.1,side:THREE.DoubleSide});
+    const neb=new THREE.Mesh(nebGeo,nebMat); neb.position.y=1.28; neb.userData.type='amNeb';
+    auraGroup.add(neb); auraObjects.push(neb);
+
+    // 3 Disques orbitaux à plans différents
+    [[0.55,0,1.1],[0.9,Math.PI/3,1.5],[1.35,Math.PI*0.6,0.9]].forEach(([r,tilt,y],i)=>{
+        const dg=new THREE.TorusGeometry(r,0.018,6,128);
+        const dm=new THREE.MeshStandardMaterial({color:i===0?c:i===1?c2:c3,emissive:i===0?c:i===1?c2:c3,emissiveIntensity:5,transparent:true,opacity:0.85,roughness:0,metalness:1});
+        const disc=new THREE.Mesh(dg,dm); disc.position.y=y; disc.rotation.x=tilt; disc.rotation.z=tilt*0.5;
+        disc.userData={type:'amDisc',i,tilt,baseY:y,speed:0.4+i*0.15}; auraGroup.add(disc); auraObjects.push(disc);
+    });
+
+    // Cube arcaniste rotatif au centre
+    const cubeGeo=new THREE.OctahedronGeometry(0.38,0);
+    const cubeMat=new THREE.MeshStandardMaterial({color:c,emissive:c,emissiveIntensity:2,transparent:true,opacity:0.6,roughness:0,metalness:0.9,wireframe:true});
+    const cube=new THREE.Mesh(cubeGeo,cubeMat); cube.position.y=1.28; cube.userData.type='amCube';
+    auraGroup.add(cube); auraObjects.push(cube);
+
+    // Orbes stellaires orbitant (5 constellations)
+    for(let i=0;i<5;i++){
+        const a=(i/5)*Math.PI*2;
+        const starGrp=new THREE.Group();
+        starGrp.position.set(Math.cos(a)*1.2,1.4,Math.sin(a)*1.2);
+        // Orbe principal
+        const oG=new THREE.IcosahedronGeometry(0.07,1);
+        const oM=new THREE.MeshStandardMaterial({color:c3,emissive:c3,emissiveIntensity:10,roughness:0});
+        starGrp.add(new THREE.Mesh(oG,oM));
+        // 3 micro-orbes en orbite
+        for(let k=0;k<3;k++){
+            const mG=new THREE.SphereGeometry(0.025,6,4);
+            const mM=new THREE.MeshStandardMaterial({color:c2,emissive:c2,emissiveIntensity:8,roughness:0});
+            const mo=new THREE.Mesh(mG,mM); mo.position.set(Math.cos(k/3*Math.PI*2)*0.14,0,Math.sin(k/3*Math.PI*2)*0.14);
+            starGrp.add(mo);
+        }
+        starGrp.userData={type:'amStar',angle:a,i,r:1.2};
+        auraGroup.add(starGrp); auraObjects.push(starGrp);
+    }
+
+    // Bâton flottant (staff spectral)
+    const staffGrp=new THREE.Group();
+    const staffBar=new THREE.Mesh(new THREE.CylinderGeometry(0.02,0.015,1.8,8),
+        new THREE.MeshStandardMaterial({color:0x224488,emissive:c,emissiveIntensity:1.5,roughness:0.3,metalness:0.8}));
+    staffBar.position.y=0.9; staffGrp.add(staffBar);
+    const staffOrb=new THREE.Mesh(new THREE.IcosahedronGeometry(0.1,1),
+        new THREE.MeshStandardMaterial({color:c3,emissive:c,emissiveIntensity:8,roughness:0}));
+    staffOrb.position.y=1.85; staffGrp.add(staffOrb);
+    staffGrp.position.set(1.2,1.1,-0.3); staffGrp.rotation.z=0.25;
+    staffGrp.userData={type:'amStaff',baseY:1.1,baseZ:-0.3};
+    auraGroup.add(staffGrp); auraObjects.push(staffGrp);
+
+    // Éclairs arcanistes (torii minuscules à angles aléatoires)
+    for(let i=0;i<10;i++){
+        const ag=new THREE.TorusGeometry(0.2+Math.random()*0.5,0.007,4,48);
+        const am=new THREE.MeshStandardMaterial({color:i%2===0?c:c2,emissive:i%2===0?c:c2,emissiveIntensity:6,transparent:true,opacity:0.6});
+        const arc=new THREE.Mesh(ag,am); arc.position.y=1.28;
+        arc.rotation.set(Math.random()*Math.PI,Math.random()*Math.PI,Math.random()*Math.PI);
+        arc.userData={type:'amArc',rx:(Math.random()-0.5)*0.05,ry:(Math.random()-0.5)*0.07,i};
+        auraGroup.add(arc); auraObjects.push(arc);
+    }
+
+    // Sol : portail inter-dimensionnel (grille hexagonale)
+    for(let i=0;i<4;i++){
+        const hg=new THREE.TorusGeometry(0.35+i*0.32,0.013,6,6);
+        const hm=new THREE.MeshStandardMaterial({color:i%2===0?c:c2,emissive:i%2===0?c:c2,emissiveIntensity:4,transparent:true,opacity:0.7});
+        const hex=new THREE.Mesh(hg,hm); hex.rotation.x=-Math.PI/2; hex.position.y=0.005-charGroup.position.y;
+        hex.userData={type:'amHex',i}; auraGroup.add(hex); auraObjects.push(hex);
+    }
+
+    // Particules d'arcane (étoiles spiralantes)
+    for(let i=0;i<100;i++) particles.push({type:'archmage',angle:Math.random()*Math.PI*2,r:0.1+Math.random()*1.8,y:Math.random()*3.5,vy:(Math.random()-0.5)*0.008,vAngle:0.008+Math.random()*0.025,size:0.008+Math.random()*0.02,alpha:0.4+Math.random()*0.6,colorIdx:Math.floor(Math.random()*3)});
+}
+
+// ── SEIGNEUR DE GUERRE ────────────────────────────────────────────
+function buildWarlord(buff) {
+    const c=buff.color, c2=buff.color2, c3=buff.color3;
+
+    // Aura de rage de guerre : distorsion d'énergie ardente
+    for(let i=0;i<3;i++){
+        const wg=new THREE.SphereGeometry(1.05+i*0.15,28,14);
+        const wm=new THREE.MeshStandardMaterial({color:i===0?c:c2,emissive:i===0?c:c2,emissiveIntensity:0.3,transparent:true,opacity:0.04+i*0.015,side:THREE.DoubleSide});
+        const ws=new THREE.Mesh(wg,wm); ws.position.y=1.28; ws.userData={type:'warlordShell',i};
+        auraGroup.add(ws); auraObjects.push(ws);
+    }
+
+    // Grande hache de guerre (Gorehowl) flottante
+    const axeGrp=new THREE.Group();
+    // Manche
+    const handleAx=new THREE.Mesh(new THREE.CylinderGeometry(0.025,0.02,1.4,8),
+        new THREE.MeshStandardMaterial({color:0x2a1800,roughness:0.8,metalness:0.3}));
+    handleAx.position.y=0.7; axeGrp.add(handleAx);
+    // Lame courbée (torus section)
+    const bladeTorus=new THREE.Mesh(new THREE.TorusGeometry(0.38,0.07,6,32,Math.PI*1.2),
+        new THREE.MeshStandardMaterial({color:0x888888,emissive:c2,emissiveIntensity:2,roughness:0.1,metalness:0.95}));
+    bladeTorus.position.y=1.45; bladeTorus.rotation.z=Math.PI/2; axeGrp.add(bladeTorus);
+    // Runes sur la lame
+    const runeAx=new THREE.Mesh(new THREE.BoxGeometry(0.04,0.04,0.5),
+        new THREE.MeshStandardMaterial({color:c,emissive:c,emissiveIntensity:6}));
+    runeAx.position.set(0,1.45,0); runeAx.rotation.y=Math.PI/2; axeGrp.add(runeAx);
+    axeGrp.position.set(-1.5,1.5,0.2); axeGrp.rotation.set(0.2,-0.3,0.15);
+    axeGrp.userData={type:'warlordAxe',baseY:1.5,baseX:-1.5};
+    auraGroup.add(axeGrp); auraObjects.push(axeGrp);
+
+    // Chaînes de fer (4 chaînes spiralantes)
+    for(let ch=0;ch<4;ch++){
+        const pts=[];
+        const sA=(ch/4)*Math.PI*2;
+        for(let j=0;j<=24;j++){
+            const t=j/24;
+            const a=sA+t*Math.PI*1.8;
+            const r=0.4+t*0.8;
+            pts.push(new THREE.Vector3(Math.cos(a)*r,t*3-0.2,Math.sin(a)*r));
+        }
+        const cg=new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts),24,0.022,6,false);
+        const cm=new THREE.MeshStandardMaterial({color:0x888888,emissive:c,emissiveIntensity:1.5,roughness:0.3,metalness:0.9,transparent:true,opacity:0.85});
+        const chain=new THREE.Mesh(cg,cm); chain.userData={type:'warlordChain',sA,ch};
+        auraGroup.add(chain); auraObjects.push(chain);
+    }
+
+    // Bouclier de feu rotatif (torus aplati + spikes)
+    const fireRing=new THREE.Mesh(new THREE.TorusGeometry(1.2,0.06,8,64),
+        new THREE.MeshStandardMaterial({color:c,emissive:c,emissiveIntensity:5,transparent:true,opacity:0.85,roughness:0,metalness:0.7}));
+    fireRing.position.y=1.3; fireRing.userData={type:'warlordFireRing',baseY:1.3};
+    auraGroup.add(fireRing); auraObjects.push(fireRing);
+
+    // Éclats de métal brûlant (16 tétrahèdres orbitants)
+    for(let i=0;i<14;i++){
+        const a=(i/14)*Math.PI*2;
+        const sg=new THREE.TetrahedronGeometry(0.06+Math.random()*0.04);
+        const sm=new THREE.MeshStandardMaterial({color:i%2===0?c:c3,emissive:i%2===0?c:c3,emissiveIntensity:4,roughness:0.1,metalness:0.9});
+        const shard=new THREE.Mesh(sg,sm);
+        const r=0.8+Math.random()*0.6, h=0.3+Math.random()*2.8;
+        shard.position.set(Math.cos(a)*r,h,Math.sin(a)*r);
+        shard.userData={type:'warlordShard',angle:a,r,h,rotSpeed:(Math.random()-0.5)*0.12};
+        auraGroup.add(shard); auraObjects.push(shard);
+    }
+
+    // Cercle de runes de guerre au sol
+    const warCircle=new THREE.Mesh(new THREE.TorusGeometry(1.35,0.05,8,128),
+        new THREE.MeshStandardMaterial({color:c,emissive:c,emissiveIntensity:6,transparent:true,opacity:0.9,roughness:0,metalness:0.9}));
+    warCircle.rotation.x=-Math.PI/2; warCircle.position.y=0.02-charGroup.position.y; warCircle.userData.type='warlordCircle';
+    auraGroup.add(warCircle); auraObjects.push(warCircle);
+
+    // Sol incandescent
+    const floorGlow=new THREE.Mesh(new THREE.CircleGeometry(1.35,64),
+        new THREE.MeshStandardMaterial({color:0x1a0800,emissive:c,emissiveIntensity:0.7,transparent:true,opacity:0.4}));
+    floorGlow.rotation.x=-Math.PI/2; floorGlow.position.y=0.01-charGroup.position.y;
+    auraGroup.add(floorGlow); auraObjects.push(floorGlow);
+
+    // Particules de braises ascendantes
+    for(let i=0;i<100;i++) particles.push({type:'warlord',angle:Math.random()*Math.PI*2,r:0.05+Math.random()*1.4,y:Math.random()*4,vy:0.012+Math.random()*0.018,vAngle:(Math.random()-0.5)*0.025,size:0.01+Math.random()*0.028,alpha:0.5+Math.random()*0.5,hot:Math.random()>0.4});
+
+    buffLight2.color.set(buff.lightColor); buffLight2.intensity=3;
+}
+
+// ── DIEU DU TEMPS ─────────────────────────────────────────────────
+function buildTimeGod(buff) {
+    const c=buff.color, c2=buff.color2, c3=buff.color3;
+
+    // Nexus temporel : plusieurs couches de réalité
+    // Sphère du passé (blanche translucide)
+    for(let i=0;i<4;i++){
+        const sg=new THREE.SphereGeometry(0.6+i*0.35,48,24);
+        const sm=new THREE.MeshStandardMaterial({color:c,emissive:i%2===0?c2:c3,emissiveIntensity:0.15+i*0.05,transparent:true,opacity:0.025+i*0.008,side:THREE.DoubleSide,roughness:0,metalness:0.9});
+        const ss=new THREE.Mesh(sg,sm); ss.position.y=1.28; ss.userData={type:'tgShell',i,rotX:(Math.random()-0.5)*0.008,rotY:(Math.random()-0.5)*0.012,rotZ:(Math.random()-0.5)*0.008};
+        auraGroup.add(ss); auraObjects.push(ss);
+    }
+
+    // Grille de réalité (icosphère wireframe triple)
+    for(let d=0;d<3;d++){
+        const wg=new THREE.IcosahedronGeometry(0.8+d*0.4,d===0?2:1);
+        const wm=new THREE.MeshBasicMaterial({color:d===0?c2:d===1?c3:c,transparent:true,opacity:0.08+d*0.02,wireframe:true});
+        const ws=new THREE.Mesh(wg,wm); ws.position.y=1.28; ws.userData={type:'tgGrid',d,speed:(d%2===0?1:-1)*(0.05+d*0.04)};
+        auraGroup.add(ws); auraObjects.push(ws);
+    }
+
+    // Horloge cosmique (4 aiguilles torii à angles différents)
+    [[0.45,0,1.0],[0.7,0.4,1.5],[1.0,0.9,1.2],[1.3,1.5,0.8]].forEach(([r,tilt,y],i)=>{
+        const rg=new THREE.TorusGeometry(r,0.014,6,96);
+        const rm=new THREE.MeshStandardMaterial({color:i%2===0?c2:c3,emissive:i%2===0?c2:c3,emissiveIntensity:6,transparent:true,opacity:0.85,roughness:0,metalness:1});
+        const ring=new THREE.Mesh(rg,rm); ring.position.y=y; ring.rotation.x=tilt; ring.rotation.z=tilt*0.6;
+        ring.userData={type:'tgClock',i,tilt,speed:(i%2===0?1:-1)*(0.08+i*0.06)};
+        auraGroup.add(ring); auraObjects.push(ring);
+    });
+
+    // Sablier cosmique (deux cônes inversés)
+    const hourGrp=new THREE.Group(); hourGrp.position.y=1.28;
+    const topCone=new THREE.Mesh(new THREE.ConeGeometry(0.22,0.55,8),
+        new THREE.MeshStandardMaterial({color:c,emissive:c2,emissiveIntensity:3,transparent:true,opacity:0.7,roughness:0,metalness:0.95}));
+    topCone.position.y=0.3; hourGrp.add(topCone);
+    const botCone=topCone.clone(); botCone.position.y=-0.3; botCone.rotation.z=Math.PI; hourGrp.add(botCone);
+    const midGlow=new THREE.Mesh(new THREE.SphereGeometry(0.06,12,8),
+        new THREE.MeshStandardMaterial({color:c3,emissive:c3,emissiveIntensity:12,roughness:0}));
+    hourGrp.add(midGlow);
+    hourGrp.userData={type:'tgHourglass'}; auraGroup.add(hourGrp); auraObjects.push(hourGrp);
+
+    // Chrono-portail (double cercle sol)
+    for(let i=0;i<3;i++){
+        const pg=new THREE.TorusGeometry(0.5+i*0.35,0.02-i*0.002,8,128);
+        const pm=new THREE.MeshStandardMaterial({color:i===0?c2:i===1?c3:c,emissive:i===0?c2:i===1?c3:c,emissiveIntensity:5,transparent:true,opacity:0.8,roughness:0,metalness:1});
+        const pr=new THREE.Mesh(pg,pm); pr.rotation.x=-Math.PI/2; pr.position.y=0.01-charGroup.position.y;
+        pr.userData={type:'tgPortal',i,speed:(i%2===0?1:-1)*(0.15+i*0.1)};
+        auraGroup.add(pr); auraObjects.push(pr);
+    }
+    const portalFill=new THREE.Mesh(new THREE.CircleGeometry(1.2,64),
+        new THREE.MeshStandardMaterial({color:0x05050f,emissive:c3,emissiveIntensity:0.5,transparent:true,opacity:0.35}));
+    portalFill.rotation.x=-Math.PI/2; portalFill.position.y=0.005-charGroup.position.y;
+    auraGroup.add(portalFill); auraObjects.push(portalFill);
+
+    // Fragments temporels (cubes tétrahédriques multiples)
+    for(let i=0;i<20;i++){
+        const a=(i/20)*Math.PI*2;
+        const r=0.4+Math.random()*1.3;
+        const h=Math.random()*3.5;
+        const fg=new THREE.TetrahedronGeometry(0.04+Math.random()*0.06);
+        const fm=new THREE.MeshStandardMaterial({color:i%3===0?c:i%3===1?c2:c3,emissive:i%3===0?c:i%3===1?c2:c3,emissiveIntensity:5,roughness:0,metalness:0.95,transparent:true,opacity:0.8});
+        const frag=new THREE.Mesh(fg,fm);
+        frag.position.set(Math.cos(a)*r,h,Math.sin(a)*r);
+        frag.userData={type:'tgFrag',angle:a,r,h,rotX:Math.random()*0.06,rotY:Math.random()*0.08};
+        auraGroup.add(frag); auraObjects.push(frag);
+    }
+
+    // Particules temporelles (flux de lumière blanche)
+    for(let i=0;i<120;i++) particles.push({type:'timegod',angle:Math.random()*Math.PI*2,r:0.05+Math.random()*2.0,y:Math.random()*4,vy:(Math.random()-0.5)*0.015,vAngle:(Math.random()-0.5)*0.03,size:0.006+Math.random()*0.018,alpha:0.3+Math.random()*0.7,colorIdx:Math.floor(Math.random()*3)});
+}
+
+// ─────────────────────────────────────────────────────────────────
+// PARTICLE RENDERER
+// ─────────────────────────────────────────────────────────────────
+const ptGeo=new THREE.SphereGeometry(1,6,4);
+
+function getParticle(color, size) {
+    const mat=new THREE.MeshStandardMaterial({color,emissive:color,emissiveIntensity:6,transparent:true,roughness:0,metalness:0});
+    const m=new THREE.Mesh(ptGeo,mat);
+    m.scale.setScalar(size);
+    auraGroup.add(m); auraObjects.push(m);
+    return {mesh:m,mat};
+}
+
+function initParticlePool() {
+    const buffDef=BUFFS[activeBuff]; if(!buffDef) return;
+    const chaosColors=[buffDef.color,buffDef.color2||buffDef.color,new THREE.Color(1,0.1,0.1),new THREE.Color(0.8,0,1)];
+    const tgColors=[buffDef.color,buffDef.color2||buffDef.color,buffDef.color3||buffDef.color];
+    ptObjects=particles.map(p=>{
+        let col;
+        if(p.type==='chaos') col=chaosColors[p.colorIdx||0];
+        else if(p.type==='archmage') col=[buffDef.color,buffDef.color2,buffDef.color3||buffDef.color][p.colorIdx||0];
+        else if(p.type==='timegod') col=tgColors[p.colorIdx||0];
+        else if(p.type==='dh') col=p.isFel?buffDef.color3||new THREE.Color(0,0.8,0.2):buffDef.color;
+        else if(p.type==='bloodmage') col=p.hot?buffDef.color2:buffDef.color;
+        else if(p.type==='warlord') col=p.hot?buffDef.color2:buffDef.color;
+        else col=buffDef.color;
+        return getParticle(col,p.size);
+    });
+}
+
+
+
+// ═══════════════════════════════════════════════
+//  CHARACTER CREATOR DATA & UI
+// ═══════════════════════════════════════════════
+const SKIN_COLORS=['#fde0c4','#f5cba7','#e8a87c','#d48b5a','#b06040','#7a3e20','#5c2810','#3a1808'];
+const HAIR_COLORS=['#0a0502','#2a1206','#4a2010','#7c3a1a','#b06030','#c8a050','#e8d080','#f0f0f0','#c0c0c0','#606060','#b03020','#ff4080','#4060d0','#20a060'];
+const EYE_COLORS=['#1a3a8c','#204a20','#7c3a10','#106868','#5c5c6c','#802860','#c04010','#18284c'];
+const OUTFIT_COLS=['#0f0f14','#1a1a2e','#2a1a3e','#1a2a3e','#1e3a1e','#3a1a1a','#2a3a10','#8a6a10','#6a3020','#3a2a4e','#d0d0d0','#e8e8e0'];
+const HAIR_STYLES=['Buzz','Crew Cut','Side Part','Slick Back','Undercut','Long Wavy','Mohawk','Afro','Bald','Quiff'];
+const FACE_SHAPES=['Regular','Carré','Rond','Ovale','Diamant','Cœur'];
+const BODY_TYPES=['Slim','Regular','Athletic','Stocky','Heavy'];
+const FACIAL_HAIR=["Clean","5 O'Clock","Goatee","Circle Beard","Full Beard","Handlebar","None"];
+const TOPS=['T-Shirt','Hoodie','Dress Shirt','Bomber','Tank Top','Suit Jacket','Turtleneck','Flannel'];
+const PANTS=['Slim Jeans','Chinos','Shorts','Track Pants','Cargo','Dress Pants','Joggers'];
+const SHOES=['Sneakers','Chelsea Boots','Oxford','Sandals','High-Tops','Slip-Ons','Timbs'];
+const ACC_GLASSES=['None','Aviators','Round','Wayfarer','Sports','Visor'];
+const ACC_HATS=['None','Snapback','Beanie','Fedora','Cap','Beret'];
+const ACC_JEWELRY=['None','Chain','Pendant','Dog Tags','Pearl','Choker'];
+const S={step:0,gender:'male',name:'NOUVEAU_PERSO',nationality:'canadian',skin:1,faceShape:0,eyeColor:0,noseBridge:50,noseSize:50,faceWidth:50,cheekH:50,jawWidth:50,eyeSize:50,eyeSpacing:50,lipSize:50,hairStyle:1,hairColor:0,facialHair:0,bodyType:1,height:50,muscular:45,fatness:30,topStyle:0,topColor:1,pantsStyle:0,pantsColor:1,shoesStyle:0,shoesColor:0,glassesStyle:0,hatStyle:0,jewelryStyle:0,glassesColor:0,hatColor:1,activeAura:null};
+const STEP_COUNT=8;
+const STEP_PANELS=['identity','face','hair','body','outfit','accessories','aura','animations'];
+
+// LOG
+function addLog(msg,cls=''){
+  const body=document.getElementById('log-body');if(!body)return;
+  const line=document.createElement('div');line.className='cc-log-line';
+  line.innerHTML=`<span class="lp">▸</span><span class="lt ${cls}">${msg}</span>`;
+  body.appendChild(line);body.scrollTop=body.scrollHeight;
+  while(body.children.length>28)body.removeChild(body.firstChild);
+}
+
+// SLIDERS
+function setSlidePct(sl){const p=((sl.value-sl.min)/(sl.max-sl.min))*100;sl.style.setProperty('--pct',p+'%');}
+function mkSlider(id,key,cb){
+  const sl=document.getElementById('sl-'+id),vl=document.getElementById('sl-'+id+'-v');
+  if(!sl)return;sl.value=S[key];setSlidePct(sl);if(vl)vl.textContent=S[key];
+  sl.addEventListener('input',e=>{S[key]=parseInt(e.target.value);if(vl)vl.textContent=S[key];setSlidePct(sl);cb();});
+}
+// SWATCHES
+function mkSwatches(sel,colors,key,cb){
+  const c=document.querySelector(sel);if(!c)return;c.innerHTML='';
+  colors.forEach((col,i)=>{const sw=document.createElement('div');sw.className='cc-swatch'+(i===S[key]?' active':'');sw.style.background=col;sw.title=col;sw.addEventListener('click',()=>{c.querySelectorAll('.cc-swatch').forEach(s=>s.classList.remove('active'));sw.classList.add('active');S[key]=i;cb();updateSummary();});c.appendChild(sw);});
+}
+// GRID
+function mkGrid(sel,items,key,icons,cb){
+  const c=document.querySelector(sel);if(!c)return;c.innerHTML='';
+  items.forEach((label,i)=>{const el=document.createElement('div');el.className='cc-opt'+(i===S[key]?' active':'');el.innerHTML=icons?`<span class="oi">${icons[i]}</span>${label}`:label;el.addEventListener('click',()=>{c.querySelectorAll('.cc-opt').forEach(o=>o.classList.remove('active'));el.classList.add('active');S[key]=i;cb();updateSummary();});c.appendChild(el);});
+}
+// ACC GRID
+function mkAccGrid(sel,items,icons,key,cb){
+  const c=document.querySelector(sel);if(!c)return;c.innerHTML='';
+  items.forEach((label,i)=>{const el=document.createElement('div');el.className='acc-card'+(i===S[key]?' active':'');el.innerHTML=`<span class="ai">${icons[i]}</span><span class="an">${label}</span>`;el.addEventListener('click',()=>{c.querySelectorAll('.acc-card').forEach(o=>o.classList.remove('active'));el.classList.add('active');S[key]=i;cb();updateSummary();});c.appendChild(el);});
+}
+
+// AURA BUTTONS
+const AURA_ALL={
+  divine:{name:'Bouclier Divin',lore:'"La Lumière Sacrée te protège de tout mal."',icon:'✦',bg:'linear-gradient(135deg,#332a00,#665500)',c:'#ffe066',cr:255,cg:224,cb:102,lc:0xffe066},
+  void:{name:'Vide Éternel',lore:'"L\'obscurité entre les étoiles répond à ton appel."',icon:'◈',bg:'linear-gradient(135deg,#1a0033,#3a0066)',c:'#b06fff',cr:176,cg:111,cb:255,lc:0xaa44ff},
+  blood:{name:'Rage de Sang',lore:'"Chaque blessure renforce ta fureur."',icon:'♦',bg:'linear-gradient(135deg,#330000,#660000)',c:'#ff3333',cr:255,cg:51,cb:51,lc:0xff2200},
+  frost:{name:'Nova de Givre',lore:'"Le souffle de Northrend fige tout sur son passage."',icon:'❄',bg:'linear-gradient(135deg,#001a2e,#003355)',c:'#00d4ff',cr:0,cg:212,cb:255,lc:0x00ccff},
+  nature:{name:'Âme Ancienne',lore:'"Tu deviens une constellation vivante."',icon:'✿',bg:'linear-gradient(135deg,#001a0a,#003318)',c:'#44ff88',cr:68,cg:255,cb:136,lc:0x22ff66},
+  chaos:{name:'Chaos Primordial',lore:'"La réalité tremble devant ton pouvoir instable."',icon:'☯',bg:'linear-gradient(135deg,#1a0a00,#331500)',c:'#ff9900',cr:255,cg:153,cb:0,lc:0xff8800},
+  lichking:{name:'Roi Liche',lore:'"Toi qui traques la mort — prends garde qu\'elle ne te traque." — Arthas',icon:'☠',bg:'linear-gradient(135deg,#000a1a,#001a33)',c:'#88ccff',cr:136,cg:204,cb:255,lc:0x44aaff},
+  demonhunter:{name:'Chasseur Démon',lore:'"Nous sommes ce qui reste quand tout a brûlé." — Illidan',icon:'⚡',bg:'linear-gradient(135deg,#1a001a,#330033)',c:'#aa00ff',cr:170,cg:0,cb:255,lc:0x8800ff},
+  bloodmage:{name:'Mage du Sang',lore:'"Le sang est le prix du pouvoir." — Kael\'thas',icon:'🩸',bg:'linear-gradient(135deg,#200000,#3a0000)',c:'#ff4400',cr:255,cg:68,cb:0,lc:0xff2200},
+  archmage:{name:'Archimage',lore:'"La magie est la langue de l\'univers." — Jaina',icon:'✧',bg:'linear-gradient(135deg,#00001a,#000033)',c:'#00aaff',cr:0,cg:170,cb:255,lc:0x0088ff},
+  warlord:{name:'Seigneur Guerre',lore:'"La guerre forge les légendes." — Grommash',icon:'⚔',bg:'linear-gradient(135deg,#1a0a00,#2a1000)',c:'#ffaa00',cr:255,cg:170,cb:0,lc:0xff6600},
+  timegod:{name:'Dieu du Temps',lore:'"Le passé, le présent, le futur — une seule illusion." — Nozdormu',icon:'∞',bg:'linear-gradient(135deg,#0a0a1a,#111122)',c:'#ffffff',cr:255,cg:255,cb:255,lc:0xaaaaff},
+};
+const CLASSIC_IDS=['divine','void','blood','frost','nature','chaos'];
+const CHAR_IDS=['lichking','demonhunter','bloodmage','archmage','warlord','timegod'];
+
+// ── BUFFS REGISTRY — links AURA_ALL ids to THREE.Color build configs ──
+const BUFFS = {
+  divine:{ color:new THREE.Color(1.0,0.88,0.2), color2:new THREE.Color(1.0,1.0,0.8), lightColor:0xffe066, build:buildDivineShield },
+  void:{ color:new THREE.Color(0.55,0.22,1.0), color2:new THREE.Color(0.8,0.4,1.0), lightColor:0xaa44ff, build:buildVoidAura },
+  blood:{ color:new THREE.Color(1.0,0.08,0.08), color2:new THREE.Color(1.0,0.4,0.0), lightColor:0xff2200, build:buildBloodAura },
+  frost:{ color:new THREE.Color(0.0,0.82,1.0), color2:new THREE.Color(0.6,0.96,1.0), lightColor:0x00ccff, build:buildFrostAura },
+  nature:{ color:new THREE.Color(0.1,1.0,0.4), color2:new THREE.Color(0.6,1.0,0.2), lightColor:0x22ff66, build:buildNatureAura },
+  chaos:{ color:new THREE.Color(1.0,0.5,0.0), color2:new THREE.Color(1.0,0.9,0.0), lightColor:0xff8800, build:buildChaosAura },
+  lichking:{ color:new THREE.Color(0.4,0.75,1.0), color2:new THREE.Color(0.8,0.95,1.0), color3:new THREE.Color(0.0,0.3,0.6), lightColor:0x44aaff, build:buildLichKing },
+  demonhunter:{ color:new THREE.Color(0.6,0.0,1.0), color2:new THREE.Color(1.0,0.3,0.0), color3:new THREE.Color(0.0,0.8,0.3), lightColor:0x8800ff, build:buildDemonHunter },
+  bloodmage:{ color:new THREE.Color(1.0,0.15,0.0), color2:new THREE.Color(1.0,0.7,0.0), color3:new THREE.Color(0.8,0.0,0.2), lightColor:0xff2200, build:buildBloodMage },
+  archmage:{ color:new THREE.Color(0.0,0.65,1.0), color2:new THREE.Color(0.6,0.0,1.0), color3:new THREE.Color(1.0,1.0,1.0), lightColor:0x0088ff, build:buildArchmage },
+  warlord:{ color:new THREE.Color(1.0,0.55,0.0), color2:new THREE.Color(1.0,0.2,0.0), color3:new THREE.Color(0.9,0.8,0.1), lightColor:0xff6600, build:buildWarlord },
+  timegod:{ color:new THREE.Color(0.9,0.9,1.0), color2:new THREE.Color(0.4,0.8,1.0), color3:new THREE.Color(0.8,0.5,1.0), lightColor:0xaaaaff, build:buildTimeGod },
+};
+
+function buildAuraButtons(){
+  function mkGrid2(containerId, ids){
+    const cont=document.getElementById(containerId);if(!cont)return;cont.innerHTML='';
+    ids.forEach(id=>{
+      const a=AURA_ALL[id];
+      const btn=document.createElement('div');
+      btn.className='aura-btn';btn.dataset.buff=id;
+      btn.style.setProperty('--aura-c',a.c);
+      btn.style.setProperty('--aura-cr',a.cr);
+      btn.style.setProperty('--aura-cg',a.cg);
+      btn.style.setProperty('--aura-cb',a.cb);
+      btn.innerHTML=`<div class="aura-icon" style="background:${a.bg}">${a.icon}</div><div class="aura-name">${a.name}</div>`;
+      btn.addEventListener('click',()=>selectAura(id));
+      cont.appendChild(btn);
+    });
+  }
+  mkGrid2('aura-classic-grid',CLASSIC_IDS);
+  mkGrid2('aura-char-grid',CHAR_IDS);
+}
+
+function selectAura(id){
+  // Update all buttons
+  document.querySelectorAll('.aura-btn').forEach(b=>{
+    b.classList.toggle('active',b.dataset.buff===id);
+  });
+  const a=AURA_ALL[id];
+  S.activeAura=id;
+  // Update aura panel labels
+  const lbl=document.getElementById('aura-active-label');
+  if(lbl){lbl.textContent=a.name;lbl.className='aura-active-label lit';lbl.style.setProperty('--aura-c',a.c);}
+  const lore=document.getElementById('aura-lore-text');
+  if(lore){lore.textContent=a.lore;lore.style.color='rgba(232,237,245,0.7)';lore.style.textAlign='left';lore.style.fontSize='9.5px';}
+  // Update viewport label
+  const vl=document.getElementById('vp-aura-label');
+  if(vl){vl.textContent='✦ '+a.name;vl.style.color=a.c+'aa';}
+  // Update trait
+  const tr=document.getElementById('trait-aura');
+  if(tr){tr.textContent=a.name;tr.style.color=a.c;}
+  // Activate 3D aura
+  clearAuras();ptObjects=[];particles=[];activeBuff=id;
+  if(buffLight){buffLight.color.set(a.lc);buffLight.intensity=3.8;}
+  if(buffLight2){buffLight2.intensity=0;}
+  if(runeRingMat){runeRingMat.emissive.set(a.lc);runeRingMat.emissiveIntensity=2.2;runeRingMat.color.set(a.lc);}
+  BUFFS[id].build(BUFFS[id]);
+  initParticlePool();
+  addLog(`✦ Aura équipée : ${a.name}`,'success');
+}
+
+// STEP NAVIGATION
+function setStep(s){
+  S.step=Math.max(0,Math.min(STEP_COUNT-1,s));
+  document.querySelectorAll('.cc-tab-btn').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.cc-panel').forEach(p=>p.classList.remove('active'));
+  const tab=document.querySelector(`[data-panel="${STEP_PANELS[S.step]}"]`);
+  if(tab)tab.classList.add('active');
+  const panel=document.getElementById('panel-'+STEP_PANELS[S.step]);
+  if(panel)panel.classList.add('active');
+  document.querySelectorAll('.prog-dot').forEach((d,i)=>{d.classList.toggle('active',i===S.step);d.classList.toggle('done',i<S.step);});
+  document.querySelectorAll('.cc-step').forEach((el,i)=>{el.classList.toggle('active',i===S.step);el.classList.toggle('done',i<S.step);});
+  document.querySelector('.cc-btn-confirm').classList.toggle('visible',S.step===STEP_COUNT-1);
+}
+document.querySelector('.cc-btn-prev').addEventListener('click',()=>setStep(S.step-1));
+document.querySelector('.cc-btn-next').addEventListener('click',()=>setStep(S.step+1));
+document.querySelectorAll('.cc-step').forEach((el,i)=>el.addEventListener('click',()=>setStep(i)));
+document.querySelectorAll('.cc-tab-btn').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    document.querySelectorAll('.cc-tab-btn').forEach(b=>b.classList.remove('active'));
+    document.querySelectorAll('.cc-panel').forEach(p=>p.classList.remove('active'));
+    btn.classList.add('active');
+    const panel=document.getElementById('panel-'+btn.dataset.panel);
+    if(panel)panel.classList.add('active');
+  });
+});
+
+// SUMMARY
+function updateSummary(){
+  const nm=document.querySelector('.cc-name-input')?.value?.toUpperCase()||'NOUVEAU_PERSO';
+  S.name=nm;
+  document.getElementById('rp-name').textContent=nm;
+  document.getElementById('vp-char-name').textContent=nm;
+  document.getElementById('rp-id').textContent=`ID: EW-${String(Date.now()).slice(-6)} • ${S.nationality.toUpperCase()}`;
+  [['trait-gender',S.gender==='male'?'♂ Masculin':'♀ Féminin'],
+   ['trait-face',FACE_SHAPES[S.faceShape]],
+   ['trait-body',BODY_TYPES[S.bodyType]],
+   ['trait-top',TOPS[S.topStyle]],
+   ['trait-pants',PANTS[S.pantsStyle]],
+   ['trait-acc',[S.glassesStyle>0?ACC_GLASSES[S.glassesStyle]:null,S.hatStyle>0?ACC_HATS[S.hatStyle]:null,S.jewelryStyle>0?ACC_JEWELRY[S.jewelryStyle]:null].filter(Boolean).join(', ')||'Aucun']
+  ].forEach(([id,val])=>{const el=document.getElementById(id);if(el)el.textContent=val;});
+  [['stat-height','height','cyan'],['stat-muscle','muscular','purple'],['stat-weight','fatness','gold']].forEach(([id,key,cls])=>{
+    const f=document.getElementById(id+'-fill'),t=document.getElementById(id+'-txt');
+    if(f){f.style.width=S[key]+'%';f.className='stat-fill '+cls;}if(t)t.textContent=S[key]+'%';
+  });
+}
+
+// INIT ALL UI
+function initUI(){
+  const HAIR_ICONS=['✂️','✂️','🔀','↩️','⬆️','🌊','⚡','🔵','🪩','☝️'];
+  const FACE_ICONS=['😐','🟥','⭕','🥚','💎','❤️'];
+  const BODY_ICONS=['🪄','👤','💪','🏋️','🐘'];
+  const FH_ICONS=['😊','🧔','🧔','⭕','🧔','〰️','🔘'];
+  const TOP_ICONS=['👕','🧥','👔','💥','🎽','🤵','🐢','🧶'];
+  const PANT_ICONS=['👖','👖','🩳','🩱','🎒','👔','🩳'];
+  const SHOE_ICONS=['👟','👢','👞','🩴','👟','🥿','🥾'];
+  const GL_ICONS=['🚫','🕶️','⭕','🔲','🏃','👓'];
+  const HAT_ICONS=['🚫','🧢','🎿','🎩','🧢','🎨'];
+  const JW_ICONS=['🚫','⛓️','📿','🪖','📿','🖤'];
+
+  mkSwatches('#sw-skin',SKIN_COLORS,'skin',()=>{});
+  mkSwatches('#sw-eye',EYE_COLORS,'eyeColor',()=>{});
+  mkSwatches('#sw-hair-color',HAIR_COLORS,'hairColor',()=>{});
+  mkSwatches('#sw-top-color',OUTFIT_COLS,'topColor',()=>{});
+  mkSwatches('#sw-pants-color',OUTFIT_COLS,'pantsColor',()=>{});
+  mkSwatches('#sw-shoes-color',OUTFIT_COLS,'shoesColor',()=>{});
+  mkSwatches('#sw-glasses-color',OUTFIT_COLS,'glassesColor',()=>{});
+  mkSwatches('#sw-hat-color',OUTFIT_COLS,'hatColor',()=>{});
+  mkGrid('#grid-face-shape',FACE_SHAPES,'faceShape',FACE_ICONS,()=>{addLog(`Visage → ${FACE_SHAPES[S.faceShape]}`);});
+  mkGrid('#grid-hair-style',HAIR_STYLES,'hairStyle',HAIR_ICONS,()=>{addLog(`Coiffure → ${HAIR_STYLES[S.hairStyle]}`);});
+  mkGrid('#grid-facial',FACIAL_HAIR,'facialHair',FH_ICONS,()=>{addLog(`Pilosité → ${FACIAL_HAIR[S.facialHair]}`);});
+  mkGrid('#grid-body-type',BODY_TYPES,'bodyType',BODY_ICONS,()=>{addLog(`Morphologie → ${BODY_TYPES[S.bodyType]}`,'success');});
+  mkGrid('#grid-top-style',TOPS,'topStyle',TOP_ICONS,()=>{addLog(`Haut → ${TOPS[S.topStyle]}`);});
+  mkGrid('#grid-pants-style',PANTS,'pantsStyle',PANT_ICONS,()=>{addLog(`Bas → ${PANTS[S.pantsStyle]}`);});
+  mkGrid('#grid-shoes-style',SHOES,'shoesStyle',SHOE_ICONS,()=>{addLog(`Shoes → ${SHOES[S.shoesStyle]}`);});
+  mkAccGrid('#grid-glasses',ACC_GLASSES,GL_ICONS,'glassesStyle',()=>{addLog(`Lunettes → ${ACC_GLASSES[S.glassesStyle]}`);});
+  mkAccGrid('#grid-hat',ACC_HATS,HAT_ICONS,'hatStyle',()=>{addLog(`Chapeau → ${ACC_HATS[S.hatStyle]}`);});
+  mkAccGrid('#grid-jewelry',ACC_JEWELRY,JW_ICONS,'jewelryStyle',()=>{addLog(`Bijoux → ${ACC_JEWELRY[S.jewelryStyle]}`);});
+
+  const faceSliders=[['face-width','faceWidth'],['cheek-h','cheekH'],['jaw-w','jawWidth'],['nose-size','noseSize'],['nose-bridge','noseBridge'],['eye-size','eyeSize'],['eye-space','eyeSpacing'],['lip','lipSize']];
+  faceSliders.forEach(([id,key])=>mkSlider(id,key,()=>{}));
+  mkSlider('height','height',()=>updateSummary());
+  mkSlider('muscular','muscular',()=>{});
+  mkSlider('fatness','fatness',()=>{});
+
+  document.querySelectorAll('.gender-btn').forEach(btn=>{
+    btn.addEventListener('click',()=>{document.querySelectorAll('.gender-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');S.gender=btn.dataset.gender;addLog(`Genre → ${S.gender==='male'?'Masculin ♂':'Féminin ♀'}`);updateSummary();});
+  });
+  document.querySelector('.cc-name-input').addEventListener('input',()=>updateSummary());
+  document.querySelector('#sel-nationality')?.addEventListener('change',e=>{S.nationality=e.target.value;addLog(`Nationalité → ${e.target.options[e.target.selectedIndex].text}`);updateSummary();});
+
+  buildAuraButtons();
+
+  // Random
+  document.getElementById('btn-random')?.addEventListener('click',()=>{
+    const rnd=arr=>Math.floor(Math.random()*arr.length);
+    S.skin=rnd(SKIN_COLORS);S.hairStyle=rnd(HAIR_STYLES);S.hairColor=rnd(HAIR_COLORS);S.eyeColor=rnd(EYE_COLORS);S.faceShape=rnd(FACE_SHAPES);S.bodyType=rnd(BODY_TYPES);S.facialHair=rnd(FACIAL_HAIR);S.topStyle=rnd(TOPS);S.topColor=rnd(OUTFIT_COLS);S.pantsStyle=rnd(PANTS);S.pantsColor=rnd(OUTFIT_COLS);S.shoesStyle=rnd(SHOES);S.shoesColor=rnd(OUTFIT_COLS);
+    S.glassesStyle=Math.random()>0.55?rnd(ACC_GLASSES):0;S.hatStyle=Math.random()>0.6?rnd(ACC_HATS):0;S.jewelryStyle=Math.random()>0.5?rnd(ACC_JEWELRY):0;
+    const auraIds=Object.keys(AURA_ALL);if(Math.random()>0.3)selectAura(auraIds[rnd(auraIds)]);
+    mkSwatches('#sw-skin',SKIN_COLORS,'skin',()=>{});
+    mkGrid('#grid-face-shape',FACE_SHAPES,'faceShape',FACE_ICONS,()=>{});
+    addLog('🎲 Personnage aléatoire généré','success');updateSummary();
+  });
+  document.getElementById('btn-reset')?.addEventListener('click',()=>{
+    S.activeAura=null;activeBuff=null;clearAuras();ptObjects=[];particles=[];
+    if(buffLight)buffLight.intensity=0;if(buffLight2)buffLight2.intensity=0;
+    document.querySelectorAll('.aura-btn').forEach(b=>b.classList.remove('active'));
+    const lbl=document.getElementById('aura-active-label');if(lbl){lbl.textContent='Aucune aura active';lbl.className='aura-active-label';}
+    const vl=document.getElementById('vp-aura-label');if(vl)vl.textContent='';
+    const tr=document.getElementById('trait-aura');if(tr){tr.textContent='Aucune';tr.style.color='var(--purple)';}
+    addLog('↺ Réinitialisé');updateSummary();
+  });
+
+  // Confirm modal
+  const modal=document.getElementById('confirm-modal');
+  document.querySelector('.cc-btn-confirm')?.addEventListener('click',()=>{
+    document.getElementById('modal-cname').textContent=S.name;
+    document.getElementById('modal-gender').textContent=S.gender==='male'?'♂ Masculin':'♀ Féminin';
+    document.getElementById('modal-aura').textContent=S.activeAura?AURA_ALL[S.activeAura].name:'—';
+    document.getElementById('modal-body').textContent=BODY_TYPES[S.bodyType];
+    document.getElementById('modal-hair').textContent=HAIR_STYLES[S.hairStyle];
+    document.getElementById('modal-top').textContent=TOPS[S.topStyle];
+    document.getElementById('modal-id').textContent=`EW-${String(Date.now()).slice(-6)}`;
+    modal.classList.add('visible');
+  });
+  document.querySelector('.cc-modal-cancel')?.addEventListener('click',()=>modal.classList.remove('visible'));
+  document.querySelector('.cc-modal-spawn')?.addEventListener('click',()=>{
+    modal.classList.remove('visible');
+    const spawn=document.getElementById('spawn-anim');spawn.classList.add('active');
+    addLog(`✅ "${S.name}" enregistré dans EtherPrism!`,'success');
+    setTimeout(()=>spawn.classList.remove('active'),3200);
+  });
+  document.getElementById('btn-export-json')?.addEventListener('click',()=>{
+    const blob=new Blob([JSON.stringify({name:S.name,aura:S.activeAura,role:currentRole,timestamp:new Date().toISOString(),...S},null,2)],{type:'application/json'});
+    const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`ew_${S.name}_${Date.now()}.json`;a.click();
+    addLog('💾 Export JSON téléchargé','success');
+  });
+
+  // Keyboard
+  document.addEventListener('keydown',e=>{
+    if(e.target.matches('input,select,textarea'))return;
+    if(e.key==='ArrowRight')setStep(S.step+1);
+    if(e.key==='ArrowLeft')setStep(S.step-1);
+    if(e.key==='Escape')modal.classList.remove('visible');
+    if(e.key==='r'||e.key==='R')document.getElementById('btn-random')?.click();
+    if(e.key==='a'||e.key==='A'){setStep(6);document.querySelector('[data-panel="aura"]')?.click();}
+  });
+
+  setStep(0);updateSummary();
+  addLog('TroxT Neural Core v4.0 — Online','');
+  addLog('Scène 3D 4K initialisée','success');
+  addLog(`Accès : ${currentRole?.toUpperCase()||'—'}  ✦ Admin Edition`,'success');
+  addLog('Aura System : 12 auras amplifiées actives','');
+}
+
+// ANIMATION LOOP
+function animate(ts){
+  requestAnimationFrame(animate);
+  const dt = Math.min(0.05, time>0 ? (ts*0.001-time) : 0.016);
+  time=ts*0.001;
+  if(!charGroup)return;
+
+  // ── Player rig animation: idle breathing + auto-walk-cycle demo loop ──
+  const anim = playerAnim;
+  anim.breath += dt*1.6;
+  const breathOff = Math.sin(anim.breath)*0.007;
+
+  // Demo auto-walk: cycles between idle and walking every few seconds so the
+  // showcased aura is seen on both stances, mirroring PlayerCharacter.tsx gait.
+  const walkCycle = (time % 9);
+  anim.walking = walkCycle > 5.5;
+  const tgtSpd = anim.walking ? 0.55 : 0;
+  anim.spd = THREE.MathUtils.lerp(anim.spd, tgtSpd, 1-Math.exp(-dt*12));
+
+  if (anim.walking) {
+    anim.t += dt*9.0;
+    const sw = Math.sin(anim.t)*0.48*anim.spd;
+    const co = Math.cos(anim.t);
+    if(PR.legL) PR.legL.rotation.x = sw;
+    if(PR.legR) PR.legR.rotation.x = -sw;
+    if(PR.lLowL) PR.lLowL.rotation.x = Math.max(0,-co)*0.45*anim.spd;
+    if(PR.lLowR) PR.lLowR.rotation.x = Math.max(0,co)*0.45*anim.spd;
+    if(PR.armL) PR.armL.rotation.x = -sw*0.8;
+    if(PR.armR) PR.armR.rotation.x = sw*0.8;
+    if(PR.foreL) PR.foreL.rotation.x = -0.12 - Math.max(0,co)*0.28*anim.spd;
+    if(PR.foreR) PR.foreR.rotation.x = -0.12 - Math.max(0,-co)*0.28*anim.spd;
+  } else {
+    const decay = Math.exp(-dt*6);
+    if(PR.legL) PR.legL.rotation.x *= decay;
+    if(PR.legR) PR.legR.rotation.x *= decay;
+    if(PR.armL) PR.armL.rotation.x *= decay;
+    if(PR.armR) PR.armR.rotation.x *= decay;
+    if(PR.lLowL) PR.lLowL.rotation.x *= decay;
+    if(PR.lLowR) PR.lLowR.rotation.x *= decay;
+    if(PR.foreL) PR.foreL.rotation.x = THREE.MathUtils.lerp(PR.foreL.rotation.x,-0.07,1-decay);
+    if(PR.foreR) PR.foreR.rotation.x = THREE.MathUtils.lerp(PR.foreR.rotation.x,-0.07,1-decay);
+  }
+  if(PR.body) PR.body.position.y = breathOff;
+
+  charGroup.position.y=0.07+Math.sin(time*1.1)*0.015;
+
+  // Aura objects animation (full system)
+  auraObjects.forEach(obj=>{
+    const d=obj.userData;if(!d||!d.type)return;
+    if(d.type==='divineOuter'){obj.rotation.y=time*0.2;obj.rotation.x=Math.sin(time*0.3)*0.1;}
+    if(d.type==='divineHex'){obj.rotation.y=-time*0.3;obj.rotation.z=time*0.15;}
+    if(d.type==='divineCore'){obj.scale.setScalar(1+Math.sin(time*2)*0.04);}
+    if(d.type==='divineRing'){obj.position.y=d.baseY+Math.sin(time*1.5+d.i)*0.08;obj.rotation.y=time*(0.4+d.i*0.2);}
+    if(d.type==='vRing'){obj.rotation.y=time*0.6;}
+    if(d.type==='vRing2'){obj.rotation.y=-time*0.5;obj.rotation.x=time*0.3;}
+    if(d.type==='voidSphere'){obj.rotation.y=time*0.1;obj.scale.setScalar(1+Math.sin(time*0.8)*0.03);}
+    if(d.type==='voidTube'){obj.rotation.y=time*(0.15+d.index*0.03);}
+    if(d.type==='voidOrb'){const a=d.baseAngle+time*(0.5+d.i*0.07);const r=1.0+Math.sin(time*0.7+d.i)*0.25;obj.position.set(Math.cos(a)*r,1.5+Math.sin(a*0.7+d.i)*0.6,Math.sin(a)*r);obj.scale.setScalar(0.8+Math.sin(time*2+d.i)*0.3);}
+    if(d.type==='voidPortal'){obj.rotation.z=-time*0.4;}
+    if(d.type==='bloodMist'){obj.rotation.y=time*(0.12+d.i*0.05);obj.scale.setScalar(1+Math.sin(time*1.5+d.i)*0.05);}
+    if(d.type==='bloodRing'){obj.rotation.y=time*(0.3+d.i*0.1)+d.baseAngle;}
+    if(d.type==='bloodSpike'){obj.position.y=d.baseY+Math.sin(time*2+d.angle*3)*0.12;obj.scale.setScalar(0.85+Math.sin(time*2+d.angle)*0.2);}
+    if(d.type==='frostShell'){obj.rotation.y=time*(d.d===0?0.15:-0.1);obj.rotation.x=time*(d.d===0?0.08:0.12);}
+    if(d.type==='frostShard'){const a=d.angle+time*(0.2+d.i*0.015);obj.position.set(Math.cos(a)*d.r,d.baseH+Math.sin(time*1.2+d.i)*0.15,Math.sin(a)*d.r);}
+    if(d.type==='frostRing'){obj.rotation.y=time*(0.2+d.i*0.05);obj.position.y=d.baseY+Math.sin(time+d.i)*0.05;}
+    if(d.type==='frostHex'){obj.rotation.z=time*(0.1+d.i*0.08);}
+    if(d.type==='natureStar'){obj.scale.setScalar(1+Math.sin(time*1.5)*0.08);obj.rotation.y=time*0.3;}
+    if(d.type==='natureLeaf'){const a=d.angle+time*(0.15+d.ring*0.06+d.i*0.003);obj.position.set(Math.cos(a)*d.r,d.baseH+Math.sin(time+d.i)*0.2,Math.sin(a)*d.r);}
+    if(d.type==='natureStar2'){const a=d.angle+time*(0.3+d.i*0.04);obj.position.set(Math.cos(a)*1.2,1.5+Math.sin(time*0.8+d.i)*0.7,Math.sin(a)*1.2);obj.scale.setScalar(0.7+Math.sin(time*2+d.i)*0.5);}
+    if(d.type==='natureVine'){obj.rotation.y=time*0.2*(d.v%2===0?1:-1);}
+    if(d.type==='natureCircle'){obj.rotation.z=time*(0.12+d.i*0.06);}
+    if(d.type==='chaosShell'){obj.rotation.y+=d.rotSpeed*0.016;obj.rotation.x+=d.rotSpeed*0.009;obj.scale.setScalar(1+Math.sin(time*3+d.i)*0.05);}
+    if(d.type==='chaosArc'){obj.rotation.x+=d.rotX;obj.rotation.y+=d.rotY;}
+    if(d.type==='chaosShard'){const a=d.angle+time*0.4;obj.position.set(Math.cos(a)*d.r,d.h+Math.sin(time*2+d.angle)*0.3,Math.sin(a)*d.r);obj.rotation.y+=d.rotSpeed;}
+    if(d.type==='lichSphere'){obj.rotation.y=time*(0.05+d.i*0.04)*(d.i%2===0?1:-1);}
+    if(d.type==='lichRune'){obj.rotation.y=-time*0.18;obj.rotation.x=time*0.1;}
+    if(d.type==='lichSword'){obj.position.y=d.baseY+Math.sin(time*0.7)*0.18;obj.rotation.z=-0.2+Math.sin(time*0.5)*0.08;}
+    if(d.type==='lichSoul'){const a=d.angle+time*d.speed;const r=d.r+Math.sin(time*1.2+d.i)*0.18;obj.position.set(Math.cos(a)*r,d.baseH+Math.sin(time*0.8+d.i)*0.22,Math.sin(a)*r);obj.scale.setScalar(0.6+Math.sin(time*2+d.i)*0.5);}
+    if(d.type==='lichCrown'){obj.rotation.y=time*(0.25+d.i*0.12);obj.position.y=d.baseY+Math.sin(time+d.i)*0.06;}
+    if(d.type==='lichPortal'){obj.rotation.z=-time*0.22;}
+    if(d.type==='lichHalo'){obj.position.y=2.9+Math.sin(time*1.5)*0.07;obj.rotation.z=time*0.3;}
+    if(d.type==='dhShadow'){obj.scale.setScalar(1+Math.sin(time*1.8)*0.07);}
+    if(d.type==='dhEye'){obj.scale.setScalar(0.8+Math.sin(time*3+d.i*1.5)*0.4);}
+    if(d.type==='dhGlaive'){obj.rotation.y=time*(0.8+d.side*0.1);obj.position.y=d.baseY+Math.sin(time*0.6+d.side)*0.2;}
+    if(d.type==='bmPhoenix'){obj.rotation.y=time*(0.25+d.idx*0.1);}
+    if(d.type==='bmPlasma'){obj.scale.setScalar(1+Math.sin(time*2.5)*0.1);obj.rotation.y=time*0.4;}
+    if(d.type==='bmCrystal'){const a=d.angle+time*(0.3+d.i*0.02);obj.position.set(Math.cos(a)*d.r,d.baseH+Math.sin(time*1.5+d.i)*0.2,Math.sin(a)*d.r);obj.rotation.x+=d.rotSpeed;obj.rotation.y+=d.rotSpeed*1.3;}
+    if(d.type==='bmFlame'){obj.position.y=d.baseH+Math.abs(Math.sin(time*3+d.angle*4))*0.3;obj.scale.y=0.8+Math.sin(time*4+d.angle)*0.4;}
+    if(d.type==='bmSigil'){obj.rotation.z=time*0.35;}
+    if(d.type==='amNeb'){obj.rotation.y=time*0.04;}
+    if(d.type==='amDisc'){obj.rotation.y+=d.speed*0.016;obj.position.y=d.baseY+Math.sin(time*0.5+d.i)*0.08;}
+    if(d.type==='amCube'){obj.rotation.y+=0.018;obj.rotation.x+=0.011;}
+    if(d.type==='amStar'){const a=d.angle+time*(0.22+d.i*0.04);obj.position.set(Math.cos(a)*d.r,1.4+Math.sin(time*0.4+d.i)*0.5,Math.sin(a)*d.r);obj.rotation.y+=0.03;}
+    if(d.type==='amStaff'){obj.position.y=d.baseY+Math.sin(time*0.7)*0.2;obj.rotation.z=0.25+Math.sin(time*0.4)*0.08;}
+    if(d.type==='amArc'){obj.rotation.x+=d.rx;obj.rotation.y+=d.ry;}
+    if(d.type==='amHex'){obj.rotation.z=time*(0.12+d.i*0.08)*(d.i%2===0?1:-1);}
+    if(d.type==='warlordShell'){obj.rotation.y=time*(0.08+d.i*0.04)*(d.i%2===0?1:-1);}
+    if(d.type==='warlordAxe'){obj.position.y=d.baseY+Math.sin(time*0.65)*0.22;obj.rotation.y=Math.sin(time*0.45)*0.25;}
+    if(d.type==='warlordChain'){obj.rotation.y=time*(0.2+d.ch*0.05);}
+    if(d.type==='warlordFireRing'){obj.rotation.y=time*0.55;obj.position.y=d.baseY+Math.sin(time*1.2)*0.1;}
+    if(d.type==='warlordShard'){const a=d.angle+time*0.35;obj.position.set(Math.cos(a)*d.r,d.h+Math.sin(time*1.8+d.angle)*0.2,Math.sin(a)*d.r);obj.rotation.y+=d.rotSpeed;}
+    if(d.type==='warlordCircle'){obj.rotation.z=time*0.28;}
+    if(d.type==='tgShell'){obj.rotation.y+=d.rotY;obj.rotation.x+=d.rotX;}
+    if(d.type==='tgGrid'){obj.rotation.y+=d.speed*0.012;obj.rotation.x+=d.speed*0.006;}
+    if(d.type==='tgClock'){obj.rotation.y+=d.speed*0.015;}
+    if(d.type==='tgHourglass'){obj.rotation.y+=0.025;obj.scale.setScalar(1+Math.sin(time*0.8)*0.06);}
+    if(d.type==='tgPortal'){obj.rotation.z+=d.speed*0.015;}
+    if(d.type==='tgFrag'){const a=d.angle+Math.sin(time*0.3+d.r)*0.5;obj.position.set(Math.cos(a)*d.r,d.h+Math.sin(time*0.6+d.angle)*0.35,Math.sin(a)*d.r);obj.rotation.x+=d.rotX;obj.rotation.y+=d.rotY;}
+  });
+
+  // Particles
+  particles.forEach((p,idx)=>{
+    const obj=ptObjects[idx];if(!obj)return;
+    if(p.type==='divine'){p.y+=p.speed*0.012;if(p.y>3.5)p.y=-0.3;const a=p.angle+time*0.2;obj.mesh.position.set(Math.cos(a)*p.r,p.y,Math.sin(a)*p.r);}
+    if(p.type==='void'){p.y+=p.vy;p.angle+=p.rotSpeed;if(p.y>3.5)p.y=-0.3;if(p.y<-0.3)p.y=3.5;obj.mesh.position.set(Math.cos(p.angle)*p.r,p.y,Math.sin(p.angle)*p.r);}
+    if(p.type==='blood'){p.y+=p.vy;if(p.y>4.5)p.y=0;const a=p.angle+time*0.3;obj.mesh.position.set(Math.cos(a)*p.r,p.y,Math.sin(a)*p.r);}
+    if(p.type==='frost'){p.y+=p.vy;p.angle+=p.vAngle;if(p.y<-0.3)p.y=4;obj.mesh.position.set(Math.cos(p.angle)*p.r,p.y,Math.sin(p.angle)*p.r);}
+    if(p.type==='nature'){p.y+=p.vy;p.angle+=p.vAngle;if(p.y>3.8)p.y=0;obj.mesh.position.set(Math.cos(p.angle)*p.r,p.y,Math.sin(p.angle)*p.r);}
+    if(p.type==='chaos'){p.y+=p.vy;p.angle+=p.vAngle;if(p.y>3.8)p.y=-0.2;if(p.y<-0.2)p.y=3.8;obj.mesh.position.set(Math.cos(p.angle)*p.r,p.y,Math.sin(p.angle)*p.r);}
+    if(p.type==='lichfrost'){p.y+=p.vy;p.angle+=p.vAngle;if(p.y<-0.3)p.y=4.5;obj.mesh.position.set(Math.cos(p.angle)*p.r,p.y,Math.sin(p.angle)*p.r);}
+    if(p.type==='dh'){p.y+=p.vy;p.angle+=p.vAngle;if(p.y>4.5)p.y=0;obj.mesh.position.set(Math.cos(p.angle)*p.r,p.y,Math.sin(p.angle)*p.r);}
+    if(p.type==='bloodmage'){p.y+=p.vy;p.angle+=p.vAngle;if(p.y>4.5)p.y=0;obj.mesh.position.set(Math.cos(p.angle)*p.r,p.y,Math.sin(p.angle)*p.r);}
+    if(p.type==='archmage'){p.y+=p.vy;p.angle+=p.vAngle;if(p.y>3.8)p.y=-0.2;if(p.y<-0.2)p.y=3.8;obj.mesh.position.set(Math.cos(p.angle)*p.r,p.y,Math.sin(p.angle)*p.r);}
+    if(p.type==='warlord'){p.y+=p.vy;p.angle+=p.vAngle;if(p.y>4.2)p.y=0;obj.mesh.position.set(Math.cos(p.angle)*p.r,p.y,Math.sin(p.angle)*p.r);}
+    if(p.type==='timegod'){p.y+=p.vy;p.angle+=p.vAngle;if(p.y>4)p.y=-0.2;if(p.y<-0.2)p.y=4;obj.mesh.position.set(Math.cos(p.angle)*p.r,p.y,Math.sin(p.angle)*p.r);}
+    const pulse=0.7+Math.sin(time*3+idx*0.5)*0.35;
+    obj.mesh.scale.setScalar(p.size*pulse);
+    obj.mat.opacity=p.alpha*pulse*0.85;
+  });
+
+  if(activeBuff){
+    buffLight.intensity=2.8+Math.sin(time*2)*1.2;
+    rimL.intensity=2.2+Math.sin(time*1.3)*0.9;
+    if(buffLight2&&buffLight2.intensity>0)buffLight2.intensity=2.2+Math.sin(time*2.5+1)*1.1;
+  }
+  charGroup.rotation.y=Math.sin(time*0.2)*0.4;
+  controls.update();
+  renderer.render(scene,camera);
+}
+
+// MASTER INIT
+function initApp(){
+  initScene();
+  buildScene();
+  initUI();
+  animate(0);
+}
+</script>

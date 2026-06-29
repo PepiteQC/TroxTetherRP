@@ -14,10 +14,9 @@ export class CityArchitect {
   public streetlights: THREE.Group[] = [];
   public houseGroups: THREE.Group[] = [];
   public interactables: UrbanInteractiveElement[] = [];
-  public collisionBoxes: THREE.Box3[] = []; // Obstacles verticaux seulement (murs, poteaux, arbres)
-  public groundBoxes: THREE.Box3[] = [];    // Surfaces de sol uniquement (planchers, trottoirs, deck)
+  public collisionBoxes: THREE.Box3[] = [];
   public baseColliders: THREE.Box3[] = [];
-  public baseGroundBoxes: THREE.Box3[] = [];
+  public boutiqueClothes: any[] = [];
 
   constructor(private scene: THREE.Scene) {
     this.generateProceduralTextures();
@@ -262,6 +261,9 @@ export class CityArchitect {
 
     // 5. Build Sidewalks & Curbs
     this.buildSidewalks(roadWidth, roadWidth2);
+
+    // 6. Build Quebec Highway 138 Signs & Landscaping
+    this.buildQuebecHighwaySigns();
   }
 
   private buildRoadMarkings(w1: number, w2: number) {
@@ -331,9 +333,10 @@ export class CityArchitect {
     sw.castShadow = true;
     this.scene.add(sw);
 
-    // NOTE: On n'ajoute PAS les trottoirs comme colliders horizontaux (murs invisibles).
-    // Le joueur monte dessus naturellement grâce au système de détection du sol (currentGroundY).
-    // Seuls les obstacles verticaux (murs, poteaux, arbres) bloquent le déplacement horizontal.
+    // Add curb box on edge facing road
+    // We also register this sidewalk as collision box so character walks onto it
+    const colBox = new THREE.Box3().setFromObject(sw);
+    this.collisionBoxes.push(colBox);
   }
 
   // ─── ADD BEAUTIFUL STREET LAMPS WITH REAL EMISSIVE BULBS ─────────
@@ -396,9 +399,8 @@ export class CityArchitect {
       lampGroup.add(targetObj);
       spotLight.target = targetObj;
 
-      spotLight.castShadow = true;
-      spotLight.shadow.mapSize.width = 512;
-      spotLight.shadow.mapSize.height = 512;
+      spotLight.castShadow = false;
+      // Shadow maps disabled on streetlamps to avoid exceeding MAX_TEXTURE_IMAGE_UNITS (16)
       spotLight.shadow.bias = -0.005;
 
       lampGroup.add(spotLight);
@@ -412,10 +414,10 @@ export class CityArchitect {
       this.scene.add(lampGroup);
       this.streetlights.push(lampGroup);
 
-      // Collider précis et minimal sur le poteau seulement (diamètre réel 0.36m)
+      // Add small collision box for pole
       const colBox = new THREE.Box3().setFromCenterAndSize(
         new THREE.Vector3(pt.x, poleHeight / 2, pt.z),
-        new THREE.Vector3(0.36, poleHeight, 0.36)
+        new THREE.Vector3(0.5, poleHeight, 0.5)
       );
       this.collisionBoxes.push(colBox);
     });
@@ -495,7 +497,6 @@ export class CityArchitect {
   public buildResidentialHouses(template: string = 'completed') {
     if (this.baseColliders.length === 0) {
       this.baseColliders = [...this.collisionBoxes];
-      this.baseGroundBoxes = [...this.groundBoxes];
     }
     this.rebuildResidentialHouses(template);
   }
@@ -516,13 +517,13 @@ export class CityArchitect {
       this.scene.remove(group);
     });
     this.houseGroups = [];
+    this.boutiqueClothes = [];
 
     // 2. Remove interactable doors
     this.interactables = this.interactables.filter(item => item.type !== 'door');
 
-    // 3. Reset collisionBoxes and groundBoxes to only contain base versions
+    // 3. Reset collisionBoxes to only contain baseColliders
     this.collisionBoxes = [...this.baseColliders];
-    this.groundBoxes = [...this.baseGroundBoxes];
 
     // 4. Build based on template
     if (template === 'completed') {
@@ -1115,14 +1116,10 @@ export class CityArchitect {
     vGroup.add(roof);
 
     // Living ceiling warm light
-    const pendantLight = new THREE.PointLight(0xfff3d1, 8.0, 20);
+    const pendantLight = new THREE.PointLight(0xfff3d1, 3.5, 16);
     pendantLight.position.set(-3.0, 4.0, 0);
+    pendantLight.castShadow = false; // Disabled to avoid exceeding MAX_TEXTURE_IMAGE_UNITS
     vGroup.add(pendantLight);
-
-    // Soft daylight fill inside the villa living room
-    const villaFill = new THREE.PointLight(0xffffff, 5.0, 18);
-    villaFill.position.set(-3.0, 2.0, 0);
-    vGroup.add(villaFill);
 
     const pendantBulb = new THREE.Mesh(
       new THREE.SphereGeometry(0.18, 8, 8),
@@ -1199,7 +1196,7 @@ export class CityArchitect {
       // Direct point lights throwing beautiful light down
       const spotLight = new THREE.PointLight(0xffecd1, 2.4, 9);
       spotLight.position.set(lx, 4.15, -2.2);
-      spotLight.castShadow = true;
+      spotLight.castShadow = false; // Disabled to avoid exceeding MAX_TEXTURE_IMAGE_UNITS
       vGroup.add(spotLight);
 
       // Visual spotlight bulb casing
@@ -1364,14 +1361,10 @@ export class CityArchitect {
     });
 
     // G. HOUSE LIGHTING SWITCH AND BULB
-    const houseLight = new THREE.PointLight(0xfff3d1, 8.0, 16);
+    const houseLight = new THREE.PointLight(0xfff3d1, 3.5, 12);
     houseLight.position.set(0, height - 0.6, 0);
+    houseLight.castShadow = false; // Disabled to avoid exceeding MAX_TEXTURE_IMAGE_UNITS
     hGroup.add(houseLight);
-
-    // Warm ambient booster inside room
-    const roomAmb = new THREE.PointLight(0xffffff, 4.0, 14);
-    roomAmb.position.set(0, 1.5, 0);
-    hGroup.add(roomAmb);
 
     // Glowing bulb mesh
     const hBulb = new THREE.Mesh(
@@ -1442,4 +1435,185 @@ export class CityArchitect {
       userData: pivot.userData,
     });
   }
+
+  // ─── GENERATE QUEBEC SIGN CANVAS TEXTURES ────────────────────────
+  private createQuebecSignTexture(textLine1: string, textLine2: string, textLine3: string, isGreen: boolean = true) {
+    const canvas = document.createElement('canvas');
+    canvas.width = 512;
+    canvas.height = 256;
+    const ctx = canvas.getContext('2d');
+    if (ctx) {
+      // Background (emerald green for autoroute or pristine white for limits)
+      ctx.fillStyle = isGreen ? '#15803d' : '#ffffff';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      
+      // Border outline
+      ctx.strokeStyle = isGreen ? '#ffffff' : '#111827';
+      ctx.lineWidth = 14;
+      ctx.strokeRect(10, 10, canvas.width - 20, canvas.height - 20);
+
+      if (isGreen) {
+        // Inner thin line for highway aesthetic
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(18, 18, canvas.width - 36, canvas.height - 36);
+
+        // Header
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 20px "Space Grotesk", sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('⚡ QC AUTOROUTE 138 ⚡', canvas.width / 2, 45);
+
+        // Destination title
+        ctx.font = 'bold 36px "Space Grotesk", sans-serif';
+        ctx.fillText(textLine1, canvas.width / 2, 105);
+
+        // Subtitle / County
+        ctx.fillStyle = '#fef08a'; // beautiful yellow accent
+        ctx.font = 'bold 28px "Space Grotesk", sans-serif';
+        ctx.fillText(textLine2, canvas.width / 2, 160);
+
+        // Village / Sign info
+        ctx.fillStyle = '#cbd5e1';
+        ctx.font = 'italic 18px sans-serif';
+        ctx.fillText(textLine3, canvas.width / 2, 215);
+      } else {
+        // Speed Limit Sign
+        ctx.fillStyle = '#111827';
+        ctx.font = 'bold 24px "Space Grotesk", sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(textLine1, canvas.width / 2, 55);
+
+        ctx.font = 'black 95px "JetBrains Mono", monospace';
+        ctx.fillText(textLine2, canvas.width / 2, 155);
+
+        ctx.font = 'bold 20px sans-serif';
+        ctx.fillText(textLine3, canvas.width / 2, 215);
+      }
+    }
+    const texture = new THREE.CanvasTexture(canvas);
+    return texture;
+  }
+
+  // ─── BUILD SCENIC QUEBEC HIGHWAY 138 SIGNPOSTS ───────────────────
+  public buildQuebecHighwaySigns() {
+    const signsGroup = new THREE.Group();
+    signsGroup.name = "Quebec_Highway_138_Signs";
+
+    // Build the dynamic textures
+    const westSignTex = this.createQuebecSignTexture("138 OUEST", "Trois-Rivières", "← Comté de Portneuf", true);
+    const eastSignTex = this.createQuebecSignTexture("138 EST", "Québec / Portneuf", "Route du Roy →", true);
+    const limitSignTex = this.createQuebecSignTexture("MAXIMUM", "90", "km/h", false);
+
+    const poleMat = new THREE.MeshStandardMaterial({ color: 0x94a3b8, metalness: 0.8, roughness: 0.2 });
+    const boardBackMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.8 });
+
+    // 1. WESTBOUND ROUTE 138 SIGN (Placed on the west side of town)
+    const signpostW = new THREE.Group();
+    signpostW.position.set(-65, 0, -10);
+
+    const poleW1 = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 5.2, 8), poleMat);
+    poleW1.position.set(-1.4, 2.6, 0);
+    poleW1.castShadow = true;
+    signpostW.add(poleW1);
+
+    const poleW2 = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 5.2, 8), poleMat);
+    poleW2.position.set(1.4, 2.6, 0);
+    poleW2.castShadow = true;
+    signpostW.add(poleW2);
+
+    const boardW = new THREE.Mesh(new THREE.BoxGeometry(3.4, 1.9, 0.12), [
+      boardBackMat, // right
+      boardBackMat, // left
+      boardBackMat, // top
+      boardBackMat, // bottom
+      new THREE.MeshStandardMaterial({ map: westSignTex, roughness: 0.3, metalness: 0.1 }), // front
+      boardBackMat  // back
+    ]);
+    boardW.position.set(0, 3.8, 0.06);
+    boardW.castShadow = true;
+    signpostW.add(boardW);
+
+    signsGroup.add(signpostW);
+
+    // 2. EASTBOUND ROUTE 138 SIGN (Placed on the east side of town)
+    const signpostE = new THREE.Group();
+    signpostE.position.set(65, 0, 10);
+
+    const poleE1 = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 5.2, 8), poleMat);
+    poleE1.position.set(-1.4, 2.6, 0);
+    poleE1.castShadow = true;
+    signpostE.add(poleE1);
+
+    const poleE2 = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 5.2, 8), poleMat);
+    poleE2.position.set(1.4, 2.6, 0);
+    poleE2.castShadow = true;
+    signpostE.add(poleE2);
+
+    const boardE = new THREE.Mesh(new THREE.BoxGeometry(3.4, 1.9, 0.12), [
+      boardBackMat, // right
+      boardBackMat, // left
+      boardBackMat, // top
+      boardBackMat, // bottom
+      new THREE.MeshStandardMaterial({ map: eastSignTex, roughness: 0.3, metalness: 0.1 }), // front
+      boardBackMat  // back
+    ]);
+    boardE.position.set(0, 3.8, 0.06);
+    boardE.rotation.y = Math.PI; // Look towards the intersection when arriving eastbound
+    boardE.castShadow = true;
+    signpostE.add(boardE);
+
+    signsGroup.add(signpostE);
+
+    // 3. SPEED LIMIT SIGN 90 KM/H (Placed near Avenue entry)
+    const signpostL = new THREE.Group();
+    signpostL.position.set(-18, 0, 11.5);
+
+    const poleL = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 3.5, 8), poleMat);
+    poleL.position.set(0, 1.75, 0);
+    poleL.castShadow = true;
+    signpostL.add(poleL);
+
+    const boardL = new THREE.Mesh(new THREE.BoxGeometry(1.2, 1.5, 0.08), [
+      boardBackMat, // right
+      boardBackMat, // left
+      boardBackMat, // top
+      boardBackMat, // bottom
+      new THREE.MeshStandardMaterial({ map: limitSignTex, roughness: 0.4 }), // front
+      boardBackMat  // back
+    ]);
+    boardL.position.set(0, 2.4, 0.04);
+    boardL.castShadow = true;
+    signpostL.add(boardL);
+
+    signsGroup.add(signpostL);
+
+    // 4. Welcome billboard for Comté de Portneuf
+    const welcomeGroup = new THREE.Group();
+    welcomeGroup.position.set(12, 0, -18);
+    welcomeGroup.rotation.y = Math.PI / 4;
+
+    const welcomePole = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 3.0, 8), poleMat);
+    welcomePole.position.set(0, 1.5, 0);
+    welcomePole.castShadow = true;
+    welcomeGroup.add(welcomePole);
+
+    const welcomeTex = this.createQuebecSignTexture("BIENVENUE !", "Comté de Portneuf", "✨ Terroir et Fleuve ✨", true);
+    const welcomeBoard = new THREE.Mesh(new THREE.BoxGeometry(2.2, 1.2, 0.08), [
+      boardBackMat,
+      boardBackMat,
+      boardBackMat,
+      boardBackMat,
+      new THREE.MeshStandardMaterial({ map: welcomeTex, roughness: 0.4 }),
+      boardBackMat
+    ]);
+    welcomeBoard.position.set(0, 2.1, 0.04);
+    welcomeBoard.castShadow = true;
+    welcomeGroup.add(welcomeBoard);
+
+    signsGroup.add(welcomeGroup);
+
+    this.scene.add(signsGroup);
+  }
 }
+
