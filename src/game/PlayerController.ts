@@ -206,3 +206,6 @@ export class PlayerController {
       x: this.mesh.rotation.x,
       y: this.mesh.rotation.y,
       z: this.mesh.rotation.z
+    };
+  }
+}

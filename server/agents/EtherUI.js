@@ -1,123 +1,213 @@
 // server/agents/EtherUI.js
-// 🖥 Génère le HUD territoire — menus, interfaces joueur
+// 🖥 Générateur d'Interface UI & HUD - Version 3.0
+import crypto from "node:crypto";
+
 export class EtherUI {
-  constructor() {
-    this.name      = "EtherUI";
-    this.version   = "2.0.0";
+  constructor(config = {}) {
+    this.name = "EtherUI";
+    this.version = "3.0.0";
+    
+    this.config = {
+      enableMetrics: config.enableMetrics !== false,
+      logLevel: config.logLevel || 'warn',
+      defaultTheme: config.defaultTheme || "dark",
+      ...config
+    };
+
     this.templates = new Map();
+    this.cache = new Map(); // Cache des HUDs générés récemment
+    
+    this.metrics = {
+      generated: 0,
+      cacheHits: 0
+    };
+
     this.#loadDefaultTemplates();
   }
 
   async process(packet) {
     return {
       agent: this.name,
+      version: this.version,
       mission: packet?.mission,
       success: true,
-      confidence: 85,
-      data: { templates: this.templates.size }
+      confidence: 98,
+      data: { templates: this.templates.size, metrics: this.getMetrics() }
     };
   }
 
-  // Générer HUD territoire
+  // 🏙 Générer un HUD Territoire Complet
   async generateTerritoryHUD(config = {}) {
+    const cacheKey = `hud_${config.name}_${config.control}_${config.gangName}`;
+    
+    // Check Cache (simple TTL pourrait être ajouté)
+    if (this.cache.has(cacheKey)) {
+      this._incrementMetric('cacheHits');
+      return this.cache.get(cacheKey);
+    }
+
+    const hudId = crypto.randomUUID();
+    const now = Date.now();
+
     const hud = {
-      id:   `hud_territory_${Date.now()}`,
+      id: hudId,
       type: "territory_hud",
+      theme: config.theme || this.config.defaultTheme,
       elements: [
         {
-          id:       "territory_name",
-          type:     "label",
-          text:     config.name || "Unnamed Territory",
-          position: { x: 10, y: 10 },
-          style:    { color: config.color || "#ff4444", fontSize: 18, fontWeight: "bold" }
+          id: "title",
+          type: "label",
+          text: config.name || "Zone Inconnue",
+          style: { fontSize: 24, fontWeight: "bold", color: config.color || "#ff4444", shadow: true }
         },
         {
-          id:       "gang_control",
-          type:     "progress_bar",
-          label:    "Contrôle",
-          value:    config.control || 50,
-          max:      100,
-          position: { x: 10, y: 40 },
-          style:    { color: "#44ff88", background: "#1a1a2e" }
+          id: "control_bar",
+          type: "progress",
+          value: config.control || 0,
+          max: 100,
+          color: config.color || "#ff4444",
+          label: "Contrôle"
         },
         {
-          id:       "gang_name",
-          type:     "label",
-          text:     `Gang: ${config.gangName || "Aucun"}`,
-          position: { x: 10, y: 70 },
-          style:    { color: "#ffffff", fontSize: 14 }
+          id: "owner",
+          type: "label",
+          text: `Propriétaire: ${config.gangName || "Aucun"}`,
+          style: { fontSize: 14, color: "#ffffff" }
         },
         {
-          id:       "income",
-          type:     "label",
-          text:     `Revenu: $${config.income || 0}/min`,
-          position: { x: 10, y: 90 },
-          style:    { color: "#ffd166", fontSize: 12 }
+          id: "income",
+          type: "label",
+          text: `+$${config.income || 0}/min`,
+          style: { fontSize: 12, color: "#4caf50" }
         },
         {
-          id:       "alert_zone",
-          type:     "alert",
-          active:   config.underAttack || false,
-          text:     "⚠️ TERRITOIRE SOUS ATTAQUE",
-          style:    { color: "#ff0000", blink: true }
+          id: "alert",
+          type: "badge",
+          visible: config.underAttack || false,
+          text: "⚠️ ATTAQUE EN COURS",
+          style: { backgroundColor: "#ff0000", animation: "pulse" }
         }
       ],
-      lua: this.#toHudLua(config),
-      timestamp: Date.now()
+      // Export Lua natif pour injection directe dans le jeu
+      luaCode: this.#generateLuaHUD(config),
+      createdAt: now
     };
+
+    // Mise en cache
+    this.cache.set(cacheKey, hud);
+    if (this.cache.size > 50) {
+      const firstKey = this.cache.keys().next().value;
+      this.cache.delete(firstKey);
+    }
+
+    this._incrementMetric('generated');
     return hud;
   }
 
-  // Générer menu gang
-  async generateGangMenu(gang = {}) {
+  // 📱 Générer un Menu Gang Dynamique
+  async generateGangMenu(gangData = {}) {
+    const menuId = crypto.randomUUID();
+    
     return {
-      id:    `menu_gang_${Date.now()}`,
-      type:  "gang_menu",
-      title: gang.name || "Gang Menu",
-      color: gang.color || "#ff4444",
+      id: menuId,
+      type: "context_menu",
+      title: gangData.name || "Menu Gang",
+      style: {
+        backgroundColor: gangData.color || "#1a1a2e",
+        accentColor: gangData.color || "#ff4444",
+        borderRadius: "8px"
+      },
       sections: [
         {
-          title: "👥 Membres",
+          title: "👥 Gestion",
           items: [
-            { id: "view_members",   label: "Voir les membres",      icon: "👥", action: "gang_members" },
-            { id: "invite_member",  label: "Inviter un membre",     icon: "➕", action: "gang_invite"  },
-            { id: "kick_member",    label: "Expulser un membre",    icon: "🚫", action: "gang_kick"    },
+            { id: "members", label: "Liste des Membres", icon: "users", action: "open_members" },
+            { id: "invite", label: "Inviter Joueur", icon: "user-plus", action: "open_invite" },
+            { id: "kick", label: "Expulser", icon: "user-minus", action: "open_kick", permission: "leader" }
           ]
         },
         {
-          title: "🏘 Territoire",
+          title: "⚔️ Actions",
           items: [
-            { id: "view_territory", label: "Voir le territoire",    icon: "🗺", action: "gang_territory" },
-            { id: "attack",         label: "Attaquer un territoire", icon: "⚔️", action: "gang_attack"   },
-            { id: "defend",         label: "Défendre",              icon: "🛡", action: "gang_defend"   },
+            { id: "attack", label: "Attaquer Territoire", icon: "sword", action: "start_attack" },
+            { id: "defend", label: "Mode Défense", icon: "shield", action: "toggle_defend" }
           ]
         },
         {
           title: "💰 Économie",
           items: [
-            { id: "bank",           label: "Banque du gang",        icon: "🏦", action: "gang_bank"    },
-            { id: "drug_trade",     label: "Commerce",              icon: "💊", action: "gang_trade"   },
+            { id: "bank", label: "Coffre Fort", icon: "bank", action: "open_bank" },
+            { id: "wash", label: "Blanchiment", icon: "washing-machine", action: "open_wash" }
           ]
         }
       ],
-      timestamp: Date.now()
+      createdAt: Date.now()
     };
   }
 
-  #toHudLua(config) {
-    return `-- EtherUI HUD Territory
--- Generated: ${new Date().toISOString()}
-DrawText("${config.name || "Territory"}", 10, 10, 255, 255, 255, 255)
-DrawRect(10, 40, ${config.control || 50}, 10, 68, 255, 136, 200)`;
+  // --- Générateur Lua Optimisé ---
+
+  #generateLuaHUD(config) {
+    // Génère du code Lua compatible NUI/FiveM DrawSprite/DrawText
+    const safeName = (config.name || "Territory").replace(/"/g, '\\"');
+    const colorHex = config.color || "#ff4444";
+    const r = parseInt(colorHex.slice(1, 3), 16);
+    const g = parseInt(colorHex.slice(3, 5), 16);
+    const b = parseInt(colorHex.slice(5, 7), 16);
+    
+    return `
+-- EtherUI Auto-Generated HUD
+-- ID: ${crypto.randomUUID()}
+Citizen.CreateThread(function()
+    while true do
+        Citizen.Wait(0)
+        -- Draw Background
+        DrawRect(0.15, 0.1, 0.2, 0.15, 0, 0, 0, 150)
+        
+        -- Draw Title
+        SetTextFont(4)
+        SetTextProportional(1)
+        SetTextScale(0.5, 0.5)
+        SetTextColour(${r}, ${g}, ${b}, 255)
+        SetTextDropshadow(0, 0, 0, 0, 255)
+        SetTextEdge(1, 0, 0, 0, 255)
+        SetTextDropShadow()
+        SetTextOutline()
+        SetTextEntry("STRING")
+        AddTextComponentString("${safeName}")
+        DrawText(0.15, 0.08)
+        
+        -- Draw Control Bar
+        local control = ${config.control || 50} / 100.0
+        DrawRect(0.15 + (control * 0.1) - 0.1, 0.13, control * 0.2, 0.01, ${r}, ${g}, ${b}, 200)
+        
+        if not IsHudHidden() then break end
+    end
+end)
+`;
   }
 
   #loadDefaultTemplates() {
-    this.templates.set("territory_hud", { name: "Territory HUD", type: "hud" });
-    this.templates.set("gang_menu",     { name: "Gang Menu",      type: "menu" });
-    this.templates.set("player_hud",    { name: "Player HUD",     type: "hud" });
+    this.templates.set("minimal_hud", { style: "clean", elements: 3 });
+    this.templates.set("detailed_menu", { style: "rich", sections: 4 });
   }
 
-  getStatus() { return { name: this.name, version: this.version, templates: this.templates.size }; }
+  _incrementMetric(metric, amount = 1) {
+    if (this.config.enableMetrics && this.metrics[metric] !== undefined) {
+      this.metrics[metric] += amount;
+    }
+  }
+
+  getMetrics() { return { ...this.metrics, timestamp: Date.now() }; }
+
+  getStatus() { 
+    return { 
+      name: this.name, 
+      version: this.version, 
+      templates: this.templates.size,
+      metrics: this.getMetrics()
+    }; 
+  }
 }
 
 export default EtherUI;

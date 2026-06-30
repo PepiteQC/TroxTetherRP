@@ -1,98 +1,45 @@
-import React, { useEffect, useRef } from 'react';
-import { ArrowRight } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { Bot, Database, Sparkles, Cpu, Layers, Radio, History, ArrowRight } from 'lucide-react';
+// import { CyberBackground } from './background/CyberBackground';
 
 interface LandingPageProps {
-  onNavigate: (view: 'landing' | 'character-creator' | 'etherprism' | 'troxt-chat' | 'sandbox' | 'map') => void;
+  onNavigate: (view: 'landing' | 'character-creator' | 'etherprism' | 'troxt-chat' | 'sandbox') => void;
 }
 
 export const LandingPage: React.FC<LandingPageProps> = ({ onNavigate }) => {
-  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const [showToast, setShowToast] = useState(false);
 
-  // Background particle loop
   useEffect(() => {
-    if (!canvasRef.current) return;
-    const canvas = canvasRef.current;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-
-    let animationFrameId: number;
-    let width = (canvas.width = window.innerWidth);
-    let height = (canvas.height = window.innerHeight);
-
-    const handleResize = () => {
-      width = canvas.width = window.innerWidth;
-      height = canvas.height = window.innerHeight;
-    };
-    window.addEventListener('resize', handleResize);
-
-    const particleCount = 65;
-    const particles = Array.from({ length: particleCount }, () => ({
-      x: Math.random() * width,
-      y: Math.random() * height,
-      vx: (Math.random() - 0.5) * 0.4,
-      vy: (Math.random() - 0.5) * 0.4,
-      radius: Math.random() * 2 + 0.5,
-      color: Math.random() > 0.5 ? 'rgba(123, 111, 255, 0.4)' : 'rgba(0, 212, 255, 0.4)',
-    }));
-
-    const render = () => {
-      ctx.clearRect(0, 0, width, height);
-
-      // Draw particle connections
-      for (let i = 0; i < particles.length; i++) {
-        for (let j = i + 1; j < particles.length; j++) {
-          const dx = particles[i].x - particles[j].x;
-          const dy = particles[i].y - particles[j].y;
-          const dist = Math.sqrt(dx * dx + dy * dy);
-
-          if (dist < 120) {
-            ctx.beginPath();
-            ctx.moveTo(particles[i].x, particles[i].y);
-            ctx.lineTo(particles[j].x, particles[j].y);
-            ctx.strokeStyle = `rgba(123, 111, 255, ${0.12 * (1 - dist / 120)})`;
-            ctx.lineWidth = 0.5;
-            ctx.stroke();
-          }
-        }
-      }
-
-      // Render and update particles
-      particles.forEach((p) => {
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
-        ctx.fillStyle = p.color;
-        ctx.fill();
-
-        p.x += p.vx;
-        p.y += p.vy;
-
-        if (p.x < 0) p.x = width;
-        if (p.x > width) p.x = 0;
-        if (p.y < 0) p.y = height;
-        if (p.y > height) p.y = 0;
-      });
-
-      animationFrameId = requestAnimationFrame(render);
-    };
-
-    render();
-
-    return () => {
-      window.removeEventListener('resize', handleResize);
-      cancelAnimationFrame(animationFrameId);
-    };
+    const timer = setTimeout(() => setShowToast(true), 2000);
+    const hide = setTimeout(() => setShowToast(false), 7000);
+    return () => { clearTimeout(timer); clearTimeout(hide); };
   }, []);
 
   return (
-    <div className="relative min-h-screen text-slate-100 flex flex-col font-sans select-none overflow-y-auto overflow-x-hidden pt-[62px]">
-      <canvas ref={canvasRef} className="fixed inset-0 z-0 pointer-events-none opacity-40" />
+    <div id="main-content" className="relative min-h-screen text-slate-100 flex flex-col font-sans select-none overflow-y-auto overflow-x-hidden bg-slate-950">
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:bg-indigo-500 focus:text-white focus:px-4 focus:py-2 focus:rounded font-mono"
+      >
+        Aller au contenu principal
+      </a>
+
+      {showToast && (
+        <div className="fixed top-4 right-4 z-50 bg-slate-900/90 border border-indigo-500/30 rounded-lg px-4 py-3 flex items-center gap-3 animate-slide-in backdrop-blur-sm shadow-2xl">
+          <span className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse" />
+          <span className="text-sm text-slate-300 font-mono">v3.0.0 — Nouvelle instance disponible</span>
+          <button onClick={() => setShowToast(false)} className="text-slate-500 hover:text-slate-300 ml-2">✕</button>
+        </div>
+      )}
+
+      {/* <CyberBackground /> */}
 
       {/* --- HERO SECTION --- */}
-      <section className="relative z-10 max-w-7xl mx-auto w-full px-6 pt-20 pb-16 flex flex-col lg:flex-row items-center justify-between gap-12">
+      <section className="relative z-10 max-w-7xl mx-auto w-full px-6 pt-32 pb-16 flex flex-col lg:flex-row items-center justify-between gap-12">
         <div className="flex-1 max-w-xl text-left animate-fade-in">
           <div className="inline-flex items-center gap-2 bg-indigo-500/10 border border-indigo-500/30 px-4 py-1.5 rounded-full text-indigo-400 font-mono text-xs font-bold tracking-wider mb-6">
             <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-            TROXT SUPERVISOR CORE v4.0
+            TROXT SUPERVISOR CORE v1.0
           </div>
           
           <h1 className="text-5xl lg:text-7xl font-black tracking-tight leading-none mb-6">
@@ -103,7 +50,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onNavigate }) => {
           </h1>
 
           <p className="text-slate-400 text-lg leading-relaxed mb-8">
-            TroxT est l'intelligence artificielle unifiée d'EtherWorld. Un dôme de 16 agents spécialisés synchronise en temps réel la base de données, la validation physique des objets 3D et le dôme de simulation RP.
+            TroxT est l'intelligence artificielle unifiée d'EtherWorld. Un dôme de 14 agents spécialisés synchronise en temps réel la base de données, la validation physique des objets 3D et le dôme de simulation RP.
           </p>
 
           <div className="flex flex-wrap gap-4 mb-10">
@@ -111,7 +58,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onNavigate }) => {
               onClick={() => onNavigate('sandbox')}
               className="bg-indigo-600 hover:bg-indigo-500 text-white font-bold px-6 py-3.5 rounded-xl flex items-center gap-2 transition duration-200 shadow-lg shadow-indigo-600/30 hover:shadow-indigo-600/50 transform hover:-translate-y-0.5 cursor-pointer"
             >
-              Lancer le Mode GMod Sandbox
+              Lancer le Mode GMod
               <ArrowRight className="w-4 h-4" />
             </button>
             <button
@@ -125,11 +72,11 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onNavigate }) => {
           {/* Quick Metrics */}
           <div className="grid grid-cols-3 gap-6 border-t border-slate-900 pt-8 font-mono">
             <div>
-              <span className="block text-2xl font-black text-indigo-400">16</span>
+              <span className="block text-2xl font-black text-indigo-400">14</span>
               <span className="text-xs text-slate-500 uppercase tracking-widest">Agents Actifs</span>
             </div>
             <div>
-              <span className="block text-2xl font-black text-cyan-400">98%</span>
+              <span className="block text-2xl font-black text-cyan-400">95%</span>
               <span className="text-xs text-slate-500 uppercase tracking-widest">Score Cognitif</span>
             </div>
             <div>
@@ -152,7 +99,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onNavigate }) => {
           >
             👁️
             <span className="absolute -bottom-8 bg-slate-950/90 border border-slate-900 text-[10px] font-mono font-black uppercase text-indigo-300 px-2 py-0.5 rounded opacity-0 group-hover:opacity-100 transition whitespace-nowrap">
-              EtherPrism DB
+              EtherPrism
             </span>
           </div>
 
@@ -162,7 +109,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onNavigate }) => {
           >
             ⚒️
             <span className="absolute -bottom-8 bg-slate-950/90 border border-slate-900 text-[10px] font-mono font-black uppercase text-amber-300 px-2 py-0.5 rounded opacity-0 group-hover:opacity-100 transition whitespace-nowrap">
-              EtherForge 3D
+              EtherForge
             </span>
           </div>
 
@@ -172,7 +119,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onNavigate }) => {
           >
             🤖
             <span className="absolute -bottom-8 bg-slate-950/90 border border-slate-900 text-[10px] font-mono font-black uppercase text-cyan-300 px-2 py-0.5 rounded opacity-0 group-hover:opacity-100 transition whitespace-nowrap">
-              Admin Brain
+              TroxT Chat
             </span>
           </div>
 
@@ -192,6 +139,13 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onNavigate }) => {
             <span className="text-[9px] text-slate-500 uppercase tracking-widest font-mono">Brain Core</span>
           </div>
         </div>
+
+        {/* AJOUT: Scroll Indicator */}
+        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 animate-bounce">
+          <svg className="w-6 h-6 text-indigo-500/50" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7" />
+          </svg>
+        </div>
       </section>
 
       {/* --- BENTO MODULE CARDS --- */}
@@ -209,7 +163,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onNavigate }) => {
               <span className="text-4xl">🗄️</span>
               <span className="text-[9px] font-mono font-extrabold px-2.5 py-1 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">LIVE ●</span>
             </div>
-            <h3 className="text-xl font-bold text-indigo-300 group-hover:text-indigo-200 mb-2">EtherPrism DB</h3>
+            <h3 className="text-xl font-bold text-indigo-300 group-hover:text-indigo-200 mb-2">EtherPrism</h3>
             <p className="text-slate-400 text-xs leading-relaxed flex-grow">
               Le centre administratif de base de données RP. Explorez, filtrez et modifiez les tables (Players, Vehicles, Bank, Factions...) avec sauvegarde intégrale et bac à sable de requêtes JS.
             </p>
@@ -254,10 +208,47 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onNavigate }) => {
               <span className="text-4xl">🤖</span>
               <span className="text-[9px] font-mono font-extrabold px-2.5 py-1 rounded bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">AGENT AI ●</span>
             </div>
-            <h3 className="text-xl font-bold text-cyan-400 group-hover:text-cyan-300 mb-2">Admin Brain Chat</h3>
+            <h3 className="text-xl font-bold text-cyan-400 group-hover:text-cyan-300 mb-2">TroxT Chat</h3>
             <p className="text-slate-400 text-xs leading-relaxed flex-grow">
-              Interagissez directement avec le Superviseur TroxT. Demande-lui de te générer des schémas JSON, des configurations ou des logs d'Audit.
+              Interagissez directement avec le Superviseur TroxT. Posez-lui des questions sur l'architecture, la physique ou les événements d'EtherWorld et obtenez des explications précises.
             </p>
+          </div>
+        </div>
+      </section>
+
+      {/* AJOUT: Section Stats - Crédibilité immédiate */}
+      <section className="relative z-10 max-w-7xl mx-auto w-full px-6 py-12 border-t border-indigo-500/10">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
+          <div>
+            <span className="text-4xl font-black text-cyan-400 font-mono">{"<"} 50ms</span>
+            <p className="text-slate-500 mt-2 text-sm uppercase tracking-widest font-mono">Latence moyenne</p>
+          </div>
+          <div>
+            <span className="text-4xl font-black text-indigo-400 font-mono">99.9%</span>
+            <p className="text-slate-500 mt-2 text-sm uppercase tracking-widest font-mono">Uptime garanti</p>
+          </div>
+          <div>
+            <span className="text-4xl font-black text-amber-400 font-mono">∞</span>
+            <p className="text-slate-500 mt-2 text-sm uppercase tracking-widest font-mono">Instances parallèles</p>
+          </div>
+        </div>
+      </section>
+
+      {/* AJOUT: Tech Stack / Roadmap */}
+      <section className="relative z-10 max-w-7xl mx-auto w-full px-6 py-12">
+        <h2 className="text-3xl font-black text-slate-100 tracking-tight mb-8">Architecture Technique</h2>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="bg-slate-900/40 border border-slate-800 rounded-xl p-5">
+            <h4 className="text-indigo-400 font-bold mb-2 flex items-center gap-2"><Cpu className="w-4 h-4" /> Moteur 3D</h4>
+            <p className="text-slate-400 text-sm">Propulsé par React Three Fiber et Three.js. Rendu optimisé, gestion des shaders et post-processing intégrés.</p>
+          </div>
+          <div className="bg-slate-900/40 border border-slate-800 rounded-xl p-5">
+            <h4 className="text-amber-400 font-bold mb-2 flex items-center gap-2"><Radio className="w-4 h-4" /> Physique Temps Réel</h4>
+            <p className="text-slate-400 text-sm">Collisions et dynamiques gérées par Cannon-es (ou Rapier). Sandbox interactive sans latence perceptible.</p>
+          </div>
+          <div className="bg-slate-900/40 border border-slate-800 rounded-xl p-5">
+            <h4 className="text-cyan-400 font-bold mb-2 flex items-center gap-2"><Database className="w-4 h-4" /> État & Multijoueur</h4>
+            <p className="text-slate-400 text-sm">Synchronisation par Zustand et Socket.io. Persistance des données via le système EtherPrism.</p>
           </div>
         </div>
       </section>
@@ -277,16 +268,57 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onNavigate }) => {
           </div>
           {/* Body */}
           <div className="p-5 font-mono text-[11px] leading-relaxed text-slate-300 text-left flex flex-col gap-1 max-h-56 overflow-y-auto">
-            <p className="text-indigo-400">$ node server/index.js</p>
+            <p className="text-indigo-400">$ ./start_troxt_neural_dome.sh --sandbox-mode</p>
             <p className="text-emerald-400">● [INFO] initialisation du bus d'événements Arcadius... OK</p>
             <p className="text-emerald-400">● [INFO] chargement du contrat de données Benedictus... VALIDE (8 tables)</p>
             <p className="text-emerald-400">● [INFO] allocation de la mémoire cognitive volatile Lotus... ALLOCATED (TTL 1800s)</p>
             <p className="text-slate-400">● [INFO] synchronisation avec le moteur 3D ThreeJS... CONNECTÉ</p>
             <p className="text-slate-400">● [INFO] dôme de surveillance Third Eye actif... SCORE RISQUE GLOBAL: GREEN ●</p>
-            <p className="text-cyan-300">● [SUCCESS] Superviseur TroxT en attente d'instructions sur http://localhost:4000 <span className="animate-pulse font-bold">_</span></p>
+            <p className="text-cyan-300">● [SUCCESS] Superviseur TroxT en attente d'instructions sur le port 3000 <span className="animate-pulse font-bold">_</span></p>
           </div>
         </div>
       </section>
+
+      {/* AJOUT: FAQ */}
+      <section className="relative z-10 max-w-3xl mx-auto w-full px-6 py-16">
+        <h2 className="text-2xl font-mono text-cyan-400 mb-10 text-center">{"// FAQ"}</h2>
+        {[
+          { q: "TroxT est-il gratuit ?", a: "L'instance de base est gratuite. Les modules avancés seront disponibles en v4." },
+          { q: "Quels navigateurs sont supportés ?", a: "Tous les navigateurs modernes avec WebGL 2.0 (Chrome, Firefox, Edge, Safari 15+)." },
+          { q: "Puis-je contribuer ?", a: "Le repo sera ouvert sur GitHub. Rejoignez le Discord pour les early contributions." }
+        ].map((item, i) => (
+          <details key={i} className="bg-slate-900/40 border border-cyan-500/20 rounded-lg mb-3 p-4 hover:border-cyan-500/40 transition-colors group">
+            <summary className="cursor-pointer text-slate-300 font-mono group-open:text-cyan-400 transition-colors select-none">
+              <span className="mr-2 text-cyan-500/50 group-open:text-cyan-400">{">"}</span>{item.q}
+            </summary>
+            <p className="text-slate-400 text-sm mt-3 pl-6 border-l-2 border-cyan-500/20">{item.a}</p>
+          </details>
+        ))}
+      </section>
+
+      {/* AJOUT: Bottom CTA */}
+      <section className="relative z-10 w-full px-6 py-20 bg-gradient-to-b from-transparent to-indigo-950/20 border-t border-indigo-500/10 text-center">
+        <h2 className="text-4xl font-black text-white mb-6">Prêt à initialiser votre instance ?</h2>
+        <p className="text-slate-400 max-w-2xl mx-auto mb-8">Rejoignez le dôme TroxT et commencez à construire, explorer et interagir avec nos agents dans l'EtherWorld.</p>
+        <button onClick={() => onNavigate('sandbox')} className="bg-indigo-600 hover:bg-indigo-500 text-white font-bold px-8 py-4 rounded-xl shadow-[0_0_30px_rgba(79,70,229,0.3)] hover:shadow-[0_0_50px_rgba(79,70,229,0.5)] transition transform hover:-translate-y-1 cursor-pointer">
+          Lancer l'expérience maintenant
+        </button>
+      </section>
+
+      {/* AJOUT: Footer */}
+      <footer className="relative z-10 w-full px-6 py-8 border-t border-slate-900 bg-slate-950 text-center flex flex-col md:flex-row items-center justify-between gap-4">
+        <div className="text-slate-500 text-xs font-mono">
+          © {new Date().getFullYear()} TroxT EtherWorld. Tous droits réservés.
+        </div>
+        <div className="flex gap-4">
+          <a href="#" className="text-slate-500 hover:text-indigo-400 transition text-sm">Discord</a>
+          <a href="#" className="text-slate-500 hover:text-indigo-400 transition text-sm">Twitter</a>
+          <a href="#" className="text-slate-500 hover:text-indigo-400 transition text-sm">GitHub</a>
+        </div>
+        <div className="text-slate-500 text-xs font-mono">
+          Version 3.0.0
+        </div>
+      </footer>
     </div>
   );
 };

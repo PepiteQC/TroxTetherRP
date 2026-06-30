@@ -262,4 +262,9 @@ export class InventoryEntity extends EventEmitter {
       const def = ITEM_REGISTRY[item.definitionId];
       if (!def) return false;
       return (
-        def.name.toLowerCase().includes(q) || ``
+        def.name.toLowerCase().includes(q) ||
+        (def.description?.toLowerCase().includes(q) ?? false)
+      );
+    });
+  }
+}

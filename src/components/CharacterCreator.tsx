@@ -1,6 +1,11 @@
 import React, { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
-import { Sparkles, RefreshCw, Download, Shuffle, CheckCircle, ArrowRight } from 'lucide-react';
+import { GLTFExporter } from 'three/examples/jsm/exporters/GLTFExporter.js';
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+import { 
+  Sparkles, RefreshCw, Download, Shuffle, CheckCircle, ArrowRight, 
+  MessageSquare, Save, Database, Send, History, Trash2, Loader2, Info, FileJson, User, Upload
+} from 'lucide-react';
 
 interface CharacterCreatorProps {
   onNavigate: (view: 'landing' | 'character-creator' | 'etherprism' | 'troxt-chat' | 'sandbox') => void;
@@ -72,19 +77,369 @@ export const CharacterCreator: React.FC<CharacterCreatorProps> = ({ onNavigate }
   const [heightScale, setHeightScale] = useState(1.0);
   const [muscleScale, setMuscleScale] = useState(1.0);
 
+  // Biography story (RP)
+  const [story, setStory] = useState('Un citoyen anonyme nouvellement arrivé dans le dôme cognitif.');
+
+  // Halo Toggle
+  const [showHalo, setShowHalo] = useState<boolean>(true);
+  const [renderTick, setRenderTick] = useState<number>(0);
+
+  // AI Conversational Creator States
+  const [aiPrompt, setAiPrompt] = useState('');
+  const [isAiGenerating, setIsAiGenerating] = useState(false);
+  const [aiTrace, setAiTrace] = useState<string[]>([]);
+
+  // Server Characters DB
+  const [savedCharacters, setSavedCharacters] = useState<any[]>([]);
+  const [isLoadingSaves, setIsLoadingSaves] = useState(false);
+
   // Animation Action Cycle
   const [animationMode, setAnimationMode] = useState<'idle' | 'walk' | 'run'>('idle');
 
   // Popup spawn
   const [isSpawned, setIsSpawned] = useState(false);
 
+  // Fetch saved characters from server
+  const fetchSavedCharacters = async () => {
+    setIsLoadingSaves(true);
+    try {
+      const res = await fetch('/api/get-characters');
+      const data = await res.json();
+      if (data.success) {
+        setSavedCharacters(data.characters || []);
+      }
+    } catch (e) {
+      console.error("Error fetching saved characters from server:", e);
+    } finally {
+      setIsLoadingSaves(false);
+    }
+  };
+
+  // Load latest character state on mount if saved
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem('troxt_latest_character');
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (parsed.name) setName(parsed.name);
+        if (parsed.gender) setGender(parsed.gender);
+        if (parsed.aura) setActiveAura(parsed.aura.toLowerCase());
+        if (parsed.hair) setHairStyle(parsed.hair);
+        if (parsed.skinTone) setSkinTone(parsed.skinTone);
+        if (parsed.eyeColor) setEyeColor(parsed.eyeColor);
+        if (parsed.hairColor) setHairColor(parsed.hairColor);
+        if (parsed.widthScale) setWidthScale(parsed.widthScale);
+        if (parsed.heightScale) setHeightScale(parsed.heightScale);
+        if (parsed.muscleScale) setMuscleScale(parsed.muscleScale);
+        if (parsed.story) setStory(parsed.story);
+        if (parsed.outfit) {
+          const idx = OUTFITS.findIndex(o => 
+            o.name.toLowerCase() === parsed.outfit.toLowerCase() || 
+            o.id.toLowerCase() === parsed.outfit.toLowerCase()
+          );
+          if (idx !== -1) setOutfitIdx(idx);
+        }
+      }
+    } catch (e) {
+      console.error("Error loading cached character:", e);
+    }
+    // Also fetch saves from server
+    fetchSavedCharacters();
+  }, []);
+
+  // Save character config to server database
+  const handleSaveToServer = async () => {
+    const charConfig = {
+      name,
+      gender: gender === 'M' ? 'Masculin' : 'Féminin',
+      skinTone,
+      eyeColor,
+      hairStyle,
+      hairColor,
+      outfitIdx,
+      aura: activeAura,
+      widthScale,
+      heightScale,
+      muscleScale,
+      story,
+      job: 'Civil',
+      cash: 5000,
+      bank: 10000,
+      status: 'Actif'
+    };
+
+    try {
+      const res = await fetch('/api/save-character', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ character: charConfig })
+      });
+      const data = await res.json();
+      if (data.success) {
+        // Trigger visual effect/alert
+        fetchSavedCharacters();
+        // Save to local storage for persistent reload
+        localStorage.setItem('troxt_latest_character', JSON.stringify({
+          ...charConfig,
+          outfit: OUTFITS[outfitIdx].name
+        }));
+        alert(`Fiche personnage de ${name} sauvegardée avec succès sur le serveur d'archives !`);
+      } else {
+        alert("Erreur de sauvegarde: " + data.error);
+      }
+    } catch (e) {
+      console.error("Error saving character:", e);
+      alert("Échec de la connexion au serveur d'archives.");
+    }
+  };
+
+  // Export as JSON
+  const handleExportJSON = () => {
+    const charData = {
+      name,
+      gender,
+      skinTone,
+      eyeColor,
+      hairStyle,
+      hairColor,
+      outfitIdx,
+      activeAura,
+      widthScale,
+      heightScale,
+      muscleScale,
+      story,
+      exportedAt: new Date().toISOString()
+    };
+    const blob = new Blob([JSON.stringify(charData, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `${name.replace(/\s+/g, '_')}_ficha.json`;
+    link.click();
+    URL.revokeObjectURL(url);
+  };
+
+  // Export 3D as GLB with fallback
+  const handleExportGLB = () => {
+    if (!characterRef.current) {
+      alert("Erreur: Le modèle 3D n'est pas encore initialisé.");
+      return;
+    }
+    try {
+      const exporter = new GLTFExporter();
+      exporter.parse(
+        characterRef.current,
+        (gltf) => {
+          const isBinary = gltf instanceof ArrayBuffer;
+          const output = isBinary ? gltf : JSON.stringify(gltf, null, 2);
+          const blob = new Blob([output], { type: isBinary ? 'application/octet-stream' : 'application/json' });
+          const url = URL.createObjectURL(blob);
+          const link = document.createElement('a');
+          link.href = url;
+          link.download = `${name.replace(/\s+/g, '_')}_avatar.${isBinary ? 'glb' : 'gltf'}`;
+          link.click();
+          URL.revokeObjectURL(url);
+        },
+        (error) => {
+          console.error("Error compiling GLB export:", error);
+          alert("Une erreur s'est produite pendant l'exportation GLB. Téléchargement de la fiche JSON de secours...");
+          handleExportJSON();
+        },
+        { binary: true }
+      );
+    } catch (e) {
+      console.error("GLTFExporter parsing error, falling back to JSON:", e);
+      handleExportJSON();
+    }
+  };
+
+  // Import JSON Design Configuration
+  const handleImportJSON = () => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'application/json';
+    input.onchange = (e) => {
+      const file = (e.target as HTMLInputElement).files?.[0];
+      if (!file) return;
+      
+      const reader = new FileReader();
+      reader.onload = (evt) => {
+        try {
+          const charData = JSON.parse(evt.target?.result as string);
+          importedGlbRef.current = null;
+          if (charData.name) setName(charData.name);
+          if (charData.gender) setGender(charData.gender);
+          if (charData.skinTone) setSkinTone(charData.skinTone);
+          if (charData.eyeColor) setEyeColor(charData.eyeColor);
+          if (charData.hairStyle) setHairStyle(charData.hairStyle);
+          if (charData.hairColor) setHairColor(charData.hairColor);
+          if (charData.outfitIdx !== undefined) setOutfitIdx(charData.outfitIdx);
+          if (charData.activeAura) setActiveAura(charData.activeAura);
+          if (charData.widthScale !== undefined) setWidthScale(charData.widthScale);
+          if (charData.heightScale !== undefined) setHeightScale(charData.heightScale);
+          if (charData.muscleScale !== undefined) setMuscleScale(charData.muscleScale);
+          if (charData.story) setStory(charData.story);
+          
+          alert("Fiche personnage JSON importée avec succès !");
+        } catch (err) {
+          console.error("Failed to parse JSON file:", err);
+          alert("Erreur lors de l'importation JSON : Le fichier est invalide.");
+        }
+      };
+      reader.readAsText(file);
+    };
+    input.click();
+  };
+
+  // Import 3D GLB/GLTF Model
+  const handleImportGLB = () => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.glb,.gltf';
+    input.onchange = (e) => {
+      const file = (e.target as HTMLInputElement).files?.[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = (evt) => {
+        const arrayBuffer = evt.target?.result as ArrayBuffer;
+        const loader = new GLTFLoader();
+        loader.parse(
+          arrayBuffer,
+          '',
+          (gltf) => {
+            if (characterRef.current) {
+              // Clear previous children
+              while (characterRef.current.children.length > 0) {
+                const child = characterRef.current.children[0];
+                characterRef.current.remove(child);
+              }
+
+              // Set the loaded scene as a child of our character container
+              const importedScene = gltf.scene;
+              
+              // Scale and center the imported scene dynamically to fit character height
+              const box = new THREE.Box3().setFromObject(importedScene);
+              const size = new THREE.Vector3();
+              box.getSize(size);
+              const maxDim = Math.max(size.x, size.y, size.z);
+              
+              if (maxDim > 0) {
+                const desiredHeight = 1.8;
+                const scaleFactor = desiredHeight / maxDim;
+                importedScene.scale.set(scaleFactor, scaleFactor, scaleFactor);
+              }
+
+              const center = new THREE.Vector3();
+              box.getCenter(center);
+              importedScene.position.y = -center.y * importedScene.scale.y + 0.9;
+              
+              importedGlbRef.current = importedScene;
+              setRenderTick(prev => prev + 1);
+              alert("Modèle 3D GLB/GLTF importé avec succès dans le visualisateur !");
+            } else {
+              alert("Erreur: Le container de personnage n'est pas prêt.");
+            }
+          },
+          (error) => {
+            console.error("Error parsing imported GLB:", error);
+            alert("Erreur lors du décodage du fichier GLB/GLTF.");
+          }
+        );
+      };
+      reader.readAsArrayBuffer(file);
+    };
+    input.click();
+  };
+
+  // Conversational generation
+  const handleModelCharacterAI = async (promptText = aiPrompt) => {
+    if (!promptText.trim()) return;
+    setIsAiGenerating(true);
+    setAiTrace(["🔍 [ETHER-PRISM] Analyse sémantique de votre description narrative..."]);
+
+    try {
+      const response = await fetch('/api/model-character', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt: promptText.trim() }),
+      });
+      const data = await response.json();
+      if (!data.success) {
+        throw new Error(data.error || "Une erreur s'est produite lors de l'appel API.");
+      }
+
+      const steps = [
+        "🧬 [ETHER-PRISM] Décodage biométrique et création de l'identité digitale...",
+        "🔬 [ETHER-PRISM] Morphologie calculée : Largeur=" + (data.character.widthScale || 1.0).toFixed(2) + ", Hauteur=" + (data.character.heightScale || 1.0).toFixed(2) + ", Muscles=" + (data.character.muscleScale || 1.0).toFixed(2),
+        "🎨 [ETHER-PRISM] Palette chromatique : Peau=" + data.character.skinTone + ", Yeux=" + data.character.eyeColor + ", Cheveux=" + data.character.hairColor,
+        "🎭 [ETHER-PRISM] Assemblage de la coupe (" + data.character.hairStyle + ") et de la tenue index (" + data.character.outfitIdx + ")",
+        "🔮 [ETHER-WEAVE] Alignement cosmique sur l'émanation " + data.character.aura.toUpperCase(),
+        "💾 [ETHER-MEMORY] Écriture de la fiche narrative dans le registre du Dôme."
+      ];
+
+      let i = 0;
+      const interval = setInterval(() => {
+        if (i < steps.length) {
+          setAiTrace(prev => [...prev, steps[i]]);
+          i++;
+        } else {
+          clearInterval(interval);
+          importedGlbRef.current = null;
+          
+          // Apply state variables
+          setName(data.character.name);
+          setGender(data.character.gender === 'Féminin' ? 'F' : 'M');
+          setSkinTone(data.character.skinTone || SKIN_TONES[0]);
+          setEyeColor(data.character.eyeColor || EYE_COLORS[0]);
+          setHairStyle(data.character.hairStyle || 'short');
+          setHairColor(data.character.hairColor || HAIR_COLORS[2]);
+          setOutfitIdx(typeof data.character.outfitIdx === 'number' ? data.character.outfitIdx : 0);
+          setActiveAura(data.character.aura?.toLowerCase() || 'divine');
+          setWidthScale(typeof data.character.widthScale === 'number' ? data.character.widthScale : 1.0);
+          setHeightScale(typeof data.character.heightScale === 'number' ? data.character.heightScale : 1.0);
+          setMuscleScale(typeof data.character.muscleScale === 'number' ? data.character.muscleScale : 1.0);
+          setStory(data.character.story || 'Un citoyen mystérieux modelé par le dôme cognitif.');
+
+          setIsAiGenerating(false);
+          setAiPrompt('');
+        }
+      }, 500);
+
+    } catch (err: any) {
+      console.error(err);
+      setAiTrace(prev => [...prev, `❌ [ERREUR] Échec de la synthèse d'agent : ${err.message}`]);
+      setIsAiGenerating(false);
+    }
+  };
+
+  // Quick apply of a saved character
+  const handleApplySavedCharacter = (char: any) => {
+    if (!char) return;
+    importedGlbRef.current = null;
+    setName(char.name || 'John Doe');
+    setGender(char.gender === 'Féminin' ? 'F' : 'M');
+    if (char.skinTone) setSkinTone(char.skinTone);
+    if (char.eyeColor) setEyeColor(char.eyeColor);
+    if (char.hairStyle) setHairStyle(char.hairStyle);
+    if (char.hairColor) setHairColor(char.hairColor);
+    if (typeof char.outfitIdx === 'number') setOutfitIdx(char.outfitIdx);
+    if (char.aura) setActiveAura(char.aura.toLowerCase());
+    if (typeof char.widthScale === 'number') setWidthScale(char.widthScale);
+    if (typeof char.heightScale === 'number') setHeightScale(char.heightScale);
+    if (typeof char.muscleScale === 'number') setMuscleScale(char.muscleScale);
+    if (char.story) setStory(char.story);
+  };
+
   // References to THREE objects to update live without re-constructing everything
   const characterRef = useRef<THREE.Group | null>(null);
   const auraPointsRef = useRef<THREE.Points | null>(null);
   const auraRingsRef = useRef<THREE.Group | null>(null);
+  const importedGlbRef = useRef<THREE.Object3D | null>(null);
 
   // Randomize values
   const handleRandomize = () => {
+    importedGlbRef.current = null;
     const randomGender = Math.random() > 0.5 ? 'M' : 'F';
     setGender(randomGender);
     setSkinTone(SKIN_TONES[Math.floor(Math.random() * SKIN_TONES.length)]);
@@ -96,7 +451,9 @@ export const CharacterCreator: React.FC<CharacterCreatorProps> = ({ onNavigate }
     setWidthScale(0.8 + Math.random() * 0.4);
     setHeightScale(0.85 + Math.random() * 0.3);
     setMuscleScale(0.8 + Math.random() * 0.4);
+    setStory("Citoyen synthétisé de manière aléatoire par le protocole de triage.");
   };
+
 
   // Run ThreeJS loop
   useEffect(() => {
@@ -153,6 +510,43 @@ export const CharacterCreator: React.FC<CharacterCreatorProps> = ({ onNavigate }
       // Clear previous parts
       while (characterGroup.children.length > 0) {
         characterGroup.remove(characterGroup.children[0]);
+      }
+
+      // If we have an imported GLB model, add it!
+      if (importedGlbRef.current) {
+        characterGroup.add(importedGlbRef.current);
+        
+        if (showHalo) {
+          // Build golden halo above the GLB head
+          const haloGeo = new THREE.TorusGeometry(0.18, 0.015, 8, 32);
+          const haloMat = new THREE.MeshStandardMaterial({
+            color: 0xffd700,
+            emissive: 0xffd700,
+            emissiveIntensity: 1.0,
+            roughness: 0.1,
+            metalness: 0.9,
+            transparent: true,
+            opacity: 0.9,
+          });
+          const haloMesh = new THREE.Mesh(haloGeo, haloMat);
+          haloMesh.name = "glorious_halo";
+          haloMesh.rotation.x = Math.PI / 2;
+          haloMesh.position.set(0, 1.95, 0); // Position above scaled GLB model (1.8m height)
+
+          const glowGeo = new THREE.TorusGeometry(0.18, 0.035, 8, 32);
+          const glowMat = new THREE.MeshBasicMaterial({
+            color: 0xffe57f,
+            transparent: true,
+            opacity: 0.4,
+            blending: THREE.AdditiveBlending,
+          });
+          const glowMesh = new THREE.Mesh(glowGeo, glowMat);
+          glowMesh.name = "glorious_halo_glow";
+          haloMesh.add(glowMesh);
+
+          characterGroup.add(haloMesh);
+        }
+        return;
       }
 
       const outfit = OUTFITS[outfitIdx];
@@ -317,6 +711,38 @@ export const CharacterCreator: React.FC<CharacterCreatorProps> = ({ onNavigate }
       footR.position.set(0, -0.22, 0.03);
       legRight.add(footR);
 
+      // Build golden halo for procedural character if enabled
+      if (showHalo) {
+        const haloGeo = new THREE.TorusGeometry(0.18, 0.015, 8, 32);
+        const haloMat = new THREE.MeshStandardMaterial({
+          color: 0xffd700,
+          emissive: 0xffd700,
+          emissiveIntensity: 1.0,
+          roughness: 0.1,
+          metalness: 0.9,
+          transparent: true,
+          opacity: 0.9,
+        });
+        const haloMesh = new THREE.Mesh(haloGeo, haloMat);
+        haloMesh.name = "glorious_halo";
+        haloMesh.rotation.x = Math.PI / 2;
+        // Position above the head of the procedural character (head.position.y is 1.25)
+        haloMesh.position.set(0, 1.25 + 0.38 / 2 + 0.22, 0);
+
+        const glowGeo = new THREE.TorusGeometry(0.18, 0.035, 8, 32);
+        const glowMat = new THREE.MeshBasicMaterial({
+          color: 0xffe57f,
+          transparent: true,
+          opacity: 0.4,
+          blending: THREE.AdditiveBlending,
+        });
+        const glowMesh = new THREE.Mesh(glowGeo, glowMat);
+        glowMesh.name = "glorious_halo_glow";
+        haloMesh.add(glowMesh);
+
+        characterGroup.add(haloMesh);
+      }
+
       // Adjust group overall height anchor
       characterGroup.position.y = -0.3;
     };
@@ -456,6 +882,14 @@ export const CharacterCreator: React.FC<CharacterCreatorProps> = ({ onNavigate }
         });
       }
 
+      // Rotate/float the glorious golden halo
+      const currentHalo = characterGroup.getObjectByName("glorious_halo");
+      if (currentHalo) {
+        currentHalo.rotation.z = elapsed * 1.5;
+        const baseHeight = importedGlbRef.current ? 1.95 : (1.25 + 0.38 / 2 + 0.22);
+        currentHalo.position.y = baseHeight + Math.sin(elapsed * 2.5) * 0.025;
+      }
+
       // ─── PLAYER BODY SUB-ANIMATION LOOPS ───────────────────────────
       const t = elapsed * 6; // base speed
       if (animationMode === 'idle') {
@@ -513,7 +947,7 @@ export const CharacterCreator: React.FC<CharacterCreatorProps> = ({ onNavigate }
       }
       renderer.dispose();
     };
-  }, [skinTone, eyeColor, hairStyle, hairColor, outfitIdx, activeAura, widthScale, heightScale, muscleScale, animationMode]);
+  }, [skinTone, eyeColor, hairStyle, hairColor, outfitIdx, activeAura, widthScale, heightScale, muscleScale, animationMode, showHalo, renderTick]);
 
   const handleFinishCreator = () => {
     setIsSpawned(true);
@@ -562,10 +996,16 @@ export const CharacterCreator: React.FC<CharacterCreatorProps> = ({ onNavigate }
             <Sparkles className="w-5 h-5 text-violet-400" />
           </h1>
         </div>
-        <div className="flex justify-center gap-3">
+        <div className="flex flex-wrap justify-center gap-2">
+          <button
+            onClick={() => onNavigate('sandbox')}
+            className="bg-slate-900 hover:bg-slate-850 border border-slate-800 hover:border-indigo-500/30 text-slate-300 font-bold font-mono text-xs px-4 py-2.5 rounded-xl flex items-center gap-2 cursor-pointer transition transform hover:scale-102"
+          >
+            ← RETOUR SANDBOX
+          </button>
           <button
             onClick={handleRandomize}
-            className="bg-slate-900 hover:bg-slate-800 border border-slate-800 hover:border-violet-500/30 text-slate-300 font-bold font-mono text-xs px-4 py-2.5 rounded-xl flex items-center gap-2 cursor-pointer transition"
+            className="bg-slate-900 hover:bg-slate-850 border border-slate-800 hover:border-violet-500/30 text-slate-300 font-bold font-mono text-xs px-4 py-2.5 rounded-xl flex items-center gap-2 cursor-pointer transition transform hover:scale-102"
           >
             <Shuffle className="w-4 h-4" />
             ALÉATOIRE
@@ -573,17 +1013,170 @@ export const CharacterCreator: React.FC<CharacterCreatorProps> = ({ onNavigate }
         </div>
       </div>
 
-      <div className="max-w-6xl mx-auto w-full grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+      <div className="max-w-7xl mx-auto w-full grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
         
-        {/* LEFT FORM PANEL (7 cols) */}
-        <div className="lg:col-span-7 bg-slate-900/35 border border-slate-900/80 rounded-2xl p-6 flex flex-col gap-6 backdrop-filter blur-xl">
+        {/* COLUMN 1: AI ASSISTANT & DATABASE SAVES (4 cols) */}
+        <div className="lg:col-span-4 flex flex-col gap-6">
+          
+          {/* AI Conversational Assistant */}
+          <div className="bg-slate-900/40 border border-slate-800 rounded-2xl p-5 flex flex-col gap-4 backdrop-blur-xl">
+            <div className="flex items-center gap-2 border-b border-slate-800 pb-3">
+              <MessageSquare className="w-5 h-5 text-violet-400" />
+              <div>
+                <h3 className="text-xs font-mono font-bold text-violet-400 uppercase tracking-wider">
+                  Synthèse IA d'Agent
+                </h3>
+                <p className="text-[10px] text-slate-500 font-mono">Modélisation narrative EtherPrism</p>
+              </div>
+            </div>
+
+            {/* Prompt input */}
+            <div className="flex flex-col gap-2">
+              <textarea
+                placeholder="Ex: Une rebelle cyborg très musclée avec de longs cheveux rouges, une combinaison tactique et une aura de feu (warlord)..."
+                className="w-full h-24 bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs text-slate-200 outline-none focus:border-violet-500/50 resize-none placeholder-slate-600 font-mono"
+                value={aiPrompt}
+                onChange={(e) => setAiPrompt(e.target.value)}
+                disabled={isAiGenerating}
+              />
+              <button
+                onClick={() => handleModelCharacterAI()}
+                disabled={isAiGenerating || !aiPrompt.trim()}
+                className="w-full bg-violet-600 hover:bg-violet-500 disabled:bg-slate-900 disabled:text-slate-600 text-white font-bold text-xs py-2.5 rounded-xl flex items-center justify-center gap-2 cursor-pointer transition disabled:cursor-not-allowed"
+              >
+                {isAiGenerating ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin text-violet-400" />
+                    SYNTHÈSE EN COURS...
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="w-4 h-4" />
+                    SYNTHÉTISER AVATAR IA
+                  </>
+                )}
+              </button>
+            </div>
+
+            {/* Suggestions bubbles */}
+            <div className="flex flex-col gap-1.5 pt-1">
+              <span className="text-[10px] font-mono text-slate-500 uppercase tracking-widest block mb-1">Idées de prompts:</span>
+              <div className="flex flex-col gap-1.5">
+                {[
+                  "Gendarme gilet tactique et court militaire",
+                  "Hacker cyberpunk aux dreads bleu ciel",
+                  "Prêtre mystique aux yeux blancs et aura sacrée",
+                  "Assassin du cartel baraqué aux yeux rouges"
+                ].map((sug, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => {
+                      setAiPrompt(sug);
+                    }}
+                    className="bg-slate-950 hover:bg-slate-800 border border-slate-800/80 rounded-lg px-2.5 py-1.5 text-[10px] text-left font-mono text-slate-400 transition cursor-pointer hover:border-slate-700 w-full truncate"
+                  >
+                    ✦ {sug}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Trace logs */}
+            {aiTrace.length > 0 && (
+              <div className="bg-slate-950 border border-slate-900 rounded-xl p-3 font-mono text-[9px] text-slate-400 flex flex-col gap-1 max-h-40 overflow-y-auto">
+                <span className="text-violet-400 font-black">// TRACE D'EXÉCUTION DU SYSTÈME:</span>
+                {aiTrace.map((tr, index) => (
+                  <div key={index} className="leading-relaxed whitespace-pre-wrap">{tr}</div>
+                ))}
+              </div>
+            )}
+
+            {/* RP Story display if any */}
+            {story && (
+              <div className="bg-slate-950/50 border border-slate-900 rounded-xl p-3 flex flex-col gap-1.5">
+                <span className="text-[9px] font-mono font-bold text-slate-500 uppercase flex items-center gap-1">
+                  <User className="w-3.5 h-3.5 text-slate-500" /> BIOGRAPHIE ET HISTOIRE RP :
+                </span>
+                <p className="text-xs text-slate-300 italic leading-relaxed font-sans select-all">
+                  "{story}"
+                </p>
+              </div>
+            )}
+          </div>
+
+          {/* Saved Characters server Database */}
+          <div className="bg-slate-900/40 border border-slate-800 rounded-2xl p-5 flex flex-col gap-4 backdrop-blur-xl">
+            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+              <div className="flex items-center gap-2">
+                <Database className="w-5 h-5 text-indigo-400" />
+                <div>
+                  <h3 className="text-xs font-mono font-bold text-indigo-400 uppercase tracking-wider">
+                    Archives du Serveur
+                  </h3>
+                  <p className="text-[10px] text-slate-500 font-mono">Fiches stockées en DB</p>
+                </div>
+              </div>
+              <button
+                onClick={fetchSavedCharacters}
+                className="p-1 hover:bg-slate-800 rounded text-slate-400 hover:text-white transition cursor-pointer"
+                title="Rafraîchir"
+              >
+                <RefreshCw className={`w-3.5 h-3.5 ${isLoadingSaves ? 'animate-spin' : ''}`} />
+              </button>
+            </div>
+
+            {isLoadingSaves ? (
+              <div className="flex flex-col items-center py-6 text-slate-500 font-mono text-xs gap-2">
+                <Loader2 className="w-5 h-5 animate-spin text-indigo-500" />
+                Chargement de la base de données...
+              </div>
+            ) : savedCharacters.length === 0 ? (
+              <div className="text-center py-6 text-slate-600 font-mono text-[11px] leading-relaxed">
+                Aucun citoyen archivé sur le serveur.<br />Sauvegardez votre configuration actuelle !
+              </div>
+            ) : (
+              <div className="flex flex-col gap-2 max-h-60 overflow-y-auto pr-1">
+                {savedCharacters.map((char, index) => {
+                  const auraObj = AURAS.find(a => a.id === char.aura?.toLowerCase()) || AURAS[0];
+                  return (
+                    <div
+                      key={index}
+                      onClick={() => handleApplySavedCharacter(char)}
+                      className="bg-slate-950 hover:bg-slate-900 border border-slate-900 hover:border-indigo-500/30 rounded-xl p-3 flex flex-col gap-1 transition cursor-pointer group text-left"
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-bold text-slate-200 group-hover:text-indigo-400 transition truncate w-40">
+                          {char.name}
+                        </span>
+                        <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-slate-900 border border-slate-800 text-slate-500">
+                          {char.gender === 'F' || char.gender === 'Féminin' ? 'F' : 'M'}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-1.5 text-[10px] text-slate-400 font-mono">
+                        <span style={{ color: auraObj.color }}>●</span>
+                        <span className="truncate">{auraObj.name}</span>
+                      </div>
+                      <p className="text-[10px] text-slate-500 leading-normal line-clamp-1 italic font-sans">
+                        "{char.story || 'Aucun passif archivé.'}"
+                      </p>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+        </div>
+
+        {/* COLUMN 2: MANUAL SLIDERS PANEL (4 cols) */}
+        <div className="lg:col-span-4 bg-slate-900/35 border border-slate-900/80 rounded-2xl p-6 flex flex-col gap-6 backdrop-blur-xl">
           
           {/* SEC 1: BASIC DETAILS */}
           <div>
             <h3 className="text-xs font-mono font-bold text-violet-400 uppercase tracking-wider mb-3">
-              1. Identité Narrative
+              1. Identité Narrative (Manuel)
             </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4">
               <div>
                 <label className="text-[11px] font-mono text-slate-500 block mb-1.5 uppercase tracking-wider">Nom du Personnage</label>
                 <input
@@ -618,7 +1211,7 @@ export const CharacterCreator: React.FC<CharacterCreatorProps> = ({ onNavigate }
           </div>
 
           {/* SEC 2: SWATCHES (SKIN, HAIR, EYES) */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 border-t border-slate-900/80 pt-6">
+          <div className="grid grid-cols-1 gap-6 border-t border-slate-900/80 pt-6">
             {/* Skin */}
             <div>
               <label className="text-[11px] font-mono text-slate-500 block mb-2 uppercase tracking-wider">Teint de peau</label>
@@ -666,7 +1259,7 @@ export const CharacterCreator: React.FC<CharacterCreatorProps> = ({ onNavigate }
           </div>
 
           {/* SEC 3: HAIR & OUTFITS SELECT */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 border-t border-slate-900/80 pt-6">
+          <div className="grid grid-cols-1 gap-6 border-t border-slate-900/80 pt-6">
             <div>
               <label className="text-[11px] font-mono text-slate-500 block mb-2 uppercase tracking-wider">Coupe de Cheveux</label>
               <select
@@ -700,7 +1293,7 @@ export const CharacterCreator: React.FC<CharacterCreatorProps> = ({ onNavigate }
             </h3>
             <div className="flex flex-col gap-4 font-mono text-xs">
               <div className="flex items-center justify-between gap-4">
-                <span className="text-slate-500 w-28">Largeur Épaules</span>
+                <span className="text-slate-500 w-24">Épaules</span>
                 <input
                   type="range"
                   min="0.7"
@@ -713,7 +1306,7 @@ export const CharacterCreator: React.FC<CharacterCreatorProps> = ({ onNavigate }
                 <span className="text-violet-400 font-bold w-12 text-right">x{widthScale.toFixed(2)}</span>
               </div>
               <div className="flex items-center justify-between gap-4">
-                <span className="text-slate-500 w-28">Taille Globale</span>
+                <span className="text-slate-500 w-24">Taille</span>
                 <input
                   type="range"
                   min="0.8"
@@ -726,7 +1319,7 @@ export const CharacterCreator: React.FC<CharacterCreatorProps> = ({ onNavigate }
                 <span className="text-violet-400 font-bold w-12 text-right">x{heightScale.toFixed(2)}</span>
               </div>
               <div className="flex items-center justify-between gap-4">
-                <span className="text-slate-500 w-28">Masse Musculaire</span>
+                <span className="text-slate-500 w-24">Muscle</span>
                 <input
                   type="range"
                   min="0.7"
@@ -741,12 +1334,36 @@ export const CharacterCreator: React.FC<CharacterCreatorProps> = ({ onNavigate }
             </div>
           </div>
 
+          {/* ORÉOLE TOGGLE */}
+          <div className="border-t border-slate-900/80 pt-6">
+            <div className="bg-slate-950 border border-slate-800 rounded-xl p-4 flex items-center justify-between pointer-events-auto">
+              <div className="flex flex-col">
+                <span className="text-xs font-mono font-bold text-violet-400 uppercase tracking-wider flex items-center gap-1.5">
+                  😇 Oréole Divine (Halo)
+                </span>
+                <span className="text-[10px] text-slate-500 font-mono mt-0.5">Activer/Désactiver le halo céleste 3D (procedural & GLB)</span>
+              </div>
+              <button
+                onClick={() => setShowHalo(!showHalo)}
+                className={`w-12 h-6.5 rounded-full p-1 transition-colors duration-200 focus:outline-none cursor-pointer ${
+                  showHalo ? 'bg-amber-500' : 'bg-slate-800'
+                }`}
+              >
+                <div
+                  className={`bg-white w-4.5 h-4.5 rounded-full shadow-md transform transition-transform duration-200 ${
+                    showHalo ? 'translate-x-5.5' : 'translate-x-0'
+                  }`}
+                />
+              </button>
+            </div>
+          </div>
+
           {/* SEC 5: AURAS */}
           <div className="border-t border-slate-900/80 pt-6">
             <h3 className="text-xs font-mono font-bold text-violet-400 uppercase tracking-wider mb-3">
-              3. Aura d'Émanation Cosmique (12 Presets)
+              3. Aura d'Émanation Cosmique
             </h3>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-2.5">
+            <div className="grid grid-cols-2 gap-2">
               {AURAS.map((a) => (
                 <button
                   key={a.id}
@@ -757,7 +1374,7 @@ export const CharacterCreator: React.FC<CharacterCreatorProps> = ({ onNavigate }
                       : 'bg-slate-950 border-slate-800 hover:border-slate-700 text-slate-400'
                   }`}
                 >
-                  <span>{a.name}</span>
+                  <span className="truncate">{a.name}</span>
                   <span className="text-[9px] font-normal text-slate-500 mt-0.5 line-clamp-1">{a.desc}</span>
                 </button>
               ))}
@@ -766,12 +1383,32 @@ export const CharacterCreator: React.FC<CharacterCreatorProps> = ({ onNavigate }
 
         </div>
 
-        {/* RIGHT PREVIEW CANVAS PANEL (5 cols) */}
-        <div className="lg:col-span-5 flex flex-col gap-6 sticky top-24">
+        {/* COLUMN 3: RIGHT PREVIEW CANVAS PANEL (4 cols) */}
+        <div className="lg:col-span-4 flex flex-col gap-6 sticky top-24">
           
           <div className="relative bg-slate-950 border border-slate-900 rounded-2xl overflow-hidden aspect-square w-full flex items-center justify-center bg-radial-gradient">
             <div className="absolute top-4 left-4 font-mono text-[9px] text-slate-500 uppercase z-10">
               ● APERÇU PROCEDURAL 3D
+            </div>
+
+            {/* FLOATING TOP IMPORT CONTROLS */}
+            <div className="absolute top-4 right-4 flex gap-1.5 z-10">
+              <button
+                onClick={handleImportJSON}
+                className="bg-slate-900/95 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-white font-bold text-[9px] px-2.5 py-1 rounded-lg flex items-center gap-1 cursor-pointer transition uppercase"
+                title="Importer une fiche personnage au format JSON"
+              >
+                <FileJson className="w-3 h-3 text-indigo-400" />
+                Importer JSON
+              </button>
+              <button
+                onClick={handleImportGLB}
+                className="bg-slate-900/95 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-white font-bold text-[9px] px-2.5 py-1 rounded-lg flex items-center gap-1 cursor-pointer transition uppercase"
+                title="Importer un fichier 3D au format GLB/GLTF"
+              >
+                <Upload className="w-3 h-3 text-violet-400" />
+                Importer GLB
+              </button>
             </div>
             
             <div ref={containerRef} className="w-full h-full flex items-center justify-center cursor-grab active:cursor-grabbing" />
@@ -798,13 +1435,47 @@ export const CharacterCreator: React.FC<CharacterCreatorProps> = ({ onNavigate }
           </div>
 
           {/* Action buttons */}
-          <button
-            onClick={handleFinishCreator}
-            className="w-full bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white font-extrabold text-sm py-4 rounded-xl flex items-center justify-center gap-2 shadow-2xl shadow-violet-600/30 hover:shadow-violet-600/50 cursor-pointer transition transform active:scale-98"
-          >
-            <CheckCircle className="w-5 h-5" />
-            CRÉER ET APPARAÎTRE EN VILLE
-          </button>
+          <div className="flex flex-col gap-3">
+            
+            {/* Main Primary Create/Spawn button */}
+            <button
+              onClick={handleFinishCreator}
+              className="w-full bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white font-extrabold text-xs py-3.5 rounded-xl flex items-center justify-center gap-2 shadow-2xl shadow-violet-600/30 hover:shadow-violet-600/50 cursor-pointer transition transform active:scale-98"
+            >
+              <CheckCircle className="w-4.5 h-4.5" />
+              CRÉER ET APPARAÎTRE EN VILLE
+            </button>
+
+            {/* Save to Archive Database Server */}
+            <button
+              onClick={handleSaveToServer}
+              className="w-full bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 font-bold text-xs py-3 rounded-xl flex items-center justify-center gap-2 cursor-pointer transition"
+            >
+              <Save className="w-4 h-4 text-violet-400" />
+              SAUVEGARDER SUR LE SERVEUR
+            </button>
+
+            {/* Downloader Exports Grid */}
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                onClick={handleExportJSON}
+                className="bg-slate-950 hover:bg-slate-900 border border-slate-900 hover:border-slate-800 text-slate-400 hover:text-slate-300 font-bold text-[10px] py-2.5 rounded-xl flex items-center justify-center gap-1.5 cursor-pointer transition"
+                title="Exporter la configuration de la fiche au format JSON"
+              >
+                <FileJson className="w-3.5 h-3.5 text-indigo-400" />
+                EXPORTER JSON
+              </button>
+              <button
+                onClick={handleExportGLB}
+                className="bg-slate-950 hover:bg-slate-900 border border-slate-900 hover:border-slate-800 text-slate-400 hover:text-slate-300 font-bold text-[10px] py-2.5 rounded-xl flex items-center justify-center gap-1.5 cursor-pointer transition"
+                title="Exporter l'avatar 3D au format GLB pour Blender, Unity, etc."
+              >
+                <Download className="w-3.5 h-3.5 text-violet-400" />
+                EXPORTER GLB
+              </button>
+            </div>
+
+          </div>
 
           <p className="text-[10px] text-slate-500 text-center font-mono">
             * Votre avatar sera stocké localement et ajouté à la base de données EtherPrism.
@@ -816,7 +1487,7 @@ export const CharacterCreator: React.FC<CharacterCreatorProps> = ({ onNavigate }
 
       {/* POPUP CONFIRMATION */}
       {isSpawned && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-filter blur-md animate-fade-in">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-md animate-fade-in">
           <div className="bg-slate-900 border border-violet-500/30 rounded-2xl p-8 max-w-sm text-center shadow-2xl flex flex-col items-center">
             <div className="w-16 h-16 rounded-full bg-violet-600/10 border border-violet-500/30 flex items-center justify-center text-3xl mb-4 animate-bounce">
               👁️‍🗨️

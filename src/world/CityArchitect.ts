@@ -395,11 +395,6 @@ export class CityArchitect {
       { x: -10, y: 0, z: -10 }, { x: 10, y: 0, z: -10 },
       { x: -10, y: 0, z: 10 }, { x: 10, y: 0, z: 10 },
       { x: -40, y: 0, z: 10 }, { x: 40, y: 0, z: 10 },
-      { x: -45, y: 0, z: -30 }, { x: 45, y: private buildTrees(): void {
-    const treePositions: Vector3[] = [
-      { x: -10, y: 0, z: -10 }, { x: 10, y: 0, z: -10 },
-      { x: -10, y: 0, z: 10 }, { x: 10, y: 0, z: 10 },
-      { x: -40, y: 0, z: 10 }, { x: 40, y: 0, z: 10 },
       { x: -45, y: 0, z: -30 }, { x: 45, y: 0, z: -30 },
       { x: -35, y: 0, z: 35 }, { x: 35, y: 0, z: 35 },
       // Commercial

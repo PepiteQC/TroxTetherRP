@@ -1,121 +1,217 @@
 // server/agents/EtherPrism.js
-// 🔮 Crée des variantes de gangs et schémas RP complets importables en jeu
+// 🔮 Générateur de Contenu Procédural & Schémas RP - Version 3.0
+import crypto from "node:crypto";
+
 export class EtherPrism {
-  constructor() {
-    this.name    = "EtherPrism";
-    this.version = "2.0.0";
+  constructor(config = {}) {
+    this.name = "EtherPrism";
+    this.version = "3.0.0";
+    
+    this.config = {
+      enableMetrics: config.enableMetrics !== false,
+      logLevel: config.logLevel || 'warn',
+      defaultCurrency: config.defaultCurrency || "EtherCoin",
+      ...config
+    };
+
     this.schemas = new Map();
+    this.templates = new Map(); // Templates de base pour génération rapide
+    
+    this.metrics = {
+      generated: 0,
+      variantsCreated: 0,
+      errors: 0
+    };
+
+    this.#loadBaseTemplates();
   }
 
   async process(packet) {
     return {
       agent: this.name,
+      version: this.version,
       mission: packet?.mission,
       success: true,
-      confidence: 90,
-      data: { status: "prism_ready", schemas: this.schemas.size }
+      confidence: 95,
+      data: { schemas: this.schemas.size, metrics: this.getMetrics() }
     };
   }
 
-  // Crée 3 variantes d'un gang RP
+  // 🎲 Créer 3 variantes distinctes d'un gang (Aggressive, Stealth, Political)
   async createGangVariants(baseConfig = {}) {
-    const base = {
-      name:      baseConfig.name      || "Unnamed Gang",
-      territory: baseConfig.territory || "Downtown",
-      color:     baseConfig.color     || "#ff4444",
-      style:     baseConfig.style     || "street",
-    };
+    try {
+      const base = {
+        name: baseConfig.name || "Unnamed Gang",
+        territory: baseConfig.territory || "Downtown",
+        color: baseConfig.color || "#ff4444",
+        style: baseConfig.style || "street",
+        ...baseConfig
+      };
 
-    const variants = [
-      {
-        id:          `gang_aggressive_${Date.now()}`,
-        name:        `${base.name} — Variant AGGRESSIVE`,
-        type:        "aggressive",
-        territory:   base.territory,
-        color:       "#ff2222",
-        stats:       { attack: 90, defense: 40, stealth: 20, influence: 60 },
-        abilities:   ["drive_by", "raid", "intimidation"],
-        economy:     { drugTrade: 80, extortion: 70, robbery: 60 },
-        weaknesses:  ["police_raids", "rival_alliances"],
-        luaExport:   this.#toLua({ ...base, type: "aggressive" }),
-      },
-      {
-        id:          `gang_stealth_${Date.now()}`,
-        name:        `${base.name} — Variant STEALTH`,
-        type:        "stealth",
-        territory:   base.territory,
-        color:       "#222266",
-        stats:       { attack: 50, defense: 60, stealth: 95, influence: 75 },
-        abilities:   ["hacking", "infiltration", "money_laundering"],
-        economy:     { cybercrime: 90, blackmail: 70, smuggling: 80 },
-        weaknesses:  ["surveillance", "informants"],
-        luaExport:   this.#toLua({ ...base, type: "stealth" }),
-      },
-      {
-        id:          `gang_political_${Date.now()}`,
-        name:        `${base.name} — Variant POLITICAL`,
-        type:        "political",
-        territory:   base.territory,
-        color:       "#226622",
-        stats:       { attack: 30, defense: 70, stealth: 50, influence: 95 },
-        abilities:   ["bribery", "propaganda", "territory_control"],
-        economy:     { corruption: 85, protection: 75, legitimate: 60 },
-        weaknesses:  ["media_exposure", "rival_politicians"],
-        luaExport:   this.#toLua({ ...base, type: "political" }),
-      }
-    ];
+      const timestamp = Date.now();
+      const variants = [
+        this.#createVariant(base, "aggressive", timestamp),
+        this.#createVariant(base, "stealth", timestamp),
+        this.#createVariant(base, "political", timestamp)
+      ];
 
-    // Stocker les schémas
-    variants.forEach(v => this.schemas.set(v.id, v));
-    return { base, variants, total: variants.length, timestamp: Date.now() };
+      // Stockage
+      variants.forEach(v => this.schemas.set(v.id, v));
+      this._incrementMetric('variantsCreated', 3);
+
+      return { 
+        base, 
+        variants, 
+        total: variants.length, 
+        timestamp 
+      };
+    } catch (error) {
+      this._incrementMetric('errors');
+      throw error;
+    }
   }
 
-  // Générer schéma RP complet importable
+  // 📜 Générer un Schéma RP Complet (World Building)
   async generateRPSchema(config = {}) {
-    const schema = {
-      id:        `schema_${Date.now()}`,
-      name:      config.name      || "TroxT RP Schema",
-      version:   "1.0.0",
-      type:      config.type      || "gang",
-      world:     config.world     || "EtherWorld",
-      factions:  config.factions  || [],
-      jobs:      config.jobs      || [],
-      territory: config.territory || {},
-      economy:   {
-        currency:    "EtherCoin",
-        startMoney:  500,
-        taxRate:     0.08,
-        inflation:   0.02,
+    try {
+      const schemaId = crypto.randomUUID();
+      const schema = {
+        id: schemaId,
+        name: config.name || "TroxT RP Schema",
+        version: config.version || "1.0.0",
+        type: config.type || "gang",
+        world: config.world || "EtherWorld",
+        
+        // Structure normalisée
+        factions: config.factions || [],
+        jobs: config.jobs || [],
+        territory: config.territory || {},
+        
+        economy: {
+          currency: this.config.defaultCurrency,
+          startMoney: config.startMoney || 500,
+          taxRate: config.taxRate || 0.08,
+          inflation: config.inflation || 0.02,
+          ...config.economy
+        },
+        
+        rules: config.rules || [
+          "No RDM (Random Deathmatch)",
+          "Respect RP boundaries",
+          "Admin decisions are final",
+          "No metagaming"
+        ],
+        
+        // Exports prêts à l'emploi
+        exports: {
+          lua: this.#toLua(schema),
+          json: JSON.stringify(config, null, 2)
+        },
+        
+        createdAt: new Date().toISOString(),
+        checksum: crypto.createHash('md5').update(JSON.stringify(config)).digest('hex')
+      };
+
+      this.schemas.set(schemaId, schema);
+      this._incrementMetric('generated');
+      
+      return schema;
+    } catch (error) {
+      this._incrementMetric('errors');
+      throw error;
+    }
+  }
+
+  // --- Méthodes Privées de Génération ---
+
+  #createVariant(base, type, timestamp) {
+    const profiles = {
+      aggressive: {
+        stats: { attack: 90, defense: 40, stealth: 20, influence: 60 },
+        abilities: ["drive_by", "raid", "intimidation"],
+        economy: { drugTrade: 80, extortion: 70, robbery: 60 },
+        weaknesses: ["police_raids", "rival_alliances"],
+        color: "#ff2222"
       },
-      rules: [
-        "No RDM (Random Deathmatch)",
-        "Respect RP boundaries",
-        "Admin decisions are final",
-        "No metagaming",
-      ],
-      luaExport: this.#toLua(config),
-      jsonExport: JSON.stringify(config, null, 2),
-      createdAt: new Date().toISOString(),
+      stealth: {
+        stats: { attack: 50, defense: 60, stealth: 95, influence: 75 },
+        abilities: ["hacking", "infiltration", "money_laundering"],
+        economy: { cybercrime: 90, blackmail: 70, smuggling: 80 },
+        weaknesses: ["surveillance", "informants"],
+        color: "#222266"
+      },
+      political: {
+        stats: { attack: 30, defense: 70, stealth: 50, influence: 95 },
+        abilities: ["bribery", "propaganda", "territory_control"],
+        economy: { corruption: 85, protection: 75, legitimate: 60 },
+        weaknesses: ["media_exposure", "rival_politicians"],
+        color: "#226622"
+      }
     };
 
-    this.schemas.set(schema.id, schema);
-    return schema;
+    const profile = profiles[type];
+    const id = `variant_${type}_${crypto.randomUUID().slice(0, 8)}`;
+
+    return {
+      id,
+      name: `${base.name} — ${type.toUpperCase()}`,
+      type,
+      territory: base.territory,
+      color: profile.color,
+      ...profile,
+      luaExport: this.#toLua({ ...base, type, ...profile }),
+      createdAt: timestamp
+    };
   }
 
-  #toLua(config) {
-    return `-- EtherPrism Schema Export
--- Generated: ${new Date().toISOString()}
-local schema = {
-  name = "${config.name || "Schema"}",
-  type = "${config.type || "gang"}",
-  version = "1.0.0",
-}
-return schema`;
+  #toLua(data) {
+    // Conversion simple JS -> Lua Table
+    const cleanData = { ...data };
+    delete cleanData.exports; // Éviter récursion
+    
+    let lua = `-- EtherPrism Export\n-- Generated: ${new Date().toISOString()}\nlocal schema = {\n`;
+    
+    for (const [key, value] of Object.entries(cleanData)) {
+      if (typeof value === 'string') {
+        lua += `  ${key} = "${value}",\n`;
+      } else if (typeof value === 'number' || typeof value === 'boolean') {
+        lua += `  ${key} = ${value},\n`;
+      } else if (Array.isArray(value)) {
+        lua += `  ${key} = { ${value.map(v => `"${v}"`).join(', ')} },\n`;
+      }
+    }
+    
+    lua += `}\nreturn schema`;
+    return lua;
   }
 
-  getSchema(id)    { return this.schemas.get(id); }
-  getAllSchemas()   { return Array.from(this.schemas.values()); }
-  getStatus()      { return { name: this.name, version: this.version, schemas: this.schemas.size }; }
+  #loadBaseTemplates() {
+    this.templates.set("basic_gang", { style: "street", influence: 50 });
+    this.templates.set("corp_syndicate", { style: "corporate", influence: 90 });
+  }
+
+  getSchema(id) { return this.schemas.get(id); }
+  
+  getAllSchemas() { return Array.from(this.schemas.values()); }
+
+  _incrementMetric(metric, amount = 1) {
+    if (this.config.enableMetrics && this.metrics[metric] !== undefined) {
+      this.metrics[metric] += amount;
+    }
+  }
+
+  getMetrics() {
+    return { ...this.metrics, timestamp: Date.now() };
+  }
+
+  getStatus() { 
+    return { 
+      name: this.name, 
+      version: this.version, 
+      schemas: this.schemas.size,
+      metrics: this.getMetrics()
+    }; 
+  }
 }
 
 export default EtherPrism;

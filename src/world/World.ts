@@ -96,7 +96,7 @@ export class World {
     group.add(road);
   }
 
-  private generateBuildings(group: THREE.Group, cx: number, cz: number...) {
+  private generateBuildings(group: THREE.Group, cx: number, cz: number) {
     const count = Math.floor(Math.random() * 4) + 1;
     for (let i = 0; i < count; i++) {
       const w = 3 + Math.random() * 4;

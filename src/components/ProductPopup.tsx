@@ -1,13 +1,14 @@
-import { X } from 'lucide-react';
+Fimport { X } from 'lucide-react';
 import { GarmentItem } from '../types';
 
 interface ProductPopupProps {
   item: GarmentItem | null;
   onClose: () => void;
+  onBuy?: (item: GarmentItem) => void;
 }
 
 /** Popup d'information produit (marque, type, prix) pour la Boutique Éther */
-export function ProductPopup({ item, onClose }: ProductPopupProps) {
+export function ProductPopup({ item, onClose, onBuy }: ProductPopupProps) {
   if (!item) return null;
   return (
     <div
@@ -27,7 +28,7 @@ export function ProductPopup({ item, onClose }: ProductPopupProps) {
         alignItems: 'center',
         gap: 22,
         fontFamily: "'JetBrains Mono', 'Courier New', monospace",
-        minWidth: 350,
+        minWidth: 400,
         boxShadow: '0 0 40px rgba(124, 58, 237, 0.25)',
       }}
       className="ui-interactive animate-bounce-short border-violet-500/50"
@@ -59,9 +60,27 @@ export function ProductPopup({ item, onClose }: ProductPopupProps) {
         </div>
         <div style={{ color: '#64748b', fontSize: 11 }}>{item.tag}</div>
       </div>
-      <div style={{ textAlign: 'right', marginRight: 8 }}>
+      <div style={{ textAlign: 'right', marginRight: 8, display: 'flex', flexDirection: 'column', gap: 6, alignItems: 'flex-end' }}>
         <div style={{ color: '#f0ede8', fontSize: 20, fontWeight: 700 }}>{item.price}</div>
-        <div style={{ color: '#334155', fontSize: 9, letterSpacing: 1 }}>+ taxes</div>
+        {onBuy && (
+          <button
+            onClick={() => onBuy(item)}
+            style={{
+              background: '#c9a84c',
+              color: '#0a0d14',
+              border: 'none',
+              borderRadius: 6,
+              padding: '6px 12px',
+              fontSize: 10,
+              fontWeight: 800,
+              cursor: 'pointer',
+              transition: 'all 0.2s',
+            }}
+            className="hover:bg-amber-400 hover:scale-105 active:scale-95 transition"
+          >
+            ACHETER
+          </button>
+        )}
       </div>
       <button
         onClick={onClose}

@@ -147,6 +147,21 @@ export class GameManager {
   }[] = [];
   private damageIndicators: { sprite: THREE.Sprite; velocity: THREE.Vector3; life: number }[] = [];
   private combatParticles: { mesh: THREE.Mesh; velocity: THREE.Vector3; life: number }[] = [];
+  private advancedParticles: {
+    mesh: THREE.Object3D;
+    type: 'machine' | 'ring' | 'plant_swirl' | 'water_bubble';
+    velocity: THREE.Vector3;
+    rotationSpeed: THREE.Vector3;
+    scaleSpeed: number;
+    initialScale: THREE.Vector3;
+    life: number;
+    maxLife: number;
+    color: number;
+    spiralRadius?: number;
+    spiralSpeed?: number;
+    spiralAngle?: number;
+    spiralCenter?: THREE.Vector3;
+  }[] = [];
 
   // Lights & Atmosphere
   private sunLight!: THREE.DirectionalLight;
@@ -165,16 +180,17 @@ export class GameManager {
   private flashlightSpot!: THREE.SpotLight;
   private flashlightOn = false;
   public playerHealth = 100;
+  public godMode = false;
 
   // Physics & Navigation
   public playerPos = new THREE.Vector3(0, 0, 15);
   public playerVelocity = new THREE.Vector3(0, 0, 0);
-  private playerSpeed = 5.0; // units per second
-  private playerSprintMultiplier = 1.8;
-  private playerHeight = 1.9;
-  private isGrounded = true;
-  private gravity = 19.8;
-  private jumpForce = 7.0;
+  public playerSpeed = 5.0; // units per second
+  public playerSprintMultiplier = 1.8;
+  public playerHeight = 1.9;
+  public isGrounded = true;
+  public gravity = 19.8;
+  public jumpForce = 7.0;
 
   // Camera Orbit Control state
   public cameraYaw = 0; // horizontal angle
@@ -190,6 +206,18 @@ export class GameManager {
   public gridSnapSize = 0.5;
   private buildRotationOffset = 0;
   private sceneTemplate = 'completed';
+
+  // Boutique Éther Properties
+  public nearGarment: any | null = null;
+  public examinedGarment: any | null = null;
+
+  // Cantine Québécoise Properties
+  public nearCantine = false;
+  public examinedCantine = false;
+
+  // Marchand de Cannabis/Graines Properties
+  public nearMarchand = false;
+  public examinedMarchand = false;
 
   // React UI Update Callback
   private onStateUpdate: (state: PlayerState & {
@@ -233,7 +261,7 @@ export class GameManager {
     this.renderer.setSize(this.canvas.clientWidth, this.canvas.clientHeight);
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     this.renderer.shadowMap.enabled = true;
-    this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    this.renderer.shadowMap.type = THREE.PCFShadowMap;
   }
 
   private initAtmosphere() {
@@ -489,7 +517,11 @@ export class GameManager {
 
       // Handle building click to spawn object in Build Mode
       if (e.button === 0 && this.activeItemId) {
-        this.builder.spawnItemAtGhost(this.activeItemId);
+        const spawned = this.builder.spawnItemAtGhost(this.activeItemId);
+        if (spawned && spawned.position) {
+          const spawnPos = new THREE.Vector3(spawned.position.x, spawned.position.y, spawned.position.z);
+          this.spawnMachineParticles(spawnPos, 0x818cf8, 20);
+        }
       }
     };
 
@@ -560,7 +592,30 @@ export class GameManager {
   }
 
   private interactDoor() {
-    // 1. Check if standing near any planted Cannabis crop first
+    // 1. Check if standing near any Boutique Éther clothes mannequin
+    if (this.nearGarment) {
+      this.examinedGarment = this.nearGarment;
+      this.addCombatLog(`🔍 EXAMEN : Vous observez la création "${this.nearGarment.type}" par ${this.nearGarment.brand}.`);
+      return;
+    }
+
+    // 1b. Check if standing near Quebec Cantine Chez Gaston
+    if (this.nearCantine) {
+      this.examinedCantine = true;
+      this.addCombatLog("🍽️ CANTINE : Vous regardez le menu de la Roulotte de Portneuf (Chez Gaston). Que voulez-vous manger ?");
+      this.onStateUpdatePay();
+      return;
+    }
+
+    // 1c. Check if standing near Marchand de Cannabis/Graines
+    if (this.nearMarchand) {
+      this.examinedMarchand = true;
+      this.addCombatLog("🌱 MARCHAND : 'Bonjour ! Tu veux acheter des graines de cannabis ou vendre ta récolte ?'");
+      this.onStateUpdatePay();
+      return;
+    }
+
+    // 2. Check if standing near any planted Cannabis crop first
     let nearPlant: any = null;
     let nearPlantDist = 2.4; // interact radius
     this.weedPlants.forEach(p => {
@@ -572,6 +627,7 @@ export class GameManager {
     });
 
     if (nearPlant) {
+      const plantPos = new THREE.Vector3(nearPlant.position.x, nearPlant.position.y + 0.3, nearPlant.position.z);
       if (nearPlant.growth >= 100) {
         // Harvest plant!
         this.scene.remove(nearPlant.mesh);
@@ -581,7 +637,11 @@ export class GameManager {
         this.weedBuds += yieldBuds;
         
         this.addCombatLog(`✂️ RÉCOLTE : Vous avez récolté ${yieldBuds} têtes de cannabis de qualité !`);
-        this.spawnCombatParticles(0xeab308, new THREE.Vector3(nearPlant.position.x, nearPlant.position.y + 0.4, nearPlant.position.z), 18);
+        
+        // Swirling gold and green leaves/sparkles
+        this.spawnPlantParticles(plantPos, 0x22c55e, 15); // green
+        this.spawnPlantParticles(plantPos, 0xeab308, 15); // amber/gold resin sparks
+        
         this.saveEconomy();
         this.saveWeedPlants();
       } else {
@@ -589,8 +649,10 @@ export class GameManager {
         nearPlant.waterLevel = 100;
         this.addCombatLog("💧 ARROSAGE : Cannabis arrosé ! Sa croissance se décuple.");
         
-        // blue water drops particles
-        this.spawnCombatParticles(0x3b82f6, new THREE.Vector3(nearPlant.position.x, nearPlant.position.y + 0.4, nearPlant.position.z), 15);
+        // Swirling blue water drops + classic splash droplets
+        this.spawnPlantParticles(plantPos, 0x3b82f6, 15);
+        this.spawnCombatParticles(0x3b82f6, plantPos, 10);
+        
         this.saveWeedPlants();
       }
       return;
@@ -672,6 +734,117 @@ export class GameManager {
       if (this.agentLogs.length > 15) this.agentLogs.pop();
     } else {
       this.addCombatLog(`⚠️ ÉCHEC : Cash insuffisant pour acheter ${name} ! Requis: $${cost}.`);
+    }
+  }
+
+  public buyGarment(item: any) {
+    const cost = parseInt(item.price.replace(/[^0-9]/g, ''));
+    if (this.cash >= cost) {
+      this.cash -= cost;
+      
+      // Update player's jacket color to the garment's color!
+      const hexColor = parseInt(item.color.replace('#', '0x'));
+      this.playerGroup.children.forEach(child => {
+        if (child instanceof THREE.Mesh && child.geometry instanceof THREE.BoxGeometry) {
+          const box = child.geometry as THREE.BoxGeometry;
+          if (Math.abs(box.parameters.width - 0.8) < 0.05 && Math.abs(box.parameters.height - 1.0) < 0.05) {
+            if (child.material instanceof THREE.MeshStandardMaterial) {
+              child.material.color.setHex(hexColor);
+            }
+          }
+        }
+      });
+
+      this.addCombatLog(`🛍️ BOUTIQUE : Vous avez acheté la ${item.type} (${item.brand}) pour $${cost} !`);
+      this.addCombatLog(`👤 AVATAR : Votre tenue a été mise à jour !`);
+      
+      // Spawn beautiful purchase star particles at player's location
+      this.spawnCombatParticles(hexColor, this.playerPos.clone().add(new THREE.Vector3(0, 1.0, 0)), 20);
+      
+      this.saveEconomy();
+      
+      // Close the popup after purchase
+      this.examinedGarment = null;
+    } else {
+      this.addCombatLog(`⚠️ BOUTIQUE : Cash insuffisant pour acheter ${item.type} ! Requis: $${cost}.`);
+    }
+  }
+
+  private updateBoutiqueProximity() {
+    let closestGarment: any | null = null;
+    let minDist = 2.2; // interact radius
+
+    if (this.city.boutiqueClothes && this.city.boutiqueClothes.length > 0) {
+      this.city.boutiqueClothes.forEach(garment => {
+        const dist = this.playerPos.distanceTo(garment.worldPos);
+        if (dist < minDist) {
+          minDist = dist;
+          closestGarment = garment;
+        }
+      });
+    }
+
+    this.nearGarment = closestGarment;
+  }
+
+  private updateCantineProximity() {
+    const dist = this.playerPos.distanceTo(this.city.cantineWorldPos);
+    this.nearCantine = (dist < 4.5);
+    if (!this.nearCantine) {
+      this.examinedCantine = false;
+    }
+  }
+
+  private updateMarchandProximity() {
+    const dist = this.playerPos.distanceTo(new THREE.Vector3(-8, 0.5, 5));
+    this.nearMarchand = (dist < 4.5);
+    if (!this.nearMarchand) {
+      this.examinedMarchand = false;
+    }
+  }
+
+  public buyCantineItem(itemId: 'poutine' | 'corn' | 'taffy' | 'beer') {
+    let cost = 0;
+    let itemName = "";
+    if (itemId === 'poutine') { cost = 8; itemName = "Poutine d'la Cantine 🍟"; }
+    else if (itemId === 'corn') { cost = 3; itemName = "Épi de blé d'inde de Neuville 🌽"; }
+    else if (itemId === 'taffy') { cost = 4; itemName = "Tire d'Érable sur la neige 🍁"; }
+    else if (itemId === 'beer') { cost = 5; itemName = "Bière Boréale Rousse 🍺"; }
+
+    if (this.cash >= cost) {
+      this.cash -= cost;
+      
+      if (itemId === 'poutine') {
+        this.playerHealth = 100;
+        this.addCombatLog(`🍟 CANTINE : Miam ! Une bonne poutine bien chaude avec du fromage de Portneuf qui fait squouich-squouich !`);
+        this.spawnCombatParticles(0xeab308, this.playerPos.clone().add(new THREE.Vector3(0, 1, 0)), 20);
+      } else if (itemId === 'corn') {
+        this.playerHealth = Math.min(100, this.playerHealth + 30);
+        this.addCombatLog(`🌽 CANTINE : Un épi de blé d'inde de Neuville tout chaud, beurré et salé ! (+30 HP, +Stamina)`);
+        this.spawnCombatParticles(0x22c55e, this.playerPos.clone().add(new THREE.Vector3(0, 1, 0)), 15);
+      } else if (itemId === 'taffy') {
+        this.playerHealth = Math.min(100, this.playerHealth + 40);
+        this.addCombatLog(`🍁 CANTINE : Une succulente tire d'érable sur la neige ! Pur sirop d'érable de Portneuf ! (+40 HP)`);
+        this.spawnCombatParticles(0xf97316, this.playerPos.clone().add(new THREE.Vector3(0, 1, 0)), 18);
+      } else if (itemId === 'beer') {
+        this.playerHealth = Math.min(100, this.playerHealth + 20);
+        this.addCombatLog(`🍺 CANTINE : Ahhh, une Boréale Rousse bien frette ! À la santé du Québec ! (+20 HP)`);
+        this.spawnCombatParticles(0xef4444, this.playerPos.clone().add(new THREE.Vector3(0, 1, 0)), 12);
+        
+        // Drunk effect: wobble camera yaw/pitch for some seconds!
+        let duration = 0;
+        const interval = setInterval(() => {
+          this.cameraYaw += Math.sin(Date.now() * 0.005) * 0.03;
+          this.cameraPitch += Math.cos(Date.now() * 0.004) * 0.01;
+          duration += 100;
+          if (duration > 8000) clearInterval(interval);
+        }, 100);
+      }
+      
+      this.saveEconomy();
+      this.onStateUpdatePay();
+    } else {
+      this.addCombatLog(`⚠️ CANTINE : Tabarouette, t'as pas assez de cash pour acheter un(e) ${itemName} ! Requis: $${cost}.`);
     }
   }
 
@@ -1184,6 +1357,64 @@ export class GameManager {
       }
     });
 
+    // Update advanced particle systems (spiral swirls, expanding rings, machine floaters)
+    for (let i = this.advancedParticles.length - 1; i >= 0; i--) {
+      const part = this.advancedParticles[i];
+      part.life -= deltaTime;
+      
+      if (part.life <= 0) {
+        this.scene.remove(part.mesh);
+        this.advancedParticles.splice(i, 1);
+        continue;
+      }
+
+      const ratio = part.life / part.maxLife;
+
+      if (part.type === 'plant_swirl' && part.spiralCenter && part.spiralAngle !== undefined && part.spiralRadius !== undefined && part.spiralSpeed !== undefined) {
+        part.spiralAngle += part.spiralSpeed * deltaTime;
+        const currentRadius = part.spiralRadius * (0.4 + 0.6 * ratio);
+        
+        part.mesh.position.x = part.spiralCenter.x + Math.cos(part.spiralAngle) * currentRadius;
+        part.mesh.position.z = part.spiralCenter.z + Math.sin(part.spiralAngle) * currentRadius;
+        part.mesh.position.y += part.velocity.y * deltaTime;
+        
+        part.mesh.rotation.x += part.rotationSpeed.x * deltaTime;
+        part.mesh.rotation.y += part.rotationSpeed.y * deltaTime;
+        part.mesh.rotation.z += part.rotationSpeed.z * deltaTime;
+      } else if (part.type === 'ring') {
+        const currentScale = 1 + (part.maxLife - part.life) * part.scaleSpeed;
+        part.mesh.scale.set(currentScale, currentScale, 1);
+        part.mesh.position.addScaledVector(part.velocity, deltaTime);
+      } else if (part.type === 'machine') {
+        part.mesh.position.addScaledVector(part.velocity, deltaTime);
+        part.velocity.x *= 0.96;
+        part.velocity.z *= 0.96;
+        
+        const sway = Math.sin((part.maxLife - part.life) * 8) * 0.015;
+        part.mesh.position.x += sway;
+        
+        part.mesh.rotation.x += part.rotationSpeed.x * deltaTime;
+        part.mesh.rotation.y += part.rotationSpeed.y * deltaTime;
+        part.mesh.rotation.z += part.rotationSpeed.z * deltaTime;
+      } else if (part.type === 'water_bubble') {
+        part.mesh.position.addScaledVector(part.velocity, deltaTime);
+        part.velocity.y -= 4.5 * deltaTime;
+      }
+
+      part.mesh.traverse((child) => {
+        if ((child as THREE.Mesh).material) {
+          const mat = (child as THREE.Mesh).material as THREE.Material;
+          mat.transparent = true;
+          mat.opacity = Math.max(0, ratio);
+        }
+      });
+
+      if (part.type !== 'ring' && part.scaleSpeed !== 0) {
+        const factor = Math.max(0.01, ratio);
+        part.mesh.scale.set(part.initialScale.x * factor, part.initialScale.y * factor, part.initialScale.z * factor);
+      }
+    }
+
     // Update mount neon trail sparks
     if (this.activeMount && isMoving && Math.random() < 0.45) {
       this.spawnTrailParticle();
@@ -1229,6 +1460,17 @@ export class GameManager {
     this.updateWeedPlants(deltaTime);
     this.updateFightClub(deltaTime);
     this.updateAgentsSimulation(deltaTime);
+    this.updateBoutiqueProximity();
+    this.updateCantineProximity();
+    this.updateMarchandProximity();
+
+    // Rotate Quebec Portneuf scenery animations
+    if (this.city.windmillSails) {
+      this.city.windmillSails.rotation.z += 0.014;
+    }
+    if (this.city.lighthouseBeam) {
+      this.city.lighthouseBeam.rotation.y += 0.008;
+    }
 
     // Animate physical shop spinning signs
     if (this.dispensarySign) {
@@ -1310,6 +1552,7 @@ export class GameManager {
       unlockedFurnitureIds: this.unlockedFurnitureIds,
       sceneTemplate: this.sceneTemplate,
       activeStreet: streetName,
+      godMode: this.godMode,
       isSprinting: this.keys['shift'] && (Math.abs(this.playerVelocity.x) > 0.1 || Math.abs(this.playerVelocity.z) > 0.1),
       isBuilding: this.activeItemId !== null,
       selectedItemId: this.activeItemId,
@@ -1348,7 +1591,19 @@ export class GameManager {
       etherWeaveConnected: this.etherWeaveConnected,
       thirdEyeRiskValidated: this.thirdEyeRiskValidated,
       hoverboardStats: this.hoverboardStats,
-      broomStats: this.broomStats
+      broomStats: this.broomStats,
+
+      // Boutique Éther
+      nearGarment: this.nearGarment,
+      examinedGarment: this.examinedGarment,
+
+      // Cantine Québécoise
+      nearCantine: this.nearCantine,
+      examinedCantine: this.examinedCantine,
+
+      // Marchand de Cannabis
+      nearMarchand: this.nearMarchand,
+      examinedMarchand: this.examinedMarchand,
     });
   };
 
@@ -1664,9 +1919,333 @@ export class GameManager {
     this.onStateUpdatePay();
   }
 
+  public executeConsoleCommand(cmdText: string): { success: boolean; message: string } {
+    const cleanCmd = cmdText.trim();
+    if (!cleanCmd) return { success: false, message: "Commande vide." };
+
+    const parts = cleanCmd.split(/\s+/);
+    const cmdName = parts[0].toLowerCase().replace(/^\//, ''); // strip leading slash if any
+    const args = parts.slice(1);
+
+    const timeStr = new Date().toLocaleTimeString();
+
+    switch (cmdName) {
+      case 'help': {
+        return {
+          success: true,
+          message: "Commandes disponibles: /help, /cash <qte>, /heal, /health <qte>, /speed <mult>, /gravity <g>, /seeds <qte>, /buds <qte>, /unlock_props, /unlock_immo, /keyrings, /teleport <cantine|quai|phare|chapelle|moulin|spawn>, /clear_props, /audit, /risk <GREEN|RED|BLACK>, /joint <stiff|relaxed|floppy>, /gangbeasts <on|off>"
+        };
+      }
+      case 'cash': {
+        const amt = parseInt(args[0]);
+        if (isNaN(amt)) {
+          return { success: false, message: "Spécifiez un montant numérique. Exemple: /cash 5000" };
+        }
+        this.cash = Math.max(0, this.cash + amt);
+        this.saveEconomy();
+        
+        // Spawns machine/cooking particles if negative cost (purchase)
+        if (amt < 0) {
+          this.spawnMachineParticles(this.playerPos.clone().add(new THREE.Vector3(0, 0.5, 0)), 0xfacc15, 18);
+        }
+
+        this.addCombatLog(`💵 ADMIN: Cash modifié de ${amt >= 0 ? '+' : ''}$${amt}. Solde: $${this.cash}`);
+        this.agentLogs.unshift(`[${timeStr}] 🛡️ Ether-Guard: Cash modifié par commande admin (${amt >= 0 ? '+' : ''}$${amt}).`);
+        this.onStateUpdatePay();
+        return { success: true, message: `Cash mis à jour. Nouveau solde: $${this.cash}` };
+      }
+      case 'setweapon':
+      case 'weapon': {
+        const type = (args[0] || 'none').toLowerCase() as any;
+        if (!['none', 'pipe', 'bat', 'bottle', 'hammer', 'sword'].includes(type)) {
+          return { success: false, message: "Type d'arme invalide. Choisissez: none, pipe, bat, bottle, hammer, sword" };
+        }
+        this.currentWeapon = type;
+        
+        // Remove old weapon model
+        if (this.playerWeaponMesh) {
+          this.playerGroup.remove(this.playerWeaponMesh);
+          this.playerWeaponMesh = null;
+        }
+        
+        // Create new visual weapon model in hand
+        if (type !== 'none') {
+          this.playerWeaponMesh = new THREE.Group();
+          
+          let color = 0x94a3b8;
+          let r = 0.04;
+          let h = 1.1;
+          
+          if (type === 'pipe') {
+            color = 0x64748b;
+          } else if (type === 'bat') {
+            color = 0xb45309;
+            r = 0.05;
+          } else if (type === 'bottle') {
+            color = 0x14b8a6;
+            r = 0.035;
+            h = 0.8;
+          } else if (type === 'hammer') {
+            color = 0x334155;
+            r = 0.06;
+            h = 1.2;
+          } else if (type === 'sword') {
+            color = 0xf59e0b; // Gold
+            r = 0.04;
+            h = 1.4;
+          }
+          
+          const cyGeo = new THREE.CylinderGeometry(r, r, h, 6);
+          const cyMat = new THREE.MeshStandardMaterial({ 
+            color: color, 
+            metalness: type === 'bottle' ? 0.2 : 0.9, 
+            roughness: type === 'bottle' ? 0.05 : 0.2,
+            transparent: type === 'bottle',
+            opacity: type === 'bottle' ? 0.8 : 1.0
+          });
+          const visualItem = new THREE.Mesh(cyGeo, cyMat);
+          visualItem.rotation.x = Math.PI / 2;
+          visualItem.castShadow = true;
+          this.playerWeaponMesh.add(visualItem);
+          
+          // Add some simple detailing for spikes or crossguard
+          if (type === 'sword') {
+            const guardGeo = new THREE.BoxGeometry(0.3, 0.05, 0.05);
+            const guardMat = new THREE.MeshStandardMaterial({ color: 0xd97706, metalness: 0.9 });
+            const guard = new THREE.Mesh(guardGeo, guardMat);
+            guard.position.set(0, -0.3, 0);
+            this.playerWeaponMesh.add(guard);
+          } else if (type === 'bat') {
+            const spikeGeo = new THREE.ConeGeometry(0.02, 0.08, 4);
+            const spikeMat = new THREE.MeshStandardMaterial({ color: 0x94a3b8, metalness: 0.9 });
+            for (let i = 0; i < 5; i++) {
+              const spike = new THREE.Mesh(spikeGeo, spikeMat);
+              spike.position.set(Math.sin(i) * 0.05, 0.2 + i * 0.1, Math.cos(i) * 0.05);
+              spike.rotation.z = Math.PI / 2;
+              this.playerWeaponMesh.add(spike);
+            }
+          }
+          
+          this.playerWeaponMesh.position.set(0.48, 0.2, -0.4);
+          this.playerGroup.add(this.playerWeaponMesh);
+        }
+        
+        this.addCombatLog(`🎒 ÉQUIPEMENT : Vous tenez désormais l'arme : ${type.toUpperCase()} !`);
+        this.spawnCombatParticles(0x6366f1, this.playerPos.clone().add(new THREE.Vector3(0, 0.5, 0)), 15);
+        this.onStateUpdatePay();
+        return { success: true, message: `Arme configurée à ${type}` };
+      }
+      case 'heal':
+      case 'health': {
+        let amt = parseInt(args[0]);
+        if (isNaN(amt)) {
+          amt = 100;
+        }
+        this.playerHealth = Math.min(100, Math.max(0, amt));
+        this.addCombatLog(`❤️ ADMIN: Santé fixée à ${this.playerHealth}%`);
+        this.agentLogs.unshift(`[${timeStr}] 🛡️ Ether-Guard: Point de santé fixé à ${this.playerHealth}% par admin.`);
+        this.onStateUpdatePay();
+        return { success: true, message: `Santé mise à jour à ${this.playerHealth}%` };
+      }
+      case 'speed': {
+        const mult = parseFloat(args[0]);
+        if (isNaN(mult)) {
+          return { success: false, message: "Spécifiez une vitesse. Exemple: /speed 12.5" };
+        }
+        this.playerSpeed = mult;
+        this.addCombatLog(`⚡ ADMIN: Vitesse de marche configurée à ${this.playerSpeed} m/s`);
+        this.agentLogs.unshift(`[${timeStr}] 🔌 Ether-Weave: Multiplicateur de vitesse ajusté à ${this.playerSpeed} par admin.`);
+        this.onStateUpdatePay();
+        return { success: true, message: `Vitesse de marche fixée à ${this.playerSpeed} m/s` };
+      }
+      case 'gravity': {
+        const g = parseFloat(args[0]);
+        if (isNaN(g)) {
+          return { success: false, message: "Spécifiez une valeur de gravité. Exemple: /gravity 5.0 (Lune: ~3.5, Normal: 19.8)" };
+        }
+        this.gravity = g;
+        this.addCombatLog(`🌎 ADMIN: Gravité modifiée à ${this.gravity} m/s² (Standard: 19.8)`);
+        this.agentLogs.unshift(`[${timeStr}] 🧪 Ether-Sim: Gravité environnementale ajustée à ${this.gravity} par admin.`);
+        this.onStateUpdatePay();
+        return { success: true, message: `Gravité fixée à ${this.gravity}` };
+      }
+      case 'seeds': {
+        const amt = parseInt(args[0]);
+        if (isNaN(amt)) {
+          return { success: false, message: "Spécifiez un montant. Exemple: /seeds 10" };
+        }
+        this.weedSeeds = Math.max(0, this.weedSeeds + amt);
+        this.saveEconomy();
+        this.addCombatLog(`🌱 ADMIN: Graines de cannabis modifiées de ${amt >= 0 ? '+' : ''}${amt}.`);
+        this.onStateUpdatePay();
+        return { success: true, message: `Graines de cannabis mises à jour: ${this.weedSeeds}` };
+      }
+      case 'buds': {
+        const amt = parseInt(args[0]);
+        if (isNaN(amt)) {
+          return { success: false, message: "Spécifiez un montant. Exemple: /buds 15" };
+        }
+        this.weedBuds = Math.max(0, this.weedBuds + amt);
+        this.saveEconomy();
+        this.addCombatLog(`🌿 ADMIN: Têtes récoltées modifiées de ${amt >= 0 ? '+' : ''}${amt}.`);
+        this.onStateUpdatePay();
+        return { success: true, message: `Têtes de cannabis mises à jour: ${this.weedBuds}` };
+      }
+      case 'unlock_props': {
+        const allPropIds = [
+          'chair_dining', 'table_dining', 'sofa_classic', 'bed_single', 'bookshelf_wood',
+          'painting_sunset', 'lamp_floor', 'fridge_modern', 'coffee_maker', 'guitar_acoustic'
+        ];
+        this.unlockedFurnitureIds = [...allPropIds];
+        this.addCombatLog(`🛋️ ADMIN: Tous les objets et meubles premium ont été débloqués !`);
+        this.agentLogs.unshift(`[${timeStr}] 🛠️ Ether-Forge: Tous les patrons de construction premium injectés.`);
+        this.onStateUpdatePay();
+        return { success: true, message: "Tous les meubles premium sont débloqués." };
+      }
+      case 'unlock_immo': {
+        this.boughtPropertyIds = ['villa_nova', 'modern_loft', 'suburban_dream'];
+        this.saveEconomy();
+        this.addCombatLog(`🏠 ADMIN: Toutes les propriétés immo débloquées dans votre trousseau !`);
+        this.agentLogs.unshift(`[${timeStr}] 🛡️ Ether-Guard: Droits d'habitation globaux validés par admin.`);
+        this.onStateUpdatePay();
+        return { success: true, message: "Toutes les propriétés de Portneuf débloquées." };
+      }
+      case 'keyrings': {
+        this.boughtPropertyIds = ['villa_nova', 'modern_loft', 'suburban_dream'];
+        this.saveEconomy();
+        this.addCombatLog(`🔑 ADMIN: Trousseau de clés rempli au complet ! (keyring_villa_nova, keyring_modern_loft, keyring_suburban_dream)`);
+        this.onStateUpdatePay();
+        return { success: true, message: "Toutes les clés immo ajoutées au trousseau." };
+      }
+      case 'teleport': {
+        const target = args[0]?.toLowerCase();
+        if (!target) {
+          return { success: false, message: "Spécifiez une cible: spawn, cantine, quai, phare, chapelle, moulin" };
+        }
+        let tx = 0, ty = 1.2, tz = 15;
+        let name = "Point d'origine";
+        if (target === 'cantine') {
+          tx = -15; ty = 1.2; tz = -25;
+          name = "La Cantine Chez Gaston";
+        } else if (target === 'quai') {
+          tx = 10; ty = 1.2; tz = 50;
+          name = "Le Quai de Portneuf";
+        } else if (target === 'phare') {
+          tx = -40; ty = 1.2; tz = 65;
+          name = "Le Phare Saint-Laurent";
+        } else if (target === 'chapelle') {
+          tx = 30; ty = 1.2; tz = -45;
+          name = "La Chapelle Historique";
+        } else if (target === 'moulin') {
+          tx = -45; ty = 1.2; tz = -50;
+          name = "Le Moulin à Vent";
+        } else if (target === 'spawn') {
+          tx = 0; ty = 1.2; tz = 15;
+          name = "Point de départ";
+        } else {
+          return { success: false, message: `Destination inconnue: "${target}". Essayez: cantine, quai, phare, chapelle, moulin, spawn` };
+        }
+
+        this.playerPos.set(tx, ty, tz);
+        this.playerGroup.position.copy(this.playerPos);
+        this.addCombatLog(`♻️ ADMIN: Téléportation vers ${name} [X: ${tx}, Z: ${tz}] !`);
+        this.agentLogs.unshift(`[${timeStr}] 🧠 Ether-Core: Événement de téléportation sécurisé vers ${name}.`);
+        this.onStateUpdatePay();
+        return { success: true, message: `Téléporté à ${name}` };
+      }
+      case 'clear_props': {
+        this.builder.placedProps = [];
+        this.builder.saveToStorage();
+        this.addCombatLog(`🧹 ADMIN: Tous les objets posés ont été nettoyés ! Rechargement...`);
+        setTimeout(() => window.location.reload(), 1200);
+        return { success: true, message: "Nettoyage en cours, la page va s'actualiser..." };
+      }
+      case 'audit': {
+        this.agentLogs.unshift(`[${timeStr}] 🔍 Ether-Lens: Lancement d'un audit de sécurité RP global...`);
+        this.agentLogs.unshift(`[${timeStr}] 🧪 Ether-Sim: Simulation de charge réseau sur 100 joueurs fictifs...`);
+        this.agentLogs.unshift(`[${timeStr}] 👁️ TroxT Third Eye: Aucun abus détecté. Intégrité de la mémoire à 100%.`);
+        this.agentCognitiveScore = 99;
+        this.addCombatLog(`🔍 ADMIN: Audit forcé Ether-Lens complété avec brio !`);
+        this.onStateUpdatePay();
+        return { success: true, message: "Audit de sécurité complété." };
+      }
+      case 'risk': {
+        const rating = args[0]?.toUpperCase();
+        const valid = ['GREEN', 'BLUE', 'YELLOW', 'ORANGE', 'RED', 'BLACK'];
+        if (!rating || !valid.includes(rating)) {
+          return { success: false, message: "Spécifiez un niveau valide: GREEN, BLUE, YELLOW, ORANGE, RED, BLACK" };
+        }
+        this.riskRating = rating as any;
+        this.addCombatLog(`🚨 ADMIN: Niveau de risque Third Eye réglé sur [${this.riskRating}]`);
+        this.onStateUpdatePay();
+        return { success: true, message: `Risque réglé sur ${this.riskRating}` };
+      }
+      case 'joint': {
+        const stiffness = args[0]?.toLowerCase();
+        if (stiffness === 'stiff' || stiffness === 'relaxed' || stiffness === 'floppy') {
+          this.jointStiffness = stiffness;
+          this.addCombatLog(`🥋 ADMIN: Rigidité articulaire réglée sur [${stiffness.toUpperCase()}]`);
+          this.onStateUpdatePay();
+          return { success: true, message: `Rigidité réglée sur ${stiffness}` };
+        }
+        return { success: false, message: "Rigidité invalide. Choisissez: stiff, relaxed, floppy" };
+      }
+      case 'gangbeasts': {
+        const mode = args[0]?.toLowerCase();
+        if (mode === 'on' || mode === '1' || mode === 'true') {
+          this.gangBeastsMode = true;
+          this.addCombatLog(`🤪 ADMIN: Mode physique pantin désarticulé (Gang Beasts) ACTIVÉ !`);
+          this.onStateUpdatePay();
+          return { success: true, message: "Mode Gang Beasts activé." };
+        } else if (mode === 'off' || mode === '0' || mode === 'false') {
+          this.gangBeastsMode = false;
+          this.addCombatLog(`🤪 ADMIN: Mode physique standard (GMod) RESTAURÉ.`);
+          this.onStateUpdatePay();
+          return { success: true, message: "Mode Gang Beasts désactivé." };
+        }
+        return { success: false, message: "Usage: /gangbeasts <on|off>" };
+      }
+      default: {
+        return { success: false, message: `Commande inconnue: "/${cmdName}". Tapez /help pour la liste.` };
+      }
+    }
+  }
+
   private onStateUpdatePay() {
     // Manually force triggering state update
     this.updatePlayerAndCamera(0);
+  }
+
+  public adminEquipWeapon(type: 'none' | 'pipe' | 'bat' | 'bottle' | 'hammer') {
+    this.currentWeapon = type;
+    if (this.playerWeaponMesh) {
+      this.playerGroup.remove(this.playerWeaponMesh);
+      this.playerWeaponMesh = null;
+    }
+    if (type !== 'none') {
+      this.playerWeaponMesh = new THREE.Group();
+      const cyGeo = new THREE.CylinderGeometry(0.04, 0.04, 1.1, 6);
+      const colorMap = {
+        pipe: 0x94a3b8,
+        bat: 0x7c2d12,
+        bottle: 0x0284c7,
+        hammer: 0x334155,
+      };
+      const cyMat = new THREE.MeshStandardMaterial({
+        color: colorMap[type] || 0x94a3b8,
+        metalness: type === 'bottle' ? 0.1 : 0.9,
+        roughness: type === 'bottle' ? 0.02 : 0.1,
+        transparent: type === 'bottle',
+        opacity: type === 'bottle' ? 0.75 : 1.0,
+      });
+      const visualItem = new THREE.Mesh(cyGeo, cyMat);
+      visualItem.rotation.x = Math.PI / 2;
+      this.playerWeaponMesh.add(visualItem);
+      this.playerWeaponMesh.position.set(0.48, 0.2, -0.4);
+      this.playerGroup.add(this.playerWeaponMesh);
+    }
+    this.addCombatLog(`🎒 ADMIN: Équipement de l'arme : ${type.toUpperCase()}`);
+    this.onStateUpdatePay();
   }
 
   public toggleMount(mount: 'hoverboard' | 'broom') {
@@ -1967,6 +2546,160 @@ export class GameManager {
     }
   }
 
+  public spawnMachineParticles(position: THREE.Vector3, color: number = 0x818cf8, count = 20) {
+    const ringCount = 2;
+    for (let r = 0; r < ringCount; r++) {
+      const ringGeo = new THREE.RingGeometry(0.1, 0.12, 32);
+      const ringMat = new THREE.MeshBasicMaterial({
+        color,
+        side: THREE.DoubleSide,
+        transparent: true,
+        opacity: 0.8,
+        depthWrite: false,
+      });
+      const ringMesh = new THREE.Mesh(ringGeo, ringMat);
+      ringMesh.position.copy(position).add(new THREE.Vector3(0, 0.05 + r * 0.1, 0));
+      ringMesh.rotation.x = Math.PI / 2;
+      
+      this.scene.add(ringMesh);
+      this.advancedParticles.push({
+        mesh: ringMesh,
+        type: 'ring',
+        velocity: new THREE.Vector3(0, 0.2, 0),
+        rotationSpeed: new THREE.Vector3(0, 0, 0.5),
+        scaleSpeed: 3.5,
+        initialScale: new THREE.Vector3(1, 1, 1),
+        life: 0.5 + r * 0.15,
+        maxLife: 0.5 + r * 0.15,
+        color,
+      });
+    }
+
+    for (let i = 0; i < count; i++) {
+      const size = 0.02 + Math.random() * 0.05;
+      const geo = new THREE.BoxGeometry(size, size, size);
+      const mat = new THREE.MeshStandardMaterial({
+        color,
+        emissive: color,
+        emissiveIntensity: 1.5,
+        transparent: true,
+        opacity: 0.9,
+        roughness: 0.1,
+        metalness: 0.9,
+      });
+      const mesh = new THREE.Mesh(geo, mat);
+      
+      mesh.position.copy(position).add(new THREE.Vector3(
+        (Math.random() - 0.5) * 0.6,
+        (Math.random() - 0.5) * 0.3,
+        (Math.random() - 0.5) * 0.6
+      ));
+      
+      mesh.rotation.set(Math.random() * Math.PI, Math.random() * Math.PI, Math.random() * Math.PI);
+      
+      const velocity = new THREE.Vector3(
+        (Math.random() - 0.5) * 1.5,
+        1.5 + Math.random() * 2.5,
+        (Math.random() - 0.5) * 1.5
+      );
+      
+      const rotationSpeed = new THREE.Vector3(
+        (Math.random() - 0.5) * 4.0,
+        (Math.random() - 0.5) * 4.0,
+        (Math.random() - 0.5) * 4.0
+      );
+
+      this.scene.add(mesh);
+      this.advancedParticles.push({
+        mesh,
+        type: 'machine',
+        velocity,
+        rotationSpeed,
+        scaleSpeed: -0.8,
+        initialScale: new THREE.Vector3(1, 1, 1),
+        life: 0.8 + Math.random() * 0.6,
+        maxLife: 0.8 + Math.random() * 0.6,
+        color,
+      });
+    }
+  }
+
+  public spawnPlantParticles(position: THREE.Vector3, color: number = 0x22c55e, count = 25) {
+    for (let i = 0; i < count; i++) {
+      const geo = new THREE.ConeGeometry(0.03 + Math.random() * 0.04, 0.08 + Math.random() * 0.08, 4);
+      const mat = new THREE.MeshStandardMaterial({
+        color,
+        emissive: color,
+        emissiveIntensity: 0.8,
+        transparent: true,
+        opacity: 0.95,
+        roughness: 0.3,
+        side: THREE.DoubleSide
+      });
+      const mesh = new THREE.Mesh(geo, mat);
+      
+      const spiralRadius = 0.2 + Math.random() * 0.5;
+      const spiralAngle = Math.random() * Math.PI * 2;
+      const spiralSpeed = 3.0 + Math.random() * 4.0;
+      
+      const offset = new THREE.Vector3(
+        Math.cos(spiralAngle) * spiralRadius,
+        0,
+        Math.sin(spiralAngle) * spiralRadius
+      );
+      mesh.position.copy(position).add(offset);
+      mesh.rotation.set(Math.random() * 2, Math.random() * 2, Math.random() * 2);
+      
+      const velocity = new THREE.Vector3(0, 1.2 + Math.random() * 1.5, 0);
+      const rotationSpeed = new THREE.Vector3(
+        Math.random() * 3.0,
+        Math.random() * 3.0,
+        Math.random() * 3.0
+      );
+
+      this.scene.add(mesh);
+      this.advancedParticles.push({
+        mesh,
+        type: 'plant_swirl',
+        velocity,
+        rotationSpeed,
+        scaleSpeed: -0.6,
+        initialScale: new THREE.Vector3(1, 1, 1),
+        life: 1.0 + Math.random() * 0.8,
+        maxLife: 1.0 + Math.random() * 0.8,
+        color,
+        spiralRadius,
+        spiralSpeed,
+        spiralAngle,
+        spiralCenter: position.clone()
+      });
+    }
+
+    const flashGeo = new THREE.RingGeometry(0.01, 0.3, 16);
+    const flashMat = new THREE.MeshBasicMaterial({
+      color: 0xffffff,
+      transparent: true,
+      opacity: 0.9,
+      side: THREE.DoubleSide,
+      depthWrite: false
+    });
+    const flash = new THREE.Mesh(flashGeo, flashMat);
+    flash.position.copy(position).add(new THREE.Vector3(0, 0.1, 0));
+    flash.rotation.x = Math.PI / 2;
+    this.scene.add(flash);
+    this.advancedParticles.push({
+      mesh: flash,
+      type: 'ring',
+      velocity: new THREE.Vector3(0, 0.5, 0),
+      rotationSpeed: new THREE.Vector3(0, 0, 0),
+      scaleSpeed: 5.0,
+      initialScale: new THREE.Vector3(1, 1, 1),
+      life: 0.3,
+      maxLife: 0.3,
+      color: 0xffffff
+    });
+  }
+
   private spawnTrailParticle() {
     const isBroom = (this.activeMount === 'broom');
     const color = isBroom ? 0xc084fc : 0x22d3ee;
@@ -2233,7 +2966,7 @@ export class GameManager {
       position: { x: plantPos.x, y: plantPos.y, z: plantPos.z }
     });
 
-    this.spawnCombatParticles(0x22c55e, plantPos.clone().add(new THREE.Vector3(0, 0.4, 0)), 12);
+    this.spawnPlantParticles(plantPos.clone().add(new THREE.Vector3(0, 0.4, 0)), 0x22c55e, 18);
     this.saveEconomy();
     this.saveWeedPlants();
   }
@@ -2281,6 +3014,70 @@ export class GameManager {
     dispLight.position.set(0, 1.5, 0);
     dispGroup.add(dispLight);
 
+    // ─── 3D MERCHANT (MARCHAND) CHARACTER MODEL ───
+    const merchantGroup = new THREE.Group();
+    merchantGroup.position.set(0, 0, 0); // Centered inside the glowing pad
+    dispGroup.add(merchantGroup);
+
+    // Body / Coat (emerald-green robe)
+    const bodyGeo = new THREE.CylinderGeometry(0.32, 0.42, 1.2, 12);
+    const bodyMat = new THREE.MeshStandardMaterial({ color: 0x065f46, roughness: 0.65 });
+    const bodyMesh = new THREE.Mesh(bodyGeo, bodyMat);
+    bodyMesh.position.y = 0.6;
+    bodyMesh.castShadow = true;
+    bodyMesh.receiveShadow = true;
+    merchantGroup.add(bodyMesh);
+
+    // Head
+    const headGeo = new THREE.SphereGeometry(0.22, 16, 16);
+    const headMat = new THREE.MeshStandardMaterial({ color: 0xfccb8f, roughness: 0.8 });
+    const headMesh = new THREE.Mesh(headGeo, headMat);
+    headMesh.position.y = 1.3;
+    headMesh.castShadow = true;
+    merchantGroup.add(headMesh);
+
+    // Eyes
+    const eyeGeo = new THREE.SphereGeometry(0.04, 8, 8);
+    const eyeMat = new THREE.MeshBasicMaterial({ color: 0x000000 });
+    const leftEye = new THREE.Mesh(eyeGeo, eyeMat);
+    leftEye.position.set(-0.08, 1.34, 0.18);
+    const rightEye = new THREE.Mesh(eyeGeo, eyeMat);
+    rightEye.position.set(0.08, 1.34, 0.18);
+    merchantGroup.add(leftEye);
+    merchantGroup.add(rightEye);
+
+    // Hat Brim (brown straw hat)
+    const hatBrimGeo = new THREE.CylinderGeometry(0.55, 0.55, 0.04, 16);
+    const hatMat = new THREE.MeshStandardMaterial({ color: 0x78350f, roughness: 0.9 });
+    const hatBrim = new THREE.Mesh(hatBrimGeo, hatMat);
+    hatBrim.position.y = 1.48;
+    merchantGroup.add(hatBrim);
+
+    // Hat Crown
+    const hatCrownGeo = new THREE.CylinderGeometry(0.3, 0.3, 0.22, 12);
+    const hatCrown = new THREE.Mesh(hatCrownGeo, hatMat);
+    hatCrown.position.y = 1.58;
+    merchantGroup.add(hatCrown);
+
+    // Stylish Orange Mustache/Beard
+    const beardGeo = new THREE.BoxGeometry(0.18, 0.1, 0.08);
+    const beardMat = new THREE.MeshStandardMaterial({ color: 0xd97706, roughness: 0.9 });
+    const beard = new THREE.Mesh(beardGeo, beardMat);
+    beard.position.set(0, 1.22, 0.19);
+    merchantGroup.add(beard);
+
+    // Left & Right Arms
+    const armGeo = new THREE.BoxGeometry(0.12, 0.6, 0.12);
+    const armMat = new THREE.MeshStandardMaterial({ color: 0x047857 });
+    const leftArm = new THREE.Mesh(armGeo, armMat);
+    leftArm.position.set(-0.45, 0.7, 0);
+    leftArm.rotation.z = 0.25;
+    const rightArm = new THREE.Mesh(armGeo, armMat);
+    rightArm.position.set(0.45, 0.7, 0);
+    rightArm.rotation.z = -0.25;
+    merchantGroup.add(leftArm);
+    merchantGroup.add(rightArm);
+
 
     // 2. GMod Premium Store
     const storeGroup = new THREE.Group();
@@ -2326,6 +3123,7 @@ export class GameManager {
       this.cash -= cost;
       this.weedSeeds++;
       this.addCombatLog(`💰 TRANSACTION : Acheté 1x Graine pour $${cost}. (Graines: ${this.weedSeeds})`);
+      this.spawnMachineParticles(this.playerPos.clone().add(new THREE.Vector3(0, 0.5, 0)), 0xfacc15, 12);
       this.saveEconomy();
     } else {
       this.addCombatLog(`⚠️ ÉCHEC : Cash insuffisant ! Vous avez besoin de $${cost}.`);
@@ -2338,6 +3136,7 @@ export class GameManager {
       this.weedBuds--;
       this.cash += payout;
       this.addCombatLog(`💰 TRANSACTION : Vendu 1x Tête de Cannabis pour +$${payout} !`);
+      this.spawnPlantParticles(this.playerPos.clone().add(new THREE.Vector3(0, 0.5, 0)), 0xeab308, 15);
       this.saveEconomy();
     } else {
       this.addCombatLog("⚠️ ÉCHEC : Vous n'avez pas de Têtes de Cannabis à vendre !");
@@ -2352,6 +3151,7 @@ export class GameManager {
       this.weedBuds = 0;
       this.cash += totalGain;
       this.addCombatLog(`💰 RECOLTE FINANCIÈRE : Vendu ${sold}x Têtes pour +$${totalGain} !!`);
+      this.spawnPlantParticles(this.playerPos.clone().add(new THREE.Vector3(0, 0.5, 0)), 0xeab308, 25);
       this.saveEconomy();
     } else {
       this.addCombatLog("⚠️ ÉCHEC : Vous n'avez aucune Tête de Cannabis dans votre inventaire.");
@@ -2364,6 +3164,7 @@ export class GameManager {
       this.cash -= cost;
       this.weedSeeds += 5;
       this.addCombatLog(`💰 TRANSACTION : Pack de 5x Graines acheté pour $${cost}.`);
+      this.spawnMachineParticles(this.playerPos.clone().add(new THREE.Vector3(0, 0.5, 0)), 0xfacc15, 20);
       this.saveEconomy();
     } else {
       this.addCombatLog(`⚠️ ÉCHEC : Cash insuffisant ! Vous avez besoin de $${cost}.`);
@@ -2379,6 +3180,7 @@ export class GameManager {
       this.cash -= cost;
       this.unlockedFurnitureIds.push(itemId);
       this.addCombatLog(`🎉 DÉBLOCAGE : Meuble Premium [${itemId.toUpperCase()}] débloqué pour GMod !`);
+      this.spawnMachineParticles(this.playerPos.clone().add(new THREE.Vector3(0, 0.5, 0)), 0x818cf8, 20);
       this.saveEconomy();
     } else {
       this.addCombatLog(`⚠️ ÉCHEC : Cash insuffisant ! Déblocage requis: $${cost}.`);
@@ -3047,25 +3849,30 @@ export class GameManager {
 
             if (targetIsPlayer) {
               // Hit player
-              this.playerHealth = Math.max(0, this.playerHealth - enemyDmg);
+              const dmg = this.godMode ? 0 : enemyDmg;
+              this.playerHealth = Math.max(0, this.playerHealth - dmg);
               
               // Apply push force vector to player joint physics
               const pushForce = chosenMove === 'kick' ? 6.5 : 4.0;
               this.playerVelocity.add(diff.clone().normalize().multiplyScalar(pushForce));
 
               // Show flash effect on screen and indicators
-              this.spawnDamageIndicator(`💥 REÇU -${enemyDmg} HP`, this.playerPos.clone().add(new THREE.Vector3(0, 1.8, 0)), true);
+              this.spawnDamageIndicator(this.godMode ? `🛡️ GOD MODE` : `💥 REÇU -${enemyDmg} HP`, this.playerPos.clone().add(new THREE.Vector3(0, 1.8, 0)), !this.godMode);
               this.spawnCombatParticles(0x991b1b, this.playerPos.clone().add(new THREE.Vector3(0, 0.8, 0)), 12);
-              this.addCombatLog(`⚠️ REÇU : ${rival.name} vous frappe avec un ${chosenMove.toUpperCase()} ! -${enemyDmg} PV !`);
+              this.addCombatLog(this.godMode ? `🛡️ GOD MODE : Attaque de ${rival.name} absorbée.` : `⚠️ REÇU : ${rival.name} vous frappe avec un ${chosenMove.toUpperCase()} ! -${enemyDmg} PV !`);
 
               // Check wall-slam threshold for player!
               const playerDistFromCenter = this.playerPos.distanceTo(this.fightArenaCenter);
               if (playerDistFromCenter > this.fightArenaRadius - 1.2) {
-                const wsDmg = 35;
+                const wsDmg = this.godMode ? 0 : 35;
                 this.playerHealth = Math.max(0, this.playerHealth - wsDmg);
-                this.spawnDamageIndicator(`💥 CRASH EN CAGE! -${wsDmg} HP`, this.playerPos.clone().add(new THREE.Vector3(0, 1.2, 0)), true);
-                this.spawnCombatParticles(0xff0000, this.playerPos, 22);
-                this.addCombatLog(`💥 IMPACT : Vous êtes projeté lourdement contre la grille d'acier ! Assommé !`);
+                if (this.godMode) {
+                  this.spawnDamageIndicator(`🛡️ COLLISION SÉCURISÉE`, this.playerPos.clone().add(new THREE.Vector3(0, 1.2, 0)), false);
+                } else {
+                  this.spawnDamageIndicator(`💥 CRASH EN CAGE! -${wsDmg} HP`, this.playerPos.clone().add(new THREE.Vector3(0, 1.2, 0)), true);
+                  this.spawnCombatParticles(0xff0000, this.playerPos, 22);
+                  this.addCombatLog(`💥 IMPACT : Vous êtes projeté lourdement contre la grille d'acier ! Assommé !`);
+                }
               }
             } else {
               // Hit another rival in FFA!
@@ -3214,5 +4021,256 @@ export class GameManager {
         this.spawnCombatParticles(0xff0000, this.playerPos, 40);
       }
     }
+  }
+
+  // ─── ADMIN CONSOLE SPAWN METHODS ─────────────────────────────────
+  public adminSpawnDummyAtFeet(type: 'wooden' | 'iron' | 'punchbag') {
+    const id = 'dummy_admin_' + Math.random().toString(36).substr(2, 9);
+    const name = type === 'wooden' ? 'Mannequin de Bois (Admin)' : type === 'iron' ? 'Mannequin d\'Acier (Admin)' : 'Sac de Frappe (Admin)';
+    
+    const dummyGroup = new THREE.Group();
+    const worldX = this.playerPos.x;
+    const worldY = this.playerPos.y + 0.1;
+    const worldZ = this.playerPos.z;
+    dummyGroup.position.set(worldX, worldY, worldZ);
+    dummyGroup.name = 'dummy_' + id;
+
+    const dummySubGroup = new THREE.Group();
+    dummySubGroup.name = 'pivot';
+    dummyGroup.add(dummySubGroup);
+
+    let headMesh: THREE.Mesh | THREE.Group | undefined;
+    let armLeft: THREE.Mesh | undefined;
+    let armRight: THREE.Mesh | undefined;
+
+    if (type === 'wooden') {
+      const base = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.5, 0.1, 10), new THREE.MeshStandardMaterial({ color: 0x1e293b }));
+      base.position.y = 0.05;
+      dummySubGroup.add(base);
+
+      const trunkGeo = new THREE.CylinderGeometry(0.18, 0.18, 1.6, 10);
+      const trunkMat = new THREE.MeshStandardMaterial({ color: 0xd97706, roughness: 0.7 });
+      const trunk = new THREE.Mesh(trunkGeo, trunkMat);
+      trunk.position.y = 0.9;
+      trunk.castShadow = true;
+      dummySubGroup.add(trunk);
+
+      const head = new THREE.Mesh(new THREE.SphereGeometry(0.2, 10, 10), new THREE.MeshStandardMaterial({ color: 0x7c2d12 }));
+      head.position.y = 1.8;
+      head.castShadow = true;
+      dummySubGroup.add(head);
+      headMesh = head;
+
+      const pegGeo = new THREE.CylinderGeometry(0.04, 0.03, 0.5, 8);
+      const pegMat = new THREE.MeshStandardMaterial({ color: 0x7c2d12 });
+
+      const peg1 = new THREE.Mesh(pegGeo, pegMat);
+      peg1.rotation.z = Math.PI / 2.5;
+      peg1.rotation.y = 0.2;
+      peg1.position.set(0.2, 1.2, 0.15);
+      dummySubGroup.add(peg1);
+      armLeft = peg1;
+
+      const peg2 = new THREE.Mesh(pegGeo, pegMat);
+      peg2.rotation.z = -Math.PI / 2.5;
+      peg2.rotation.y = -0.2;
+      peg2.position.set(-0.2, 1.2, 0.15);
+      dummySubGroup.add(peg2);
+      armRight = peg2;
+    } else if (type === 'iron') {
+      const base = new THREE.Mesh(new THREE.CylinderGeometry(0.6, 0.6, 0.15, 12), new THREE.MeshStandardMaterial({ color: 0x374151, metalness: 0.8 }));
+      base.position.y = 0.075;
+      dummySubGroup.add(base);
+
+      const bodyGeo = new THREE.CylinderGeometry(0.25, 0.25, 1.5, 12);
+      const bodyMat = new THREE.MeshStandardMaterial({ color: 0x1f2937, roughness: 0.3, metalness: 0.9 });
+      const body = new THREE.Mesh(bodyGeo, bodyMat);
+      body.position.y = 0.9;
+      body.castShadow = true;
+      dummySubGroup.add(body);
+
+      const stripeGeo = new THREE.CylinderGeometry(0.26, 0.26, 0.2, 12);
+      const stripeMat = new THREE.MeshStandardMaterial({ color: 0xeab308, roughness: 0.4 });
+      const stripe = new THREE.Mesh(stripeGeo, stripeMat);
+      stripe.position.set(0, 1.3, 0);
+      dummySubGroup.add(stripe);
+
+      const head = new THREE.Mesh(new THREE.SphereGeometry(0.24, 10, 10), new THREE.MeshStandardMaterial({ color: 0x4b5563, metalness: 0.8 }));
+      head.position.y = 1.75;
+      dummySubGroup.add(head);
+      headMesh = head;
+    } else {
+      const standMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.5 });
+      const standPole = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 2.6, 8), standMat);
+      standPole.position.set(-0.6, 1.3, 0);
+      standPole.castShadow = true;
+      dummyGroup.add(standPole);
+
+      const standArm = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 0.8, 8), standMat);
+      standArm.rotation.z = Math.PI / 2;
+      standArm.position.set(-0.2, 2.6, 0);
+      standArm.castShadow = true;
+      dummyGroup.add(standArm);
+
+      const rope = new THREE.Mesh(new THREE.CylinderGeometry(0.015, 0.015, 0.3, 4), new THREE.MeshStandardMaterial({ color: 0x000000 }));
+      rope.position.set(0, 2.45, 0);
+      dummySubGroup.add(rope);
+
+      const bagGeo = new THREE.CylinderGeometry(0.22, 0.22, 1.2, 10);
+      const bagMat = new THREE.MeshStandardMaterial({ color: 0xef4444, roughness: 0.8 });
+      const bag = new THREE.Mesh(bagGeo, bagMat);
+      bag.position.y = 1.7;
+      bag.castShadow = true;
+      dummySubGroup.add(bag);
+      headMesh = bag;
+    }
+
+    this.scene.add(dummyGroup);
+
+    const collider = new THREE.Box3().setFromObject(dummyGroup);
+    this.city.collisionBoxes.push(collider);
+
+    this.dummies.push({
+      id,
+      name,
+      type,
+      mesh: dummyGroup,
+      pivotMesh: dummySubGroup,
+      initialPos: new THREE.Vector3(worldX, worldY, worldZ),
+      health: type === 'iron' ? 500 : 150,
+      maxHealth: type === 'iron' ? 500 : 150,
+      wobbleAngle: 0,
+      wobbleSpeed: 0,
+      wobbleAxis: new THREE.Vector3(1, 0, 0),
+      impactVelocity: new THREE.Vector3(0, 0, 0),
+      collider,
+      headMesh,
+      armLeft,
+      armRight
+    });
+
+    this.addCombatLog(`🛠️ ADMIN: Mannequin d'entraînement "${name}" généré à vos pieds !`);
+    this.onStateUpdatePay();
+  }
+
+  public adminSpawnWeedPlantAtFeet(stage: 'seedling' | 'medium' | 'mature') {
+    const growth = stage === 'seedling' ? 10 : stage === 'medium' ? 50 : 100;
+    const stageNum = stage === 'seedling' ? 0 : stage === 'medium' ? 1 : 2;
+    const uuid = 'weed_admin_' + Math.random().toString(36).substring(2, 9);
+    const plantPos = this.playerPos.clone();
+    
+    const mesh = this.createWeedPlantMesh(growth, 100);
+    mesh.position.set(plantPos.x, plantPos.y, plantPos.z);
+    this.scene.add(mesh);
+
+    this.weedPlants.push({
+      uuid,
+      mesh,
+      growth,
+      waterLevel: 100,
+      stage: stageNum,
+      position: { x: plantPos.x, y: plantPos.y, z: plantPos.z }
+    });
+
+    this.spawnPlantParticles(plantPos.clone().add(new THREE.Vector3(0, 0.4, 0)), 0x22c55e, 18);
+    this.saveEconomy();
+    this.saveWeedPlants();
+    this.addCombatLog(`🛠️ ADMIN: Graine de cannabis (${stage.toUpperCase()}) plantée et cultivée à vos pieds !`);
+    this.onStateUpdatePay();
+  }
+
+  public adminSpawnRivalAtFeet() {
+    const rivalGroup = new THREE.Group();
+    const rPos = this.playerPos.clone().add(new THREE.Vector3(Math.random() * 2 - 1, 0.8, Math.random() * 2 - 1));
+    rivalGroup.position.copy(rPos);
+    this.scene.add(rivalGroup);
+
+    const namesFFA = ["Sandro le Chauve", "Baki le Gringo", "Mike le Flasque", "Ronda la Cogneuse", "Gérard la Fureur"];
+    const rName = "Clone " + namesFFA[Math.floor(Math.random() * namesFFA.length)] + ` #${Math.floor(Math.random() * 90 + 10)}`;
+    const jacketColor = [0xef4444, 0x8b5cf6, 0xf59e0b, 0x10b981][Math.floor(Math.random() * 4)];
+
+    // Torso
+    const torsoGeo = new THREE.BoxGeometry(0.7, 0.9, 0.35);
+    const torsoMat = new THREE.MeshStandardMaterial({ color: jacketColor, roughness: 0.7 });
+    const torso = new THREE.Mesh(torsoGeo, torsoMat);
+    torso.position.set(0, 1.1, 0);
+    torso.castShadow = true;
+    rivalGroup.add(torso);
+
+    // Head
+    const headGeo = new THREE.BoxGeometry(0.42, 0.42, 0.42);
+    const headMat = new THREE.MeshStandardMaterial({ color: 0xffe4e6, roughness: 0.6 });
+    const head = new THREE.Mesh(headGeo, headMat);
+    head.position.set(0, 1.75, 0);
+    head.castShadow = true;
+    rivalGroup.add(head);
+
+    // Angry eyes or band
+    const bandGeo = new THREE.BoxGeometry(0.44, 0.1, 0.44);
+    const bandMat = new THREE.MeshBasicMaterial({ color: 0x1e293b });
+    const band = new THREE.Mesh(bandGeo, bandMat);
+    band.position.set(0, 1.82, 0);
+    rivalGroup.add(band);
+
+    // Left Arm
+    const armGeo = new THREE.BoxGeometry(0.22, 0.75, 0.22);
+    const skinMat = new THREE.MeshStandardMaterial({ color: 0xffe4e6 });
+    const leftArm = new THREE.Mesh(armGeo, skinMat);
+    leftArm.position.set(-0.46, 1.1, 0);
+    leftArm.castShadow = true;
+    rivalGroup.add(leftArm);
+
+    // Right Arm
+    const rightArm = new THREE.Mesh(armGeo, skinMat);
+    rightArm.position.set(0.46, 1.1, 0);
+    rightArm.castShadow = true;
+    rivalGroup.add(rightArm);
+
+    // Legs
+    const legGeo = new THREE.BoxGeometry(0.24, 0.8, 0.24);
+    const pantsMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.8 });
+    const leftLeg = new THREE.Mesh(legGeo, pantsMat);
+    leftLeg.position.set(-0.2, 0.4, 0);
+    leftLeg.castShadow = true;
+    rivalGroup.add(leftLeg);
+
+    const rightLeg = new THREE.Mesh(legGeo, pantsMat);
+    rightLeg.position.set(0.2, 0.4, 0);
+    rightLeg.castShadow = true;
+    rivalGroup.add(rightLeg);
+
+    this.currentRivals.push({
+      id: `rival_admin_${Date.now()}`,
+      name: rName,
+      mesh: rivalGroup,
+      head: head,
+      leftArm: leftArm,
+      rightArm: rightArm,
+      leftLeg: leftLeg,
+      rightLeg: rightLeg,
+      health: 150,
+      maxHealth: 150,
+      isKO: false,
+      isDazed: false,
+      dazedTimer: 0,
+      speed: 2.8 + Math.random() * 1.5,
+      velocity: new THREE.Vector3(0,0,0),
+      position: rivalGroup.position,
+      activeWeapon: 'none',
+      weaponMesh: null,
+      activeCombatMove: null,
+      combatMoveTimer: 0,
+      attackCooldown: 1.0 + Math.random() * 1.5,
+      personality: ['aggressive', 'defensive', 'brawler'][Math.floor(Math.random() * 3)] as any,
+      wobbleFactor: 1.0,
+      jointRot: new THREE.Vector3(0, 0, 0),
+      jointRotVelocity: new THREE.Vector3(0, 0, 0),
+      isPinnedToWall: false,
+      pinWallNormal: new THREE.Vector3(0, 0, 0),
+      pinTimer: 0
+    });
+
+    this.addCombatLog(`🛠️ ADMIN: Rival hostile "${rName}" généré à vos pieds !`);
+    this.onStateUpdatePay();
   }
 }

@@ -1,0 +1,24 @@
+/* src/styles/background.css */
+
+.canvas-container-cyber {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  /* Radial mask to darken edges and make text readable */
+  mask-image: radial-gradient(circle at center, black 30%, transparent 95%);
+  -webkit-mask-image: radial-gradient(circle at center, black 30%, transparent 95%);
+}
+
+.terminal-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  mix-blend-mode: screen;
+  opacity: 0.15;
+  background-size: 40px 40px;
+  background-image: 
+    linear-gradient(to right, rgba(99, 102, 241, 0.05) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(99, 102, 241, 0.05) 1px, transparent 1px);
+}

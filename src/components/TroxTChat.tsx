@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Send, Bot, User, Trash2, Clock, MessageSquare, Terminal } from 'lucide-react';
+import { brainInstance, thirdEyeInstance } from '../game/TroxTBrain';
 
 interface TroxTChatProps {
   onNavigate: (view: 'landing' | 'character-creator' | 'etherprism' | 'troxt-chat' | 'sandbox') => void;
@@ -124,7 +125,7 @@ export const TroxTChat: React.FC<TroxTChatProps> = ({ onNavigate }) => {
     // Simulate thinking delay (600ms - 1200ms)
     const delay = Math.min(600 + text.length * 8, 1200);
 
-    setTimeout(() => {
+    setTimeout(async () => {
       // Direct navigation callbacks in suggestions
       if (text === 'Créer un personnage maintenant') {
         onNavigate('character-creator');
@@ -139,11 +140,34 @@ export const TroxTChat: React.FC<TroxTChatProps> = ({ onNavigate }) => {
         return;
       }
 
+      let brainPlanStr = '';
+      try {
+        const plan = await brainInstance.process(text, 'user');
+        const tasksList = plan.tasks.map((t: any) => `  - <i class="text-violet-400 font-semibold">[${t.agentId.toUpperCase()}]</i> ${t.mission}`).join('<br>');
+        brainPlanStr = `<br><br><div class="bg-slate-950/80 p-3.5 rounded-2xl border-2 border-violet-900/60 font-mono text-[10px] text-slate-300 mt-3 shadow-xl">` +
+          `<div class="flex items-center gap-1.5 text-violet-400 font-extrabold uppercase tracking-wider mb-2">` +
+          `<span>🧠 PLAN COGNITIF TROXT ACTIF</span>` +
+          `</div>` +
+          `• <b>Plan ID:</b> <span class="text-indigo-300">${plan.planId}</span><br>` +
+          `• <b>Niveau de risque (Third Eye):</b> <span class="px-1.5 py-0.5 rounded font-bold ${plan.riskLevel === 'GREEN' ? 'bg-emerald-950/50 text-emerald-400' : 'bg-amber-950/50 text-amber-400'}">${plan.riskLevel}</span><br>` +
+          `• <b>Agents mobilisés:</b> <span class="text-cyan-400 font-bold">${plan.agents.join(', ')}</span><br>` +
+          `• <b>Estimation:</b> <span class="text-slate-400">${plan.estimatedMs}ms</span><br><br>` +
+          `<div class="border-t border-slate-900/80 pt-2">` +
+          `<b>Missions exécutées en dôme:</b><br>${tasksList}` +
+          `</div>` +
+          `</div>`;
+      } catch (e: any) {
+        brainPlanStr = `<br><br><div class="bg-red-950/30 p-3.5 rounded-2xl border-2 border-red-900/60 font-mono text-[10px] text-red-400 mt-3 shadow-xl">` +
+          `<b>⚠️ TROXT THIRD EYE BLOCK</b><br>` +
+          `• Raison: ${e.message}` +
+          `</div>`;
+      }
+
       const response = getAgentResponse(text);
       const agentMsg: Message = {
         id: String(Date.now() + 1),
         sender: 'agent',
-        text: response.text,
+        text: response.text + brainPlanStr,
         timestamp: new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }),
         suggestions: response.suggestions
       };
@@ -281,7 +305,7 @@ export const TroxTChat: React.FC<TroxTChatProps> = ({ onNavigate }) => {
         </div>
 
         {/* Input Bar */}
-        <div className="px-6 py-3 border-t border-slate-900/80 bg-slate-950/80 backdrop-filter blur-xl">
+        <div className="px-6 py-3 border-t border-slate-900/80 bg-slate-950/80 backdrop-blur-xl">
           <div className="max-w-3xl mx-auto flex gap-3 items-end">
             <textarea
               className="flex-grow bg-slate-900/50 hover:bg-slate-900 focus:bg-slate-900 border border-slate-800 focus:border-indigo-500/50 rounded-2xl px-4 py-3 text-sm text-slate-200 outline-none resize-none transition max-h-32"

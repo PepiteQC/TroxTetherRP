@@ -37,7 +37,9 @@ export class JobSystem {
           { id: 'deliver_package', label: 'Livrer un colis', type: 'deliver', pay: 50, cooldown: 30000 },
           { id: 'deliver_food', label: 'Livrer un repas', type: 'deliver', pay: 35, cooldown: 20000 },
         ],
-        uniformColor: 0xffaa00,{
+        uniformColor: 0xffaa00,
+      },
+      {
         id: 'mecanicien',
         name: 'Mécanicien',
         salary: 180,

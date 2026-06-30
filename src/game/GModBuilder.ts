@@ -30,6 +30,36 @@ export const GMOD_CATALOG: CatalogItem[] = [
   { id: 'wall_shelf', name: "Étagère Murale Ébène", category: 'decor', size: [2.0, 0.4, 0.38], color: '#2a1a08', description: 'Étagère de rangement flottante en bois d\'ébène avec supports dorés et boîtes à chaussures.', icon: 'Folder', price: 350 },
 ];
 
+// Self-executing initialization to load custom generated items from local storage
+try {
+  const existing = typeof window !== 'undefined' ? window.localStorage.getItem('etherworld_custom_catalog') : null;
+  if (existing) {
+    const list = JSON.parse(existing);
+    if (Array.isArray(list)) {
+      list.forEach(item => {
+        if (!GMOD_CATALOG.some(x => x.id === item.id)) {
+          GMOD_CATALOG.push(item);
+        }
+      });
+    }
+  }
+} catch (e) {
+  console.warn('Could not load custom catalog from storage:', e);
+}
+
+export function addCustomCatalogItem(item: CatalogItem) {
+  if (GMOD_CATALOG.some(x => x.id === item.id)) return;
+  GMOD_CATALOG.push(item);
+  try {
+    const existing = localStorage.getItem('etherworld_custom_catalog');
+    const list = existing ? JSON.parse(existing) : [];
+    list.push(item);
+    localStorage.setItem('etherworld_custom_catalog', JSON.stringify(list));
+  } catch (e) {
+    console.error('Failed to save custom item:', e);
+  }
+}
+
 export class GModBuilder {
   private raycaster = new THREE.Raycaster();
   private ghostMesh: THREE.Group | null = null;

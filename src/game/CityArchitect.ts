@@ -17,6 +17,11 @@ export class CityArchitect {
   public collisionBoxes: THREE.Box3[] = [];
   public baseColliders: THREE.Box3[] = [];
   public boutiqueClothes: any[] = [];
+  
+  // Quebec Portneuf Scenery Animations & Pos
+  public windmillSails: THREE.Group | null = null;
+  public lighthouseBeam: THREE.Group | null = null;
+  public cantineWorldPos: THREE.Vector3 = new THREE.Vector3(-10, 0.5, -15);
 
   constructor(private scene: THREE.Scene) {
     this.generateProceduralTextures();
@@ -573,6 +578,9 @@ export class CityArchitect {
 
     // 4. House 4: Villa Celeste (Masterpiece 5D Architectural Estate)
     this.createLuxuryVilla();
+
+    // 5. Boutique Éther (Luxury clothing storefront in North-West)
+    this.createBoutiqueEther();
   }
 
   private buildOutlineHouses() {
@@ -1378,6 +1386,301 @@ export class CityArchitect {
     this.houseGroups.push(hGroup);
   }
 
+  /** Génère le magasin de luxe physique Boutique Éther */
+  private createBoutiqueEther() {
+    const bGroup = new THREE.Group();
+    const pos = { x: -16, y: 0.25, z: 12 };
+    bGroup.position.set(pos.x, pos.y, pos.z);
+    bGroup.name = 'boutique_ether';
+    bGroup.userData = { name: 'Boutique Éther', id: 'boutique_ether' };
+
+    const width = 14;
+    const depth = 10;
+    const height = 4.2;
+    const wallThick = 0.3;
+
+    // A. FLOOR (Polished tile Floor)
+    const floorGeo = new THREE.BoxGeometry(width, 0.1, depth);
+    const floor = new THREE.Mesh(floorGeo, this.materials.tileFloor);
+    floor.position.set(0, -0.05, 0);
+    floor.receiveShadow = true;
+    bGroup.add(floor);
+    this.collisionBoxes.push(new THREE.Box3().setFromObject(floor));
+
+    // B. LUXURY MARBLE & GOLD WALLS
+    const wallMat = new THREE.MeshStandardMaterial({
+      color: 0x111116, // Dark obsidian/marble
+      roughness: 0.15,
+      metalness: 0.85,
+    });
+    const goldMat = new THREE.MeshStandardMaterial({
+      color: 0xd4af37, // Elegant Gold
+      roughness: 0.15,
+      metalness: 0.95,
+    });
+
+    // Rear Wall
+    const wallBack = new THREE.Mesh(new THREE.BoxGeometry(width, height, wallThick), wallMat);
+    wallBack.position.set(0, height / 2, -depth / 2 + wallThick / 2);
+    wallBack.castShadow = true;
+    wallBack.receiveShadow = true;
+    bGroup.add(wallBack);
+    this.collisionBoxes.push(new THREE.Box3().setFromObject(wallBack));
+
+    // Left Wall
+    const wallLeft = new THREE.Mesh(new THREE.BoxGeometry(wallThick, height, depth), wallMat);
+    wallLeft.position.set(-width / 2 + wallThick / 2, height / 2, 0);
+    wallLeft.castShadow = true;
+    wallLeft.receiveShadow = true;
+    bGroup.add(wallLeft);
+    this.collisionBoxes.push(new THREE.Box3().setFromObject(wallLeft));
+
+    // Right Wall
+    const wallRight = new THREE.Mesh(new THREE.BoxGeometry(wallThick, height, depth), wallMat);
+    wallRight.position.set(width / 2 - wallThick / 2, height / 2, 0);
+    wallRight.castShadow = true;
+    wallRight.receiveShadow = true;
+    bGroup.add(wallRight);
+    this.collisionBoxes.push(new THREE.Box3().setFromObject(wallRight));
+
+    // Front Wall (Open glass storefront layout with gold columns)
+    const storeHeight = height;
+    const columnWidth = 0.4;
+    
+    // Left column
+    const colLeft = new THREE.Mesh(new THREE.BoxGeometry(columnWidth, storeHeight, columnWidth), goldMat);
+    colLeft.position.set(-width / 2 + columnWidth / 2, storeHeight / 2, depth / 2 - columnWidth / 2);
+    colLeft.castShadow = true;
+    bGroup.add(colLeft);
+    this.collisionBoxes.push(new THREE.Box3().setFromObject(colLeft));
+
+    // Right column
+    const colRight = new THREE.Mesh(new THREE.BoxGeometry(columnWidth, storeHeight, columnWidth), goldMat);
+    colRight.position.set(width / 2 - columnWidth / 2, storeHeight / 2, depth / 2 - columnWidth / 2);
+    colRight.castShadow = true;
+    bGroup.add(colRight);
+    this.collisionBoxes.push(new THREE.Box3().setFromObject(colRight));
+
+    // Center columns flanking a wide open entry
+    const entryWidth = 3.5;
+    const leftColX = -entryWidth / 2 - columnWidth / 2;
+    const rightColX = entryWidth / 2 + columnWidth / 2;
+
+    const colMidLeft = new THREE.Mesh(new THREE.BoxGeometry(columnWidth, storeHeight, columnWidth), goldMat);
+    colMidLeft.position.set(leftColX, storeHeight / 2, depth / 2 - columnWidth / 2);
+    colMidLeft.castShadow = true;
+    bGroup.add(colMidLeft);
+    this.collisionBoxes.push(new THREE.Box3().setFromObject(colMidLeft));
+
+    const colMidRight = new THREE.Mesh(new THREE.BoxGeometry(columnWidth, storeHeight, columnWidth), goldMat);
+    colMidRight.position.set(rightColX, storeHeight / 2, depth / 2 - columnWidth / 2);
+    colMidRight.castShadow = true;
+    bGroup.add(colMidRight);
+    this.collisionBoxes.push(new THREE.Box3().setFromObject(colMidRight));
+
+    // Huge Glass windows between side columns and entry columns
+    const glassLeftWidth = Math.abs((-width / 2 + columnWidth) - (leftColX - columnWidth / 2));
+    const glassLeftX = (-width / 2 + columnWidth) + glassLeftWidth / 2;
+    const glassLeft = new THREE.Mesh(new THREE.PlaneGeometry(glassLeftWidth, storeHeight - 0.2), this.materials.glass);
+    glassLeft.position.set(glassLeftX, storeHeight / 2, depth / 2 - 0.05);
+    bGroup.add(glassLeft);
+
+    const glassRightWidth = Math.abs((width / 2 - columnWidth) - (rightColX + columnWidth / 2));
+    const glassRightX = (width / 2 - columnWidth) - glassRightWidth / 2;
+    const glassRight = new THREE.Mesh(new THREE.PlaneGeometry(glassRightWidth, storeHeight - 0.2), this.materials.glass);
+    glassRight.position.set(glassRightX, storeHeight / 2, depth / 2 - 0.05);
+    bGroup.add(glassRight);
+
+    // Front header sign board
+    const signBoard = new THREE.Mesh(new THREE.BoxGeometry(width, 0.8, 0.5), wallMat);
+    signBoard.position.set(0, storeHeight - 0.4, depth / 2);
+    signBoard.castShadow = true;
+    bGroup.add(signBoard);
+
+    const signTrim = new THREE.Mesh(new THREE.BoxGeometry(width + 0.1, 0.08, 0.6), goldMat);
+    signTrim.position.set(0, storeHeight - 0.8, depth / 2);
+    bGroup.add(signTrim);
+
+    // Sign letters area glowing halo
+    const logoGlow = new THREE.PointLight(0xa78bfa, 4.0, 5);
+    logoGlow.position.set(0, storeHeight - 0.4, depth / 2 + 0.4);
+    bGroup.add(logoGlow);
+
+    const logoMesh = new THREE.Mesh(new THREE.BoxGeometry(3.5, 0.4, 0.1), new THREE.MeshBasicMaterial({ color: 0xa78bfa }));
+    logoMesh.position.set(0, storeHeight - 0.4, depth / 2 + 0.26);
+    bGroup.add(logoMesh);
+
+    // Roof
+    const roofGeo = new THREE.BoxGeometry(width + 0.6, 0.3, depth + 0.6);
+    const roof = new THREE.Mesh(roofGeo, new THREE.MeshStandardMaterial({ color: 0x1a1a24, roughness: 0.5 }));
+    roof.position.set(0, storeHeight + 0.15, 0);
+    roof.castShadow = true;
+    bGroup.add(roof);
+
+    // C. INTERNAL DECOR & BOUTIQUE DISPLAY
+    // Warm lighting overhead
+    const ambientLight = new THREE.PointLight(0xfff5ea, 5.0, 10);
+    ambientLight.position.set(0, height - 0.6, 0);
+    bGroup.add(ambientLight);
+
+    const ambientLight2 = new THREE.PointLight(0xfff5ea, 3.0, 8);
+    ambientLight2.position.set(3, height - 0.6, 2);
+    bGroup.add(ambientLight2);
+
+    const ambientLight3 = new THREE.PointLight(0xfff5ea, 3.0, 8);
+    ambientLight3.position.set(-3, height - 0.6, -2);
+    bGroup.add(ambientLight3);
+
+    // 2 Fitting Stall rooms
+    const stallWidth = 2.0;
+    const stallDepth = 2.0;
+    const stallHeight = 2.4;
+    const stallMat = new THREE.MeshStandardMaterial({ color: 0x1f1f2e, roughness: 0.8 });
+
+    // Stall 1 (Left Back)
+    const stall1Back = new THREE.Mesh(new THREE.BoxGeometry(stallWidth, stallHeight, wallThick), stallMat);
+    stall1Back.position.set(-width / 2 + stallWidth / 2, stallHeight / 2, -depth / 2 + stallDepth + wallThick / 2);
+    stall1Back.castShadow = true;
+    bGroup.add(stall1Back);
+    this.collisionBoxes.push(new THREE.Box3().setFromObject(stall1Back));
+
+    const stall1Side = new THREE.Mesh(new THREE.BoxGeometry(wallThick, stallHeight, stallDepth), stallMat);
+    stall1Side.position.set(-width / 2 + stallWidth - wallThick / 2, stallHeight / 2, -depth / 2 + stallDepth / 2);
+    stall1Side.castShadow = true;
+    bGroup.add(stall1Side);
+    this.collisionBoxes.push(new THREE.Box3().setFromObject(stall1Side));
+
+    // Stall 2 (Right Back)
+    const stall2Back = new THREE.Mesh(new THREE.BoxGeometry(stallWidth, stallHeight, wallThick), stallMat);
+    stall2Back.position.set(width / 2 - stallWidth / 2, stallHeight / 2, -depth / 2 + stallDepth + wallThick / 2);
+    stall2Back.castShadow = true;
+    bGroup.add(stall2Back);
+    this.collisionBoxes.push(new THREE.Box3().setFromObject(stall2Back));
+
+    const stall2Side = new THREE.Mesh(new THREE.BoxGeometry(wallThick, stallHeight, stallDepth), stallMat);
+    stall2Side.position.set(width / 2 - stallWidth + wallThick / 2, stallHeight / 2, -depth / 2 + stallDepth / 2);
+    stall2Side.castShadow = true;
+    bGroup.add(stall2Side);
+    this.collisionBoxes.push(new THREE.Box3().setFromObject(stall2Side));
+
+    // D. LUXURY CASHIER COUNTER (La Caisse)
+    const counterGeo = new THREE.BoxGeometry(3.0, 1.1, 1.2);
+    const counter = new THREE.Mesh(counterGeo, stallMat);
+    counter.position.set(0, 1.1 / 2, -depth / 2 + 1.8);
+    counter.castShadow = true;
+    bGroup.add(counter);
+    this.collisionBoxes.push(new THREE.Box3().setFromObject(counter));
+
+    const counterTrim = new THREE.Mesh(new THREE.BoxGeometry(3.1, 0.08, 1.3), goldMat);
+    counterTrim.position.set(0, 1.1, -depth / 2 + 1.8);
+    bGroup.add(counterTrim);
+
+    // Cash register/screen box on counter
+    const register = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.3, 0.4), new THREE.MeshStandardMaterial({ color: 0x050505 }));
+    register.position.set(0, 1.1 + 0.15, -depth / 2 + 1.8);
+    bGroup.add(register);
+
+    // E. MANNEQUINS & CLOTHES DISPLAY
+    const clothesList = [
+      {
+        id: 'garment_glow',
+        brand: 'Maison Éther',
+        type: 'Veste Éther-Glow',
+        color: '#8b5cf6', // Violet
+        colorHex: 0x8b5cf6,
+        price: '450 $',
+        tag: 'Émanation d\'Éther violette stabilisée',
+        relPos: { x: -3.5, z: 2.0 },
+      },
+      {
+        id: 'garment_cyber',
+        brand: 'Aura Couture',
+        type: 'Manteau Cyber-Chic',
+        color: '#10b981', // Vert émeraude
+        colorHex: 0x10b981,
+        price: '950 $',
+        tag: 'Nano-tissage de fils d\'or d\'Éther',
+        relPos: { x: 3.5, z: 2.0 },
+      },
+      {
+        id: 'garment_mirage',
+        brand: 'Vortex Paris',
+        type: 'Blouson Mirage',
+        color: '#f59e0b', // Or / Ambre
+        colorHex: 0xf59e0b,
+        price: '250 $',
+        tag: 'Réfraction lumineuse adaptative',
+        relPos: { x: -3.5, z: -1.5 },
+      },
+      {
+        id: 'garment_neon',
+        brand: 'Forge Factory',
+        type: 'Parka Néon-Forge',
+        color: '#ef4444', // Rouge
+        colorHex: 0xef4444,
+        price: '600 $',
+        tag: 'Isolation en plasma condensé résistant',
+        relPos: { x: 3.5, z: -1.5 },
+      },
+    ];
+
+    clothesList.forEach((garment) => {
+      // 1. Pedestal Base
+      const pedBase = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.5, 0.25, 16), goldMat);
+      pedBase.position.set(garment.relPos.x, 0.125, garment.relPos.z);
+      pedBase.castShadow = true;
+      bGroup.add(pedBase);
+
+      // Pedestal column stem
+      const pedStem = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 1.0, 8), goldMat);
+      pedStem.position.set(garment.relPos.x, 0.25 + 0.5, garment.relPos.z);
+      pedStem.castShadow = true;
+      bGroup.add(pedStem);
+
+      // Mannequin Torso
+      const torsoMat = new THREE.MeshStandardMaterial({
+        color: parseInt(garment.color.replace('#', '0x')),
+        roughness: 0.1,
+        metalness: 0.5,
+      });
+      const pedTorso = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.8, 0.25), torsoMat);
+      pedTorso.position.set(garment.relPos.x, 1.25, garment.relPos.z);
+      pedTorso.castShadow = true;
+      bGroup.add(pedTorso);
+
+      // Small glowing orb floating above the mannequin
+      const orb = new THREE.Mesh(
+        new THREE.SphereGeometry(0.12, 16, 16),
+        new THREE.MeshBasicMaterial({ color: parseInt(garment.color.replace('#', '0x')) })
+      );
+      orb.position.set(garment.relPos.x, 1.85, garment.relPos.z);
+      bGroup.add(orb);
+
+      // Light glow
+      const glowLight = new THREE.PointLight(parseInt(garment.color.replace('#', '0x')), 3.0, 3);
+      glowLight.position.set(garment.relPos.x, 1.85, garment.relPos.z);
+      bGroup.add(glowLight);
+
+      // Push to public boutiqueClothes with computed world position
+      const worldX = pos.x + garment.relPos.x;
+      const worldZ = pos.z + garment.relPos.z;
+      
+      this.boutiqueClothes.push({
+        id: garment.id,
+        brand: garment.brand,
+        type: garment.type,
+        color: garment.color,
+        colorHex: garment.colorHex,
+        price: garment.price,
+        tag: garment.tag,
+        worldPos: new THREE.Vector3(worldX, 1.25, worldZ),
+      });
+    });
+
+    this.scene.add(bGroup);
+    this.houseGroups.push(bGroup);
+  }
+
   // ─── SWINGING HINGE ASSEMBLY FOR DOORS ───────────────────────────
   private createDoorSwinging(
     parent: THREE.Group,
@@ -1614,6 +1917,530 @@ export class CityArchitect {
     signsGroup.add(welcomeGroup);
 
     this.scene.add(signsGroup);
+
+    // Call Portneuf Scenic Environment generator
+    this.buildQuebecPortneufScenery();
+  }
+
+  /** Génère le fleuve Saint-Laurent, le quai, le phare, la cantine et tous les villages de Portneuf */
+  private buildQuebecPortneufScenery() {
+    const qGroup = new THREE.Group();
+    qGroup.name = "Quebec_Portneuf_Scenery";
+
+    // 1. FLEUVE SAINT-LAURENT (Southern Water Body)
+    const riverGeo = new THREE.PlaneGeometry(350, 110);
+    const riverMat = new THREE.MeshStandardMaterial({
+      color: 0x1d4ed8, // Deep blue Saint-Laurent
+      roughness: 0.1,
+      metalness: 0.8,
+      transparent: true,
+      opacity: 0.85,
+    });
+    const river = new THREE.Mesh(riverGeo, riverMat);
+    river.rotation.x = -Math.PI / 2;
+    river.position.set(0, 0.05, -135);
+    river.receiveShadow = true;
+    qGroup.add(river);
+
+    // 2. LE QUAI DE PORTNEUF (Wood Pier extending into the river)
+    const pierGroup = new THREE.Group();
+    pierGroup.position.set(-30, 0, -80);
+
+    const plankMat = new THREE.MeshStandardMaterial({ color: 0x5c4033, roughness: 0.85 });
+    const postMat = new THREE.MeshStandardMaterial({ color: 0x2e1d11, roughness: 0.95 });
+
+    // Wooden walkway
+    const boardwalk = new THREE.Mesh(new THREE.BoxGeometry(4.5, 0.4, 52), plankMat);
+    boardwalk.position.set(0, 0.2, -26);
+    boardwalk.castShadow = true;
+    boardwalk.receiveShadow = true;
+    pierGroup.add(boardwalk);
+    this.collisionBoxes.push(new THREE.Box3().setFromObject(boardwalk));
+
+    // Support pilings/posts
+    for (let pz = -4; pz >= -50; pz -= 8) {
+      const poleL = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.18, 6.0, 8), postMat);
+      poleL.position.set(-2.4, -2.8, pz);
+      pierGroup.add(poleL);
+
+      const poleR = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.18, 6.0, 8), postMat);
+      poleR.position.set(2.4, -2.8, pz);
+      pierGroup.add(poleR);
+    }
+
+    // T-shaped platform at end of pier
+    const tPlatform = new THREE.Mesh(new THREE.BoxGeometry(10.0, 0.4, 8.0), plankMat);
+    tPlatform.position.set(0, 0.2, -52);
+    tPlatform.castShadow = true;
+    tPlatform.receiveShadow = true;
+    pierGroup.add(tPlatform);
+    this.collisionBoxes.push(new THREE.Box3().setFromObject(tPlatform));
+
+    // Wooden handrails on sides of pier
+    const railMat = new THREE.MeshStandardMaterial({ color: 0x7c2d12, roughness: 0.9 });
+    for (let side = -1; side <= 1; side += 2) {
+      if (side === 0) continue;
+      const railH = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.08, 48), railMat);
+      railH.position.set(2.2 * side, 1.1, -24);
+      pierGroup.add(railH);
+
+      // Verticals for support
+      for (let pz = -4; pz >= -48; pz -= 6) {
+        const vert = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.9, 0.08), railMat);
+        vert.position.set(2.2 * side, 0.6, pz);
+        pierGroup.add(vert);
+      }
+    }
+
+    // Signpost at Quai entrance
+    const signBoardMat = new THREE.MeshStandardMaterial({ color: 0x1e3a8a, roughness: 0.5 });
+    const signBoard = new THREE.Mesh(new THREE.BoxGeometry(2.4, 1.2, 0.1), signBoardMat);
+    signBoard.position.set(0, 3.2, 0);
+    pierGroup.add(signBoard);
+
+    // Decorative anchor logo or sign text backing
+    const quaiSignTex = this.createQuebecSignTexture("⚓ PORTNEUF ⚓", "Le Quai Municipal", "Fierté du Saint-Laurent", true);
+    signBoard.material = new THREE.MeshStandardMaterial({ map: quaiSignTex, roughness: 0.4 });
+
+    const signPole = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 3.5, 8), postMat);
+    signPole.position.set(0, 1.75, 0);
+    pierGroup.add(signPole);
+
+    qGroup.add(pierGroup);
+
+    // 3. LE PHARE DE PORTNEUF (Lighthouse guarding the waters)
+    const lighthouseGroup = new THREE.Group();
+    lighthouseGroup.position.set(50, 0, -85);
+
+    // Rocky foundation
+    const foundation = new THREE.Mesh(new THREE.CylinderGeometry(4.5, 5.0, 1.6, 12), new THREE.MeshStandardMaterial({ color: 0x475569, roughness: 0.95 }));
+    foundation.position.y = 0.8;
+    foundation.castShadow = true;
+    foundation.receiveShadow = true;
+    lighthouseGroup.add(foundation);
+    this.collisionBoxes.push(new THREE.Box3().setFromObject(foundation));
+
+    // Conical Tower Base (White stucco)
+    const towerMat = new THREE.MeshStandardMaterial({ color: 0xf8fafc, roughness: 0.75 });
+    const tower = new THREE.Mesh(new THREE.CylinderGeometry(1.6, 2.4, 9.5, 12), towerMat);
+    tower.position.y = 1.6 + 4.75;
+    tower.castShadow = true;
+    lighthouseGroup.add(tower);
+    this.collisionBoxes.push(new THREE.Box3().setFromObject(tower));
+
+    // Red balcony deck at top
+    const balcony = new THREE.Mesh(new THREE.CylinderGeometry(2.1, 2.1, 0.4, 12), new THREE.MeshStandardMaterial({ color: 0xdc2626, roughness: 0.6 }));
+    balcony.position.y = 1.6 + 9.5 + 0.2;
+    balcony.castShadow = true;
+    lighthouseGroup.add(balcony);
+
+    // Metal guard rails
+    const blackMetal = new THREE.MeshStandardMaterial({ color: 0x111111, metalness: 0.9, roughness: 0.2 });
+    const rails = new THREE.Mesh(new THREE.CylinderGeometry(2.0, 2.0, 0.8, 12, 1, true), blackMetal);
+    rails.position.y = 1.6 + 9.5 + 0.6;
+    lighthouseGroup.add(rails);
+
+    // Glass light housing chamber
+    const lightChamber = new THREE.Mesh(new THREE.CylinderGeometry(1.3, 1.3, 2.2, 12), this.materials.glass);
+    lightChamber.position.y = 1.6 + 9.5 + 0.4 + 1.1;
+    lighthouseGroup.add(lightChamber);
+
+    // Conical Red Roof
+    const fRoof = new THREE.Mesh(new THREE.ConeGeometry(1.5, 1.8, 12), new THREE.MeshStandardMaterial({ color: 0xdc2626, roughness: 0.5 }));
+    fRoof.position.y = 1.6 + 9.5 + 0.4 + 2.2 + 0.9;
+    fRoof.castShadow = true;
+    lighthouseGroup.add(fRoof);
+
+    // Internal Light Bulb
+    const bulb = new THREE.Mesh(new THREE.SphereGeometry(0.35, 12, 12), new THREE.MeshBasicMaterial({ color: 0xfef08a }));
+    bulb.position.y = 1.6 + 9.5 + 0.4 + 1.1;
+    lighthouseGroup.add(bulb);
+
+    // Rotating Spotlight & Volumetric beam
+    const beamGroup = new THREE.Group();
+    beamGroup.position.set(0, 1.6 + 9.5 + 0.4 + 1.1, 0);
+
+    const beamGeo = new THREE.ConeGeometry(2.8, 32, 16);
+    beamGeo.translate(0, -16, 0); // shift pivot
+    const beamMat = new THREE.MeshBasicMaterial({
+      color: 0xfef08a,
+      transparent: true,
+      opacity: 0.22,
+      blending: THREE.AdditiveBlending,
+      side: THREE.DoubleSide,
+    });
+    const beamMesh = new THREE.Mesh(beamGeo, beamMat);
+    beamMesh.rotation.x = Math.PI / 2;
+    beamGroup.add(beamMesh);
+
+    // Spotlight
+    const spotlight = new THREE.SpotLight(0xfef08a, 45, 60, Math.PI / 5.5, 0.5, 1.0);
+    spotlight.position.set(0, 0, 0);
+    const targetObj = new THREE.Object3D();
+    targetObj.position.set(0, 0, 15);
+    beamGroup.add(targetObj);
+    spotlight.target = targetObj;
+    beamGroup.add(spotlight);
+
+    lighthouseGroup.add(beamGroup);
+    this.lighthouseBeam = beamGroup; // Stored for update loop rotation!
+
+    // Flagpole with waving Quebec Flag
+    const fpGeo = new THREE.CylinderGeometry(0.04, 0.04, 1.6, 8);
+    const flagPole = new THREE.Mesh(fpGeo, blackMetal);
+    flagPole.position.set(0, 1.6 + 9.5 + 0.4 + 2.2 + 1.8 + 0.8, 0);
+    lighthouseGroup.add(flagPole);
+
+    const qcFlag = this.createQuebecFlagMesh();
+    qcFlag.position.set(0.65, 1.6 + 9.5 + 0.4 + 2.2 + 1.8 + 1.2, 0);
+    lighthouseGroup.add(qcFlag);
+
+    qGroup.add(lighthouseGroup);
+
+    // 4. VILLAGE DE NEUVILLE (Corn fields / Blé d'inde)
+    const neuvilleGroup = new THREE.Group();
+    neuvilleGroup.position.set(-85, 0, 18);
+    
+    // Wood sign "Neuville"
+    const signN = new THREE.Mesh(new THREE.BoxGeometry(2.0, 1.0, 0.08), new THREE.MeshStandardMaterial({
+      map: this.createQuebecSignTexture("🌾 NEUVILLE 🌾", "Kiosque de Blé d'Inde", "Auto-cueillette fraîche", true),
+      roughness: 0.5
+    }));
+    signN.position.set(0, 1.8, 0);
+    signN.castShadow = true;
+    neuvilleGroup.add(signN);
+
+    const postN = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 2.2, 8), postMat);
+    postN.position.set(0, 1.1, 0);
+    postN.castShadow = true;
+    neuvilleGroup.add(postN);
+
+    // Corn fields: Grid of yellow and green corn crop boxes
+    const cornLeafMat = new THREE.MeshStandardMaterial({ color: 0x15803d, roughness: 0.9, flatShading: true });
+    const cornCobMat = new THREE.MeshStandardMaterial({ color: 0xeab308, roughness: 0.8 });
+
+    for (let cx = -4; cx <= 4; cx += 1.8) {
+      for (let cz = -4; cz <= 4; cz += 1.8) {
+        if (Math.abs(cx) < 0.5 && Math.abs(cz) < 0.5) continue; // clear center for sign
+        
+        const cropGroup = new THREE.Group();
+        cropGroup.position.set(cx, 0, cz);
+
+        // Stalk
+        const stalk = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 1.5, 6), cornLeafMat);
+        stalk.position.y = 0.75;
+        cropGroup.add(stalk);
+
+        // Leaves
+        const leaf1 = new THREE.Mesh(new THREE.ConeGeometry(0.25, 0.8, 4), cornLeafMat);
+        leaf1.position.set(-0.1, 0.8, 0);
+        leaf1.rotation.z = 0.4;
+        cropGroup.add(leaf1);
+
+        const leaf2 = new THREE.Mesh(new THREE.ConeGeometry(0.2, 0.8, 4), cornLeafMat);
+        leaf2.position.set(0.1, 1.0, 0);
+        leaf2.rotation.z = -0.4;
+        cropGroup.add(leaf2);
+
+        // Yellow corn top cobs
+        const cob = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 0.5, 6), cornCobMat);
+        cob.position.set(0, 1.4, 0);
+        cropGroup.add(cob);
+
+        neuvilleGroup.add(cropGroup);
+      }
+    }
+    qGroup.add(neuvilleGroup);
+
+    // 5. VILLAGE DE DONNACONA (Paper Mill Chimney / Usine de Pâte et Papier)
+    const donnaconaGroup = new THREE.Group();
+    donnaconaGroup.position.set(-52, 0, 20);
+
+    // Stone foundation slab
+    const factoryBase = new THREE.Mesh(new THREE.BoxGeometry(6, 0.3, 6), new THREE.MeshStandardMaterial({ color: 0x334155, roughness: 0.8 }));
+    factoryBase.position.y = 0.15;
+    factoryBase.castShadow = true;
+    donnaconaGroup.add(factoryBase);
+    this.collisionBoxes.push(new THREE.Box3().setFromObject(factoryBase));
+
+    // Tall industrial chimney (Paper Mill)
+    const brickMat = new THREE.MeshStandardMaterial({ color: 0x9a3412, roughness: 0.9 }); // Deep terracotta brick red
+    const chimney = new THREE.Mesh(new THREE.CylinderGeometry(0.6, 1.1, 11.0, 10), brickMat);
+    chimney.position.set(0, 5.5 + 0.3, 0);
+    chimney.castShadow = true;
+    chimney.receiveShadow = true;
+    donnaconaGroup.add(chimney);
+    this.collisionBoxes.push(new THREE.Box3().setFromObject(chimney));
+
+    // Metallic chimney rim ring
+    const rim = new THREE.Mesh(new THREE.CylinderGeometry(0.7, 0.7, 0.4, 10), blackMetal);
+    rim.position.set(0, 11.0 + 0.3, 0);
+    donnaconaGroup.add(rim);
+
+    // Donnacona Paper Mill signage billboard
+    const signD = new THREE.Mesh(new THREE.BoxGeometry(2.4, 1.1, 0.08), new THREE.MeshStandardMaterial({
+      map: this.createQuebecSignTexture("🏭 DONNACONA 🏭", "Moulin de Pâte & Papier", "Économie locale de Portneuf", true),
+      roughness: 0.4
+    }));
+    signD.position.set(0, 1.6, 2.5);
+    donnaconaGroup.add(signD);
+
+    qGroup.add(donnaconaGroup);
+
+    // 6. VILLAGE DE CAP-SANTÉ (Beautiful gabled chapel church / L'Église)
+    const capsanteGroup = new THREE.Group();
+    capsanteGroup.position.set(-18, 0, -25); // Placed beautifully in Southwest sector
+
+    // Church main building
+    const churchBody = new THREE.Mesh(new THREE.BoxGeometry(8, 4.2, 12), new THREE.MeshStandardMaterial({ color: 0xf1f5f9, roughness: 0.85 }));
+    churchBody.position.set(0, 2.1, 0);
+    churchBody.castShadow = true;
+    churchBody.receiveShadow = true;
+    capsanteGroup.add(churchBody);
+    this.collisionBoxes.push(new THREE.Box3().setFromObject(churchBody));
+
+    // Gabled tin roof (Classic Quebec silver/tin metal roof styling)
+    const roofMat = new THREE.MeshStandardMaterial({ color: 0xcbd5e1, metalness: 0.82, roughness: 0.25 });
+    const tinRoofGeo = new THREE.ConeGeometry(6.5, 4.0, 4);
+    const tinRoof = new THREE.Mesh(tinRoofGeo, roofMat);
+    tinRoof.position.set(0, 4.2 + 2.0, 0);
+    tinRoof.rotation.y = Math.PI / 4; // align gables with building box
+    tinRoof.scale.set(1.4, 1.0, 2.0); // stretch to fit gabled format
+    capsanteGroup.add(tinRoof);
+
+    // Bell Tower / Silver Clocher (Steeple)
+    const steepleLower = new THREE.Mesh(new THREE.BoxGeometry(2.2, 3.5, 2.2), new THREE.MeshStandardMaterial({ color: 0xe2e8f0, roughness: 0.8 }));
+    steepleLower.position.set(0, 4.2 + 1.75, 5);
+    steepleLower.castShadow = true;
+    capsanteGroup.add(steepleLower);
+
+    // Shiny silver spire top
+    const silverSpire = new THREE.Mesh(new THREE.ConeGeometry(1.2, 4.2, 8), roofMat);
+    silverSpire.position.set(0, 4.2 + 3.5 + 2.1, 5);
+    silverSpire.castShadow = true;
+    capsanteGroup.add(silverSpire);
+
+    // Gold Cross at the absolute peak
+    const crossGroup = new THREE.Group();
+    crossGroup.position.set(0, 4.2 + 3.5 + 4.2 + 0.6, 5);
+    const goldMat = new THREE.MeshStandardMaterial({ color: 0xd4af37, roughness: 0.1, metalness: 0.9 });
+    const crossV = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 1.2, 8), goldMat);
+    crossGroup.add(crossV);
+    const crossH = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 0.7, 8), goldMat);
+    crossH.rotation.z = Math.PI / 2;
+    crossH.position.y = 0.25;
+    crossGroup.add(crossH);
+    capsanteGroup.add(crossGroup);
+
+    // Big front double door (brown wood)
+    const doorC = new THREE.Mesh(new THREE.BoxGeometry(2.2, 2.8, 0.15), new THREE.MeshStandardMaterial({ color: 0x451a03, roughness: 0.8 }));
+    doorC.position.set(0, 1.4, 6.01);
+    capsanteGroup.add(doorC);
+
+    // Round rose window on front facade
+    const roseWin = new THREE.Mesh(new THREE.CylinderGeometry(1.0, 1.0, 0.1, 16), new THREE.MeshStandardMaterial({ color: 0x9333ea, emissive: 0x4c1d95, roughness: 0.1 }));
+    roseWin.rotation.x = Math.PI / 2;
+    roseWin.position.set(0, 4.0, 5.01);
+    capsanteGroup.add(roseWin);
+
+    // Chapel sign
+    const signChapel = new THREE.Mesh(new THREE.BoxGeometry(2.8, 1.0, 0.08), new THREE.MeshStandardMaterial({
+      map: this.createQuebecSignTexture("⛪ CAP-SANTÉ ⛪", "Église de la Sainte-Famille", "Fleuron d'architecture (1714)", true),
+      roughness: 0.4
+    }));
+    signChapel.position.set(0, 1.2, 7.8);
+    capsanteGroup.add(signChapel);
+
+    qGroup.add(capsanteGroup);
+
+    // 7. VILLAGE DE DESCHAMBAULT-GRONDINES (Stone windmill / Moulin à vent)
+    const deschambaultGroup = new THREE.Group();
+    deschambaultGroup.position.set(65, 0, -28); // South-East sector
+
+    // Base mound
+    const grassMound = new THREE.Mesh(new THREE.CylinderGeometry(3.5, 4.2, 0.8, 12), this.materials.grassField);
+    grassMound.position.y = 0.4;
+    grassMound.receiveShadow = true;
+    deschambaultGroup.add(grassMound);
+    this.collisionBoxes.push(new THREE.Box3().setFromObject(grassMound));
+
+    // Stone round tower body
+    const stoneTower = new THREE.Mesh(new THREE.CylinderGeometry(1.5, 2.2, 6.2, 10), new THREE.MeshStandardMaterial({ color: 0xa1a1aa, roughness: 0.9 }));
+    stoneTower.position.y = 0.8 + 3.1;
+    stoneTower.castShadow = true;
+    stoneTower.receiveShadow = true;
+    deschambaultGroup.add(stoneTower);
+    this.collisionBoxes.push(new THREE.Box3().setFromObject(stoneTower));
+
+    // Cap/Roof (wooden dome)
+    const capRoof = new THREE.Mesh(new THREE.SphereGeometry(1.6, 12, 12, 0, Math.PI * 2, 0, Math.PI / 2), new THREE.MeshStandardMaterial({ color: 0x78350f, roughness: 0.8 }));
+    capRoof.position.y = 0.8 + 6.2;
+    capRoof.castShadow = true;
+    deschambaultGroup.add(capRoof);
+
+    // Windmill rotating sails (Le mécanisme)
+    const sailsGroup = new THREE.Group();
+    sailsGroup.position.set(0, 0.8 + 6.2 + 0.3, 1.8); // extend slightly forward on the cap
+
+    const centerHub = new THREE.Mesh(new THREE.CylinderGeometry(0.25, 0.25, 0.5, 8), blackMetal);
+    centerHub.rotation.x = Math.PI / 2;
+    sailsGroup.add(centerHub);
+
+    // 4 sails (cross style)
+    const latticeMat = new THREE.MeshStandardMaterial({ color: 0xead5c3, roughness: 0.9 });
+    for (let i = 0; i < 4; i++) {
+      const angle = (Math.PI / 2) * i;
+      const sailArm = new THREE.Group();
+      sailArm.rotation.z = angle;
+
+      // Wooden beam
+      const beam = new THREE.Mesh(new THREE.BoxGeometry(0.1, 4.2, 0.1), postMat);
+      beam.position.y = 2.1;
+      sailArm.add(beam);
+
+      // Fabric lattice blade
+      const blade = new THREE.Mesh(new THREE.BoxGeometry(0.7, 3.2, 0.04), latticeMat);
+      blade.position.set(0.38, 2.1, 0.05);
+      sailArm.add(blade);
+
+      sailsGroup.add(sailArm);
+    }
+    deschambaultGroup.add(sailsGroup);
+    this.windmillSails = sailsGroup; // Stored for rotate animation inside loop!
+
+    // Windmill Sign
+    const signW = new THREE.Mesh(new THREE.BoxGeometry(2.4, 1.0, 0.08), new THREE.MeshStandardMaterial({
+      map: this.createQuebecSignTexture("🌾 GRONDINES 🌾", "Moulin à vent de Grondines", "Patrimoine historique (1674)", true),
+      roughness: 0.4
+    }));
+    signW.position.set(0, 1.2, 3.5);
+    deschambaultGroup.add(signW);
+
+    qGroup.add(deschambaultGroup);
+
+    // 8. LA CANTINE QUÉBÉCOISE (La Roulotte "Chez Gaston")
+    const cantineGroup = new THREE.Group();
+    cantineGroup.position.copy(this.cantineWorldPos); // (-10, 0.5, -15) - Very close to main street intersection
+
+    // Chrome body trailer
+    const trailerMat = new THREE.MeshStandardMaterial({ color: 0xe2e8f0, roughness: 0.1, metalness: 0.8 });
+    const trailer = new THREE.Mesh(new THREE.BoxGeometry(5.2, 2.5, 3.2), trailerMat);
+    trailer.position.y = 1.25;
+    trailer.castShadow = true;
+    cantineGroup.add(trailer);
+    this.collisionBoxes.push(new THREE.Box3().setFromObject(trailer));
+
+    // Wheels
+    const tireMat = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.9 });
+    const wheelGeo = new THREE.CylinderGeometry(0.4, 0.4, 0.3, 10);
+    const wheel1 = new THREE.Mesh(wheelGeo, tireMat);
+    wheel1.rotation.z = Math.PI / 2;
+    wheel1.position.set(-1.8, 0, -1.61);
+    cantineGroup.add(wheel1);
+
+    const wheel2 = new THREE.Mesh(wheelGeo, tireMat);
+    wheel2.rotation.z = Math.PI / 2;
+    wheel2.position.set(1.8, 0, -1.61);
+    cantineGroup.add(wheel2);
+
+    // Service window shelf
+    const shelf = new THREE.Mesh(new THREE.BoxGeometry(3.2, 0.1, 0.4), new THREE.MeshStandardMaterial({ color: 0x0ea5e9 }));
+    shelf.position.set(0, 1.1, 1.61);
+    cantineGroup.add(shelf);
+
+    // Service awning (red & white stripe canvas)
+    const canvasMat = new THREE.MeshStandardMaterial({ color: 0xef4444, roughness: 0.8 });
+    const awning = new THREE.Mesh(new THREE.BoxGeometry(3.6, 0.1, 1.2), canvasMat);
+    awning.position.set(0, 2.2, 2.1);
+    awning.rotation.x = 0.25; // tilt down
+    cantineGroup.add(awning);
+
+    // Menu Sign on Cantine front
+    const menuTex = this.createQuebecSignTexture("⚜️ CHEZ GASTON ⚜️", "La Roulotte de Portneuf", "Poutine • Blé d'Inde • Bière", true);
+    const menuSign = new THREE.Mesh(new THREE.BoxGeometry(3.0, 1.0, 0.08), new THREE.MeshStandardMaterial({ map: menuTex, roughness: 0.4 }));
+    menuSign.position.set(0, 3.1, 0);
+    cantineGroup.add(menuSign);
+
+    // High 7-meter flag pole with a large Quebec Flag!
+    const fpCantine = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.08, 7.2, 8), new THREE.MeshStandardMaterial({ color: 0x94a3b8, metalness: 0.85, roughness: 0.15 }));
+    fpCantine.position.set(-2.8, 3.6, -1.5);
+    cantineGroup.add(fpCantine);
+
+    const flagCantine = this.createQuebecFlagMesh();
+    flagCantine.scale.set(1.6, 1.6, 1.6); // larger flag
+    flagCantine.position.set(-1.75, 6.2, -1.5);
+    cantineGroup.add(flagCantine);
+
+    qGroup.add(cantineGroup);
+
+    this.scene.add(qGroup);
+  }
+
+  /** Crée une texture de Drapeau du Québec haute fidélité (Fleurdelisé) */
+  private createQuebecFlagTexture(): THREE.CanvasTexture {
+    const canvas = document.createElement('canvas');
+    canvas.width = 256;
+    canvas.height = 170;
+    const ctx = canvas.getContext('2d');
+    if (ctx) {
+      // 1. Fond bleu royal québécois
+      ctx.fillStyle = '#0033a0';
+      ctx.fillRect(0, 0, 256, 170);
+
+      // 2. Croix blanche (largeur environ 1/6 de la hauteur du drapeau)
+      const crossWidth = 24;
+      ctx.fillStyle = '#ffffff';
+      // Barre horizontale
+      ctx.fillRect(0, (170 - crossWidth) / 2, 256, crossWidth);
+      // Barre verticale
+      ctx.fillRect((256 - crossWidth) / 2, 0, crossWidth, 170);
+
+      // 3. Fleur de lys dessinée dans chacun des quatre cantons
+      const drawFleurDeLys = (cx: number, cy: number) => {
+        ctx.fillStyle = '#ffffff';
+        // Pétale central
+        ctx.beginPath();
+        ctx.ellipse(cx, cy - 8, 4, 10, 0, 0, Math.PI * 2);
+        // Pétale gauche
+        ctx.ellipse(cx - 7, cy - 3, 7, 4, Math.PI / 4, 0, Math.PI * 2);
+        // Pétale droit
+        ctx.ellipse(cx + 7, cy - 3, 7, 4, -Math.PI / 4, 0, Math.PI * 2);
+        ctx.fill();
+        
+        // Attache horizontale de la fleur de lys
+        ctx.fillRect(cx - 8, cy + 1, 16, 2.5);
+        
+        // Pieds du bas
+        ctx.beginPath();
+        ctx.moveTo(cx - 4, cy + 4);
+        ctx.lineTo(cx + 4, cy + 4);
+        ctx.lineTo(cx, cy + 11);
+        ctx.closePath();
+        ctx.fill();
+      };
+
+      // Dessiner dans les 4 quadrants
+      drawFleurDeLys(52, 38);   // Canton Haut-Gauche
+      drawFleurDeLys(204, 38);  // Canton Haut-Droit
+      drawFleurDeLys(52, 132);  // Canton Bas-Gauche
+      drawFleurDeLys(204, 132); // Canton Bas-Droit
+    }
+    const tex = new THREE.CanvasTexture(canvas);
+    return tex;
+  }
+
+  /** Crée le mesh 3D double face d'un drapeau fleurdelisé */
+  private createQuebecFlagMesh(): THREE.Mesh {
+    const geo = new THREE.PlaneGeometry(1.3, 0.85);
+    const mat = new THREE.MeshStandardMaterial({
+      map: this.createQuebecFlagTexture(),
+      side: THREE.DoubleSide,
+      roughness: 0.5,
+      metalness: 0.0,
+    });
+    const flag = new THREE.Mesh(geo, mat);
+    flag.name = "Quebec_Flag_Mesh";
+    return flag;
   }
 }
 

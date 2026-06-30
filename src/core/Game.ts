@@ -59,7 +59,7 @@ export class Game {
 
     // Ombres
     this.renderer.shadowMap.enabled = true;
-    this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    this.renderer.shadowMap.type = THREE.PCFShadowMap;
 
     // 🎨 Color Management (CRUCIAL pour Three.js moderne r152+)
     // Sans ça, les couleurs paraissent délavées et l'éclairage faux.
