@@ -1,24 +1,4 @@
-| null>(null);
-  const alertIdRef = useRef(0);
-
-  useEffect(() => {
-    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [state.chatMessages.length]);
-
-  useEffect(() => {
-    const iv = setInterval(() => {
-      const c = clockRef.current;
-      c.m = (c.m + 1) % 60;
-      if (c.m === 0) c.h = (c.h + 1) % 24;
-      setTimeStr(
-        `${String(c.h).padStart(2, "0")}:${String(c.m).padStart(2, "0")}`,
-      );
-    }, 500);
-    return () => clearInterval(iv);
-  }, []);
-
-  useEffect(() => {
-    clockRef.current = { h: state.timeOfDay, m: 0 };import { useState, useEffect, useCallback, useRef, useMemo, memo } from "react";
+import { useState, useEffect, useCallback, useRef, useMemo, memo } from "react";
 import {
   useGameState,
   toggleBuild,
@@ -117,7 +97,27 @@ export function GameHUD() {
   const clockRef = useRef({ h: state.timeOfDay, m: 0 });
   const chatEndRef = useRef<HTMLDivElement>(null);
   const chatInputRef = useRef<HTMLInputElement>(null);
-  const toastTimer = useRef<ReturnType<typeof setTimeout> 
+  const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const alertIdRef = useRef(0);
+
+  useEffect(() => {
+    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [state.chatMessages.length]);
+
+  useEffect(() => {
+    const iv = setInterval(() => {
+      const c = clockRef.current;
+      c.m = (c.m + 1) % 60;
+      if (c.m === 0) c.h = (c.h + 1) % 24;
+      setTimeStr(
+        `${String(c.h).padStart(2, "0")}:${String(c.m).padStart(2, "0")}`,
+      );
+    }, 500);
+    return () => clearInterval(iv);
+  }, []);
+
+  useEffect(() => {
+    clockRef.current = { h: state.timeOfDay, m: 0 };
     setTimeStr(`${String(state.timeOfDay).padStart(2, "0")}:00`);
   }, [state.timeOfDay]);
 
